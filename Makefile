@@ -14,10 +14,10 @@ ${PDFFILE} : ${TEXFILE}
 	${TEX} ${NAME}
 	${BIB} ${NAME}
 	${GLO} ${NAME}
-	${TEX} ${NAME} 
-	${TEX} ${NAME} 
+	${TEX} ${NAME}
+	${TEX} ${NAME}
 
-clean : 
+clean :
 	@rm *.bbl || true
 	@rm *.log || true
 	@rm *.out || true
@@ -43,5 +43,7 @@ clean :
 	@rm *.maf || true
 
 clean_all : clean
-	@rm ${PDFFILE} || true 
-	
+	@rm ${PDFFILE} || true
+
+clean_atom:
+	rm $(PDFFILE)
