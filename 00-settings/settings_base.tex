@@ -86,7 +86,7 @@
 \newcommand*{\captionsource}[3]{%
 	\caption[{#1}]{%
 		#2%
-		
+
 		\textbf{Source:} #3%
 	}%
 }
@@ -107,7 +107,7 @@
 \newcolumntype{N}[1]{>{\raggedleft\arraybackslash}p{#1}}
 
 % Set row height multiplicator to provide more breathing space
-\renewcommand{\arraystretch}{1.3} 
+\renewcommand{\arraystretch}{1.3}
 
 % Bibliography
 % -------------------
@@ -125,7 +125,7 @@ bibencoding=auto
 % Tables of contents, figures, tables and listings
 % ------------------------------------------------
 \usepackage{tocloft}
-\newlistof{listing}{lol}{List of Listings}
+\newlistof{listing}{lol}{Liste des codes sources}
 \setcounter{tocdepth}{1} % Depth to 'section'
 \setlength{\cftfigindent}{0pt}  % remove indentation from figures in lof
 \setlength{\cftfignumwidth}{1cm}
@@ -139,7 +139,7 @@ bibencoding=auto
 \usepackage{minitoc}
 
 % no "Contents" title
-\mtcsettitle{minitoc}{Contents} 
+\mtcsettitle{minitoc}{Contenu}
 
 % Layout
 \setlength{\mtcindent}{-0.5em}
@@ -147,8 +147,9 @@ bibencoding=auto
 
 % Spacing above and below table
 \mtcsetfeature{minitoc}{before}{\vspace{0.5cm}}
-\mtcsetfeature{minitoc}{after}{\vspace{-0.25cm}}
-\renewcommand{\mtifont}{\sffamily\bfseries\large}
+\mtcsetfeature{minitoc}{after}{\vspace{0.5cm}}
+% \renewcommand{\mtifont}{\sffamily\bfseries\large}
+% \renewcommand{\mltfont}{\small\rmfamily}
 
 % Colors & graphics
 % -----------------
@@ -167,7 +168,7 @@ bibencoding=auto
 \usepackage{csquotes}                    % paragraph indentation and spacing
 \usepackage[defaultlines=3,all]{nowidow} % avoid widows and orphans
 \usepackage{microtype}                   % typographic improvements
-\usepackage{parskip}                     % No indent and auto-space between paragraphs
+% \usepackage{parskip}                     % No indent and auto-space between paragraphs
 \usepackage[super]{nth}
 
 \usepackage{paralist}
@@ -189,7 +190,7 @@ bibencoding=auto
 \addtolength{\textheight}{-.5cm}
 
 \titlespacing{\chapter}{-5mm}{-10mm}{3mm}
-\titlespacing{\section}{-5mm}{3mm}{-2mm}
+\titlespacing{\section}{-5mm}{3mm}{3mm}
 \titlespacing{\subsection}{-5mm}{2mm}{-2mm}
 \titlespacing{\subsubsection}{-5mm}{2mm}{-1mm}
 
@@ -234,9 +235,9 @@ bibencoding=auto
 	pdfauthor={\Author},
 	pdftitle={\ThesisTitle},
 	pdfsubject={\ThesisSubject},
-	pdfkeywords={\Keywords}
+	pdfkeywords={\Keywordsfr}
 	pdfduplex=DuplexFlipLongEdge]{hyperref}
-		
+
 % Hyperlinks
 \hypersetup{
 	colorlinks=true,
@@ -253,4 +254,3 @@ bibencoding=auto
 \usepackage[xindy,toc]{glossaries}
 \input{03-tail/glossary.tex}
 \makeglossaries
-

@@ -22,7 +22,7 @@
 \documentclass[a4paper,11pt,fleqn]{book}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french,english]{babel}
+\usepackage[english,french]{babel}
 
 % -----------------------------------------------------------------------------
 % Preamble
@@ -50,9 +50,9 @@
 \cleardoublepage
 \input{01-head/acknowledgments}
 
-% Preface (to be written by someone else)
-\cleardoublepage
-\input{01-head/preface}
+% % Preface (to be written by someone else)
+% \cleardoublepage
+% \input{01-head/preface}
 
 % French + English abstracts
 \cleardoublepage
@@ -61,25 +61,25 @@
 % Table of contents
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{chapter}{Contents}
+% \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
 
 % List of figures
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{chapter}{List of Figures}
+\addcontentsline{toc}{chapter}{Table des figures}
 \listoffigures
 
 % List of tables
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{chapter}{List of Tables}
+\addcontentsline{toc}{chapter}{Liste des tableaux}
 \listoftables
 
 % List of listings
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{chapter}{List of Listings}
+\addcontentsline{toc}{chapter}{Liste des codes sources}
 \listoflistings
 
 % Restore paragraphs
@@ -96,8 +96,11 @@
 % -----------------------------------------------------------------------------
 \mainmatter
 
+\setlength{\parindent}{15pt}
+\setlength{\parskip}{0.0pt plus 1.0pt}
+
 % Chapters
-\setcounter{mtc}{7} % Help minitoc skip the front matter chapters
+\setcounter{mtc}{5} % Help minitoc skip the front matter chapters
 \include{02-main/ch1_introduction}
 \include{02-main/ch2_analysis}
 \include{02-main/ch3_design}
@@ -116,15 +119,10 @@
 
 % Bibliography
 \cleardoublepage
-\printbibliography[title={References}, heading=bibintoc]
+\printbibliography[title={Références}, heading=bibintoc]
 
 % Glossary
 \cleardoublepage
 \printglossaries
 
-% TODO: Add index
-
-% Add your CV here if you want
-
 \end{document}
-

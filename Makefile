@@ -46,4 +46,4 @@ clean_all : clean
 	@rm ${PDFFILE} || true
 
 clean_atom:
-	rm $(PDFFILE)
+	@rm ${PDFFILE} || true
