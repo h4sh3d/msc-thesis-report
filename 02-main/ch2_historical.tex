@@ -5,6 +5,8 @@ La gestion de la mémoire est un des composants le plus complexe d'un système d
 
 Dans ce chapitre un bref récapitulatif de cette gestion est faite en préambule de la partie historique des attaques et des mécanismes de protection. Les cas expliqués dans ce rapport sont volontairement simplifiés de manière à comprendre l'aspect conceptuel et non pratique. Exploiter dans un environement réel certaines des attaques brievement décritent par la suite peut occuper la place d'un rapport au moins égal à celui-ci.
 
+La description du fonctionnement de la mémoire est trés fortement basée sur les articles suivants \cite{AnatomyOfAProgramInMemory} \cite{HowTheKernelManagesYourMemory} \cite{JourneyToTheStackPartI} tirés du blog de Gustavo Duarte.
+
 \minitoc
 
 \newpage
@@ -12,9 +14,9 @@ Dans ce chapitre un bref récapitulatif de cette gestion est faite en préambule
 % ---------------------------------------------------------------------------
 \section{Rappel sur la gestion de la mémoire}
 
-La mémoire d'un programe est gérée selon un schéma bien définit. Chaque processus du système d'exploitation voit sa mémoire définie dans un bac-à-sable appelé "virtual address space". Ce espace est toujours égal à 4Go dans un système 32 bits. Le système d'exploitation est ensuite responsable de faire le lien entre cet espace mémoire vituel et l'épace d'adresses physique.
+La mémoire d'un programe est gérée selon un schéma bien définit. Chaque processus du système d'exploitation voit sa mémoire définie dans un bac-à-sable appelé "virtual address space". Ce espace est toujours égal à 4 Go dans un système 32 bits. Le système d'exploitation est ensuite responsable de faire le lien entre cet espace mémoire vituel et l'épace d'adresses physique.
 
-Cette mémoire virtuelle est d'abord scindée en deux parties. Cependant cela ne signifie pas que l'espace est entièrement utilisé. La première ayant les adresses mémoires 0xc0000000 à 0xffffffff est reservée au noyaux du système d'exploitation sous linux. La seconde correspond à l'espace disponible au programme.
+Cette mémoire virtuelle est d'abord scindée en deux parties. Cependant cela ne signifie pas que l'espace est entièrement utilisé. La première ayant les adresses mémoires \mintinline{c}{0xc0000000} à \mintinline{c}{0xffffffff} est reservée au noyaux du système d'exploitation sous linux. La seconde correspond à l'espace disponible au programme.
 
 \begin{figure}[H]
 	% \centering
@@ -64,7 +66,7 @@ Lors de l'execution d'un programme, cette mémoire virtuelle est gérée par le 
 	\label{fig:mm_struct}
 \end{figure}
 
-Cette structure est constituée d'une suite de vm\_area\_struct. Chacun d'eux est un espace continu en mémoire. Ils permettent de stocker des informations tels que les droits d'écriture et de lecture ou encore les droits d'execution. Ils stockent aussi si et quel fichier est copier en mémoire.
+Cette structure est constituée d'une suite de \mintinline{c}{vm_area_struct}. Chacun d'eux est un espace continu en mémoire. Ils permettent de stocker des informations tels que les droits d'écriture et de lecture ou encore les droits d'execution. Ils stockent aussi si et quel fichier est copier en mémoire.
 
 \begin{figure}[H]
 	\centering
@@ -89,7 +91,7 @@ Lorsqu'une Stack frame est créée, celle-ci stocke dans un schéma particulier 
 	\item et les variables locales
 \end{enumerate}
 
-Cela permet, en dépassant la taille des variables locales, de modifier des zones mémoires qui ne devraient pas l'être. En regardant la \autoref{fig:stackIntro} on constat que si l'on écrit (8+4+4+4) = 12 bytes dans le local\_buffer, les 4 dernier bytes auront remplacé l'adresse de retour.
+Cela permet, en dépassant la taille des variables locales, de modifier des zones mémoires qui ne devraient pas l'être. En regardant la \autoref{fig:stackIntro} on constat que si l'on écrit (8+4+4+4) = 20 bytes dans le \mintinline{c}{local_buffer}, les 4 dernier bytes auront remplacé l'adresse de retour.
 
 \begin{figure}[H]
 	\centering
@@ -100,7 +102,7 @@ Cela permet, en dépassant la taille des variables locales, de modifier des zone
 	\label{fig:stackIntro}
 \end{figure}
 
-Pour illustrer ce cas, voici un code C utilisant la fonction \mintinline{c}{strcpy()}. Dans cette exemple trivial il est possiblde d'injecter un shell code dans le buffer et de redefinir l'adresse de retour. La chaine de caractère copiée dans le local\_buffer est directement contrôlée par l'utilisateur, ce qui rend la manoeuvre encore plus facile.
+Pour illustrer ce cas, voici un code C utilisant la fonction \mintinline{c}{strcpy()}. Dans cette exemple trivial il est possiblde d'injecter un shell code dans le buffer et de redefinir l'adresse de retour. La chaine de caractère copiée dans le \mintinline{c}{local_buffer} est directement contrôlée par l'utilisateur, ce qui rend la manoeuvre encore plus facile.
 
 \usemintedstyle{monokai}
 \begin{listing}
@@ -110,6 +112,7 @@ Pour illustrer ce cas, voici un code C utilisant la fonction \mintinline{c}{strc
 \end{listing}
 \usemintedstyle{trac}
 
+
 % ---------------------------------------------------------------------------
 \section{DEP/NX}
 
@@ -117,13 +120,13 @@ Pour éviter lors d'un buffer overflow que l'attaquant puisse executer du code a
 
 \subsection{Mécanisme de protection}
 
-DEP pour Data Execution Prevention a été introduit sur Linux en 2004 avec la version 2.6.8. \footnote{Dans la même année pour Windows et deux ans plus tard pour Mac OS X lors de la transition vers x86 en 2006. Source : \url{http://duartes.org/gustavo/blog/post/journey-to-the-stack/}}
+DEP pour Data Execution Prevention a été introduit sur Linux en 2004 avec la version 2.6.8 du noyau, durant la même année pour Windows et deux ans plus tard pour Mac OS X lors de la transition vers x86 en 2006 \cite{DataExecutionPrevention}.
 
-La protection se base sur le hardware, le NX bit, introduit tout d'abord par AMD en 2003, puis reprise par Intel sous le nom de XD bit une année après.\footnote{Source : \url{https://fr.wikipedia.org/wiki/NX_Bit}} Ce bit indique au processeur s'il sagit d'une zone d'instructions ou de données. Cependant cette fonctionalité hardware peut être simulée, entrainant du coup un overhead important.
+La protection se base sur le hardware, le NX bit, introduit tout d'abord par AMD en 2003, puis reprise par Intel sous le nom de XD bit une année après \cite{ExecutableSpaceProtection} \cite{NXBit}. Ce bit indique au processeur s'il sagit d'une zone d'instructions ou de données. Cependant cette fonctionalité hardware peut être simulée, entrainant du coup un overhead important.
 
 \subsection{Contournements avec return-to-libc}
 
-Une pile non-executable ne permet plus à l'attaquant d'executer son code, mais cela n'empêche pas d'executer du code executable déjà présent dans le programe. Comme montré dans la \autoref{fig:memoryDescriptorAndMemoryAreas}, la bibliothèque partagée libc est présente. Ce qui rend possible une attaque de type return-to-libc. Grâce à la fonction \mintinline{c}{system()} il est possible d'executer arbitrairement un programe. Lors de l'attaque on localise par exemple une chaine de caractère tel que \mintinline{c}{"/bin/sh"} que l'on prepare comme étant le paramètre à passé à la fonction  \mintinline{c}{system()}.
+Une pile non-executable ne permet plus à l'attaquant d'executer son code, mais cela n'empêche pas d'executer du code executable déjà présent dans le programe. Comme montré dans la \autoref{fig:memoryDescriptorAndMemoryAreas}, la bibliothèque partagée libc est présente. Ce qui rend possible une attaque de type return-to-libc\cite{ReturntolibcAttack}. Grâce à la fonction \mintinline{c}{system()} il est possible d'executer arbitrairement un programe. Lors de l'attaque on localise par exemple une chaine de caractère tel que \mintinline{c}{"/bin/sh"} que l'on prepare comme étant le paramètre à passé à la fonction  \mintinline{c}{system()}.
 
 % ---------------------------------------------------------------------------
 \section{ASLR (Address space layout randomization)}
@@ -149,10 +152,11 @@ Depuis juin 2005, l'Address Space Layout Randomization est supportée dans le no
 
 Sur un OS 32 bits, comme montré a la \autoref{fig:linuxFlexibleAddressSpaceLayout}, la marge de manoeuvre laissée au décalage n'est pas trés grande. Seul une partie des bits est utilisée, ce qui laisse possible une attaque de type force brutte réussir en quelques milliers d'essais. En effet la Stack est randomisée avec une entropie de 19 bits et la Memory Mapping 8 bits.
 
-Dans le cas d'un OS 64 bits ASLR devient tout de suite plus interessant car l'espace mémoire virtuel est beaucoup plus grand. Cependant, les chercheurs Hector Marco-Gisbert et Ismael Ripoll de l'université de Valence ont écrit un papier démontrant une faiblesse sous certaines assomptions.
+Dans le cas d'un OS 64 bits ASLR devient tout de suite plus interessant car l'espace mémoire virtuel est beaucoup plus grand. Cependant, les chercheurs Hector Marco-Gisbert et Ismael Ripoll de l'université de Valence ont écrit un papier démontrant une faiblesse sous certaines assomptions. \cite{EffectivenessFullASLR64bit}
 
 % ---------------------------------------------------------------------------
 \section{Les stack cannaries}
+
 
 
 

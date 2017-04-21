@@ -7,18 +7,19 @@
 % Surveys and papers
 % -----------------------------------------------------------------------------
 
-@inproceedings{paper_millwheel,
-	title = {MillWheel: Fault-Tolerant Stream Processing at Internet Scale},
-	author  = {Tyler Akidau and Alex Balikov and Kaya Bekiroglu and Slava Chernyak and Josh Haberman and Reuven Lax and Sam McVeety and Daniel Mills and Paul Nordstrom and Sam Whittle},
-	year  = 2013,
-	booktitle = {Very Large Data Bases},
-	pages = {734--746}
+@techreport{EffectivenessFullASLR64bit,
+	title = {{On the Effectiveness of Full-ASLR on 64-bit Linux}},
+  author = {Hector Marco-Gisbert and Ismael Ripoll},
+  month = {11},
+  year = {2014},
+  institution = {Universitat Politècnica de València},
+	url = {http://cybersecurity.upv.es/attacks/offset2lib/offset2lib-paper.pdf}
 }
 
 % -----------------------------------------------------------------------------
 % Books
 % -----------------------------------------------------------------------------
- 
+
 
 
 % -----------------------------------------------------------------------------
@@ -32,14 +33,63 @@
 % -----------------------------------------------------------------------------
 
 
+@online{AnatomyOfAProgramInMemory,
+  author = {Gustavo Duarte},
+  title = {Anatomy of a Program in Memory},
+  url = {http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/},
+  urldate = {2009-01-27}
+}
 
-% -----------------------------------------------------------------------------
-% Source code repositories
-% -----------------------------------------------------------------------------
+@online{HowTheKernelManagesYourMemory,
+  author = {Gustavo Duarte},
+  title = {How the Kernel Manages Your Memory},
+  url = {http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/},
+  urldate = {2009-02-03}
+}
 
+@online{JourneyToTheStackPartI,
+  author = {Gustavo Duarte},
+  title = {Journey to the Stack, Part I},
+  url = {http://duartes.org/gustavo/blog/post/journey-to-the-stack/},
+  urldate = {2014-03-10}
+}
 
+@online{StackOverflowsDefeatingCanaries,
+  title = {Stack Overflows - Defeating Canaries, ASLR, DEP, NX},
+  url = {https://security.stackexchange.com/questions/20497/stack-overflows-defeating-canaries-aslr-dep-nx}
+}
 
-% -----------------------------------------------------------------------------
-% Various
-% -----------------------------------------------------------------------------
+@online{BypassingASLRDEP,
+  author = {Bypassing ASLR/DEP},
+  title = {Vinay Katoch},
+  url = {https://www.exploit-db.com/docs/17914.pdf}
+}
 
+@online{LeakingPointersBypassDEPASLR,
+  title = {How “leaking pointers” to bypass DEP/ASLR works},
+  url = {https://security.stackexchange.com/questions/22989/how-leaking-pointers-to-bypass-dep-aslr-works}
+}
+
+@online{ExecutableSpaceProtection,
+  title = {Executable space protection},
+  url = {https://en.wikipedia.org/wiki/Executable_space_protection},
+  urldate = {2017-01-08}
+}
+
+@online{DataExecutionPrevention,
+  title = {Data Execution Prevention},
+  url = {https://fr.wikipedia.org/wiki/Data_Execution_Prevention},
+  urldate = {2015-06-09}
+}
+
+@online{NXBit,
+  title = {NX Bit},
+  url = {https://fr.wikipedia.org/wiki/NX_Bit},
+  urldate = {2017-03-21}
+}
+
+@online{ReturntolibcAttack,
+  title = {Return-to-libc attack},
+  url = {https://fr.wikipedia.org/wiki/Return-to-libc_attack},
+  urldate = {2016-06-07}
+}
