@@ -12,19 +12,40 @@
 %     full: \javafile{PATH}
 %     extract: \javafile[startline=x, endline=y]{PATH}
 
+\usemintedstyle{trac}
+\definecolor{mintedBg}{rgb}{0,0,0}
+
+% C
+\newminted{c}{
+	% frame=single,
+	% framesep=6pt,
+	breaklines=true,
+	fontsize=\scriptsize,
+	linenos,
+	bgcolor=mintedBg
+}
+\newmintedfile{c}{
+	% frame=single,
+	% framesep=6pt,
+	breaklines=true,
+	fontsize=\scriptsize,
+	linenos,
+	bgcolor=mintedBg
+}
+
 % Java
 \newminted{java}{frame=single, framesep=6pt, breaklines=true, fontsize=\scriptsize}
-\newmintedfile{java}{frame=single, framesep=6pt, breaklines=true, 
+\newmintedfile{java}{frame=single, framesep=6pt, breaklines=true,
 fontsize=\scriptsize}
 
 % Scala
 \newminted{scala}{frame=single, framesep=6pt, breaklines=true, fontsize=\scriptsize}
-\newmintedfile{scala}{frame=single, framesep=6pt, breaklines=true, 
+\newmintedfile{scala}{frame=single, framesep=6pt, breaklines=true,
 	fontsize=\scriptsize}
 
 % Clojure
 \newminted{clojure}{frame=single, framesep=6pt, breaklines=true, fontsize=\scriptsize}
-\newmintedfile{clojure}{frame=single, framesep=6pt, breaklines=true, 
+\newmintedfile{clojure}{frame=single, framesep=6pt, breaklines=true,
 	fontsize=\scriptsize}
 
 % Python
@@ -37,13 +58,13 @@ fontsize=\scriptsize}
 
 % Json
 \newminted{json}{frame=single, framesep=6pt, breaklines=true, fontsize=\scriptsize}
-\newmintedfile{json}{frame=single, framesep=6pt, breaklines=true, 
+\newmintedfile{json}{frame=single, framesep=6pt, breaklines=true,
 	fontsize=\scriptsize}
 
 % Yaml
-\newminted{yaml}{frame=single, framesep=6pt, breaklines=true, 
+\newminted{yaml}{frame=single, framesep=6pt, breaklines=true,
 fontsize=\scriptsize}
-\newmintedfile{yaml}{frame=single, framesep=6pt, breaklines=true, 
+\newmintedfile{yaml}{frame=single, framesep=6pt, breaklines=true,
 	fontsize=\scriptsize}
 
 % Plain text
