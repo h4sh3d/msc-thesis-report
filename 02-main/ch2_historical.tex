@@ -1,0 +1,182 @@
+\chapter{Historique}
+\label{chap:historique}
+
+La gestion de la mémoire est un des composants le plus complexe d'un système d'exploitation moderne. Ce qui rend le sujet bien plus vaste que ce que l'on peut traiter dans ce rapport. Cependant, il m'a été nécessaire de parcourir les principaux concepts pour pouvoir en comprendre les enjeux.
+
+Dans ce chapitre un bref récapitulatif de cette gestion est faite en préambule de la partie historique des attaques et des mécanismes de protection. Les cas expliqués dans ce rapport sont volontairement simplifiés de manière à comprendre l'aspect conceptuel et non pratique. Exploiter dans un environement réel certaines des attaques brievement décritent par la suite peut occuper la place d'un rapport au moins égal à celui-ci.
+
+\minitoc
+
+\newpage
+
+\section{Rappel sur la gestion de la mémoire}
+
+La mémoire d'un programe est gérée selon un schéma bien définit. Chaque processus du système d'exploitation voit sa mémoire définie dans un bac-à-sable appelé "virtual address space". Ce espace est toujours égal à 4Go dans un système 32 bits. Le système d'exploitation est ensuite responsable de faire le lien entre cet espace mémoire vituel et l'épace d'adresses physique.
+
+Cette mémoire virtuelle est d'abord scindée en deux parties. Cependant cela ne signifie pas que l'espace est entièrement utilisé. La première ayant les adresses mémoires 0xc0000000 à 0xffffffff est reservée au noyaux du système d'exploitation sous linux. La seconde correspond à l'espace disponible au programme.
+
+\begin{figure}[H]
+	% \centering
+	\includegraphics[width=1\columnwidth]{kernelUserMemorySplit}
+	\captionsource{Répartition de l'espace mémoire du kernel}
+	{Répartition de l'espace mémoire entre le noyau et le programme, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/}}
+	\label{fig:kernelUserMemorySplit}
+\end{figure}
+
+L'espace réserver au programme est ensuite découpé en différents segments tel que la Stack, Heap, etc. Ces segments sont des plages mémoires continues gérée par le système d'exploitation. Dans le cas d'un processus Linux les ségments sont répartit ainsi :
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.7\columnwidth]{linuxClassicAddressSpaceLayout}
+	\captionsource{Ségmentation de la mémoire d'un processus Linux 32 bits}
+	{Ségmentation de la mémoire d'un processus Linux 32 bits, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/}}
+	\label{fig:linuxClassicAddressSpaceLayout}
+\end{figure}
+
+La Stack permet de gérer le "Control-Flow" de l'application. À chaque appel de fonction, une nouvelle stack frame est ajoutée à la Stack et est ensuite retirée lorsque celle-ci se termine. La Stack grandit vers le bas, c-à-d que les adresses mémoires sont décroissantes. Il est possible que la Stack veuille s'étende au-delà de sa taille maximum, c'est le stack overflow et dans ce cas le programme recoit un "segmentation fault".
+
+Le segment "Memory Mapping Region" permet au noyaux de copier en mémoire le contenu de certain fichier de manière à augmenter les performances. Ce segment est généralement utilisé pour charger les librairies. Il peut aussi être utilisé à d'autre fin, à la place de la Heap par exemple.
+
+En dessous se trouve la Heap, permettant de stocker en mémoire les allocations dynamiques. En C ce ségment est géré par la fonction $malloc()$ ainsi que ses collèges. Dans d'autres langages bénéficiant d'un ramasse mièttes tel que le C\#, l'interface pour intéragir avec la Heap est le mot reservé $new$.
+
+Finalement les trois derniers segements que sont BSS, Data et Text servent a stocker les variables static initialisées ou non ainsi que la source du binaire executé. En \autoref{fig:mappingBinaryImage} un exemple de ce que l'on peut retrouver dans ces trois segments:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.8\columnwidth]{mappingBinaryImage}
+	\captionsource{Mapping d'une image binaire dans les ségments BSS, Data et Text}
+	{Mapping d'une image binaire dans les ségments BSS, Data et Text, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/}}
+	\label{fig:mappingBinaryImage}
+\end{figure}
+
+Lors de l'execution d'un programme, cette mémoire virtuelle est gérée par le système d'exploitation grâce à une structure appelée "Memory Descriptor". Cette structure contient les adresses de début et de fin de chaque ségments.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\columnwidth]{mm_struct}
+	\captionsource{"Memory Descriptor" d'un processus Linux}
+	{"Memory Descriptor" d'un processus Linux, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/}}
+	\label{fig:mm_struct}
+\end{figure}
+
+Cette structure est constituée d'une suite de vm\_area\_struct. Chacun d'eux est un espace continu en mémoire. Ils permettent de stocker des informations tels que les droits d'écriture et de lecture ou encore les droits d'execution. Ils stockent aussi si et quel fichier est copier en mémoire.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{memoryDescriptorAndMemoryAreas}
+	\captionsource{Structure des "Virtual Memory Area"}
+	{Structure des "Virtual Memory Area", par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/}}
+	\label{fig:memoryDescriptorAndMemoryAreas}
+\end{figure}
+
+
+\section{Le buffer overflow}
+
+
+\section{Les stack cannaries}
+
+
+\section{Address space layout randomization}
+
+
+\section{Control-Flow integrity}
+
+
+
+\newpage
+
+% -----------------------------------------------------------------------------
+This chapter shows example of picture and also serves to populate the different lists: list of figures, list of tables, bibliography, and glossary.
+
+\section{Tables}
+
+This section contains an examples of table: \autoref{tab:esempio}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{ccc}
+		\toprule
+		name & weight & food \\
+		\midrule
+		mouse	& 10 g	& cheese \\
+		cat	& 1 kg	& mice \\
+		dog	& 10 kg	& cats \\
+		t-rex	& 10 Mg	& dogs \\
+		\bottomrule
+	\end{tabular}
+	\caption[A floating table]{A floating table.}
+	\label{tab:esempio}
+\end{table}
+
+\section{Figures}
+
+This section contains examples of figures: \autoref{fig:galleria}, \autoref{fig:lorem}, \autoref{fig:ipsum}, \autoref{fig:dolor}, \autoref{fig:sit}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\columnwidth]{galleria_stampe}
+	\captionsource{A floating figure}{A floating figure: the lithograph \emph{Galleria di stampe}, of M.~Escher}{\url{http://www.mcescher.com/}}
+	\label{fig:galleria}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.45\textwidth}
+		\includegraphics[width=\textwidth]{lorem}
+		\caption{A gull}
+		\label{fig:lorem}
+	\end{subfigure}
+	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+	%(or a blank line to force the subfigure onto a new line)
+	\begin{subfigure}[b]{0.45\textwidth}
+		\includegraphics[width=\textwidth]{ipsum}
+		\caption{A tiger}
+		\label{fig:ipsum}
+	\end{subfigure}
+	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+	%(or a blank line to force the subfigure onto a new line)
+	\begin{subfigure}[b]{0.45\textwidth}
+		\includegraphics[width=\textwidth]{dolor}
+		\caption{A mouse}
+		\label{fig:dolor}
+	\end{subfigure}
+	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+	%(or a blank line to force the subfigure onto a new line)
+	\begin{subfigure}[b]{0.45\textwidth}
+		\includegraphics[width=\textwidth]{sit}
+		\caption{A mouse}
+		\label{fig:sit}
+	\end{subfigure}
+	\caption{Example subcaption}\label{fig:animals}
+\end{figure}
+
+
+% -----------------------------------------------------------------------------
+\section{Code}
+
+\autoref{lst:listing_example} shows an example of Java code rendered with minted.
+
+\begin{listing}
+	\javafile{02-main/listings/HelloWorld.java}
+	\caption{Example of listing using the minted package}
+	\label{lst:listing_example}
+\end{listing}
+
+% -----------------------------------------------------------------------------
+\section{Other features}
+
+Term (glossaries): \gls{nosql}
+
+Acronym (glossaries): \gls{sql}
+
+Citation (biblatex): \cite{paper_millwheel}
+
+% -----------------------------------------------------------------------------
+\section{Conclusion}
+
+\blindtext

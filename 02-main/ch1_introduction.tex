@@ -1,17 +1,12 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
-% -----------------------------------------------------------------------------
-\section{Context}
+Nos programmes sont le plus souvent écrits avec des langages bas niveaux tels le C/C++ qui forcent le développeur à gérer la mémoire lui-même. Ce qui implique que, sans de bonnes connaissances et une attention particulière, un adversaire peut facilement exploiter des bugs qui surviennent au sein de ces mécanismes de gestion. Grâce à cela, l’attaquant peut modifier le "Control-Flow" de l'application et exécuter son propre code avec les privilèges donné au programme ciblé.
 
-\lipsum[1-4]
+Sur les dix dernières années, les attaques de capables de modifier le "Control-Flow" connues au sein des principaux logiciels que nous utilisons ont augmentées. Etant donné la dangerosité de ce type d’attaque connues depuis cinquante ans, 1998 pour le "grand public", différents concepts ont été mis en place. Parmi eux on peut retrouver ASLR, DEP/NX, "Stack cookies", "Coarse-grained CFI" ou encore "Finest-grained CFI".
 
-% -----------------------------------------------------------------------------
-\section{Objectives}
+Mais comme à chaque fois, le jeu du chat et de la souris se met en marche et les chercheur en sécurité parviennent toujours à trouver un moyen de contourner ces mécanisme de protection. Être capable de garantir l'intergrité du "Control-Flow" de l'application est un enjeu majeur dans la sécurité des systèmes d'informations d'aujourd'hui.
 
-\lipsum[1]
+C'est dans ce contexte, qu'un laboratoire de l’EPFL propose une implémentation appelée Levee qui rassemble des concepts de protection au sein de l’infrastructure de compilation LLVM. L’idée est de séparer les pointeurs jugés sensible et de les placer dans une zone mémoire sécurisée appelée "SafeStack". La séparation des pointeurs est faite par analyse durant la phase de compilation et permet d’obtenir un "hoverhead" relativement bas (environ 8\% à 10\%).
 
-% -----------------------------------------------------------------------------
-\section{Structure of this report}
-
-\lipsum[1]
+Le but de ce rapport est d’expliquer en détail le fonctionnement des concepts de protection de Levee ainsi que d’expérimenter et d’analyser son implémentation. Cependant, pour mieux comprendre les enjeux se cachant derrière les concepts de Levee un bref récapitulatif du fonctionnement de la mémoire au sein des systèmes d'exploitations modernes ainsi qu'un historique des protections et leurs attaques respectives est dressé dans le chapitre suivant.
