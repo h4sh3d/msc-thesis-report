@@ -1,7 +1,15 @@
 \chapter{Analyse de Levee}
 \label{chap:levee}
 
-introduction du projet Levee... composant, équipe, epfl
+% introduction du projet Levee... composant, équipe, epfl
+
+Levee est un projet mener dans le cadre du Dependable Systems Lab \cite{dslab} par les chercheurs Volodymyr Kuznetsov, Laszlo Szekeres, Mathias Payer, George Candea, R. Sekar et Dawn Song.
+
+Le but annoncé du projet est de sécurisé tout programe informatique contre la totalité des attaques de type "control-flow hijack" via une erreur mémoire. Comme montré dans le chapitre précédant, il existe déjà quelques mécanismes (DEP, ASLR) permettants de réduire le risque de ce type d'attaque sans imposer un cout supplémentaire à la performance du programe. Cependant il est possible de les contournés (return-to-libc, ROP). D'autres mécanismes (CFI) permettent quant à eux d'améliorer fortement la sécurité, mais ne sont pas adobté majoritairement pour cause de leur cout élevé en performance.
+
+Toutes ces techniques ne permettent pas de garantire l'intégrité complète du control-flow sans imposer de cout élevé ou sans demander au programmeur de modifier le code source de son programe. Dans le cas des langages de type "memory-safe", un objet en mémoire ne peut être accedé que depuis un pointeur prévu explicitement pour l'objet en question. Cela rend la modification du control-flow impossible mais entraine une baisse de performance importante.
+
+Dans ce chapitre seront abordés les concepts théoriques sur lesquels se base Levee ainsi que son implémentation au sein du compilateur LLVM.
 
 \minitoc
 
@@ -10,15 +18,25 @@ introduction du projet Levee... composant, équipe, epfl
 % -----------------------------------------------------------------------------
 \section{Concepts théoriques}
 
-introduction au concept de separation des pointeurs
+Les chercheurs du projet posent comme postulat de départ qu'il est suffisant de garantir l'intégrité des pointeurs pour rendre impossible la modification du control-flow par exploitation d'erreurs mémoire.
 
-\subsection{CPI/CPS}
+Afin de garder de bonne performance tout en garantissant leur integrité, le code est analyser de manière statique à la compilation. Le concepts de CPI \cite{CPIPaper}, pour "code-pointer integrity", intervient alors afin de determiné quels pointeurs doivent être protegé.
+
+Seul les attaques visant à dérouté le control-flow sont prise en compte dans leur model de sécurité. Les attaques de type "data-only", visant à modifier ou récuperer des informations qui ne font pas partie du control-flow n'entrent pas en considération.
+
+Ils assument le fait que l'attaquant à le controle total sur la mémoire du processus et que le chargement du programe ainsi que le bianire ne peuvent pas être alterés. De ce fait, l'instrumentation du programe résultant de la compilation peut se mettre en place avant intervention de l'attaquant.
+
+\subsection{CPI (Code-pointer integrity)}
 
 Decrire pourquoi les pointeurs sensibles et pas sensibles. comment determiner si un pointeur est sensible
 
-\subsection{SafeStack}
+\subsection{CPS (Code-pointer separation)}
 
-quel est le concept de la safeStack
+Decrire la variante CPS, moins d'overhead mais permettant certain hijack
+
+\subsection{Safe Stack}
+
+quel est le concept de la safe stack
 
 % -----------------------------------------------------------------------------
 \section{Implémentation au sein de LLVM}

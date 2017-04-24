@@ -152,7 +152,7 @@ Depuis juin 2005, l'Address Space Layout Randomization est supportée dans le no
 
 Sur un OS 32 bits, comme montré a la \autoref{fig:linuxFlexibleAddressSpaceLayout}, la marge de manoeuvre laissée au décalage n'est pas trés grande. Seul une partie des bits est utilisée, ce qui laisse possible une attaque de type force brutte réussir en quelques milliers d'essais. En effet la Stack est randomisée avec une entropie de 19 bits et la Memory Mapping 8 bits.
 
-Dans le cas d'un OS 64 bits ASLR devient tout de suite plus interessant car l'espace mémoire virtuel est beaucoup plus grand. Cependant, les chercheurs Hector Marco-Gisbert et Ismael Ripoll de l'université de Valence ont écrit un papier démontrant une faiblesse sous certaines assomptions. \cite{EffectivenessFullASLR64bit}
+Dans le cas d'un OS 64 bits ASLR devient tout de suite plus interessant car l'espace mémoire virtuel est beaucoup plus grand. Cependant, les chercheurs Hector Marco-Gisbert et Ismael Ripoll de l'université de Valence ont écrit un papier démontrant une faiblesse sous certaines assomptions \cite{EffectivenessFullASLR64bit}.
 
 % ---------------------------------------------------------------------------
 \section{Les stack cannaries}
