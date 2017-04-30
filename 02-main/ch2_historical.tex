@@ -172,17 +172,43 @@ L'exemple \autoref{lst:bruteforce_aslr} montre comment avec un code python d'une
 
 La cas \autoref{lst:bruteforce_aslr} illustre aussi l'utilisation de l'opération \mintinline{python}{"\x90"} indiquant au processeur de passer à l'instruction suivante. En définissant une taile de 4096 bytes de NOP (No Operation) ont augmente drastiquement les chances de tomber sur le shellcode.
 
-
 % ---------------------------------------------------------------------------
-\section{Les stack cannaries}
+\section{Stack canaries}
 
+Les \og Stack canaries \fg ou \og \gls{stackCookies} \fg sont des valeurs déposées sur la pile d'exécution après la valeur de retour lors de l'appel d'une fonction. Le nom \og canaries \fg vient par analogie des canaris que l'on plaçait dans le mine pour prévenir les fuites de monoxyde de carbone. Ces oiseaux étant petit et vite atteint par les effets du gaz, ils donnaient rapidement l'informations \cite{StackCanaries} \cite{SentinelSpecies}.
 
+Le fonctionnement des \og stack canaries \fg est pareil, la valeur du canari est vérifiée lors de l'épilogue de la function et si celle-ci ne correspond pas à la valeur du canari d'origine, alors la tentative de dérouter le flôt de contrôle de l'application est détectée, on peut alors réagir en concéquence.
 
+\subsection{Implémentation}
+
+Il existe trois types de canaris: terminator, random, and random XOR. Les canaris de type terminator se base sur le constat que l'exploitation d'un dépassement de tampon est une opération sur un chaîne de caractères. De ce fait, si le canari est constitué de caractères tels que null, CR, LF ou encore -1, alors la fonction \mintinline{c}{strcpy()} se terminera avant de réécrire l'adresse de retour. Le désavantage notable de cette méthode se trouve dans le fait que l'attaquant connait la valeur du canari.
+
+Le random canari est générée aléatoirement afin de palier au problème des terminator canaris, généralement le canari est tiré à l'initialisation du programme et est stocké dans une variable globale.
+
+Le random XOR canari est une méthode un peu plus élaborée, elle fonctionne de la même manière que le random canari mais est en plus calculée en fonction de tout ou partie du programme ce qui rend encore plus difficile pour l'attaquant de forger un canari valide.
+
+\subsection{Limitation et contournements}
+
+Dans les deux premières implémentations (terminator, random), il est possible de contourner les canaris en récupérant leur valeur. Ce qui peut être fait directement sur la pile d'exécution grâce au contrôle, par exemple, des paramètres d'une fonction tel que \mintinline{c}{printf()}.
+
+Dans le cas d'un canari de type random XOR, si l'adresse de retour est modifiée, alors la valeur du canari change, car elle dépend de la valeur aléatoire de départ et des données sur la pile d'exécution. L'exploitation alors est plus complexe à mettre en place mais est toujours possible.
 
 % ---------------------------------------------------------------------------
 \section{Control-Flow integrity}
 
+Le \og Control-Flow integrity \fg est un concept dont l'implémentation est disponible au sein de Clang \cite{ControlFlowIntegrity} permettant, par analyse statique, de définir les changements possibles du flôt de contrôle de l'application pour ensuite valider ou non les changements effectifs lors de l'exécution du programme.
 
+\subsection{Coarse-grained CFI}
+
+\og Coarse-grained CFI \fg est une méthode créant un graphe de l'entierté du flôt de contrôle de l'application. Chaque élément du graphe est labélisé de manière unique. Lors de l'exécution du programme, à chaque changement du flôt de contrôle on vérifie si la destination labélisée correspond à un label voisin de l'élément de départ.
+
+Cette manière de faire amène, par ces nombreuses vérifications, un coût important en terme de performances. C'est pourquoi une variante moins coûteusse existe.
+
+\subsection{Finest-grained CFI}
+
+\og Finest-grained CFI \fg est une variante de \og Coarse-grained CFI \fg plus simple et donc plus performante mais ouvrant la porte la certaines attaques. Afin d'alléger les vérifications, les points de contrôle de l'application son labélisés de manière à obtenir le nombre le plus petit de labels nécessaire afin que chaque élément du graphe aie des voisins aux labels uniques.
+
+De ce fait il est possible de partir d'un point A et aller au point C alors que cela n'est pas prévu, mais par cause d'une labélisation non unique l'erreur n'est pas détectée.
 
 % \newpage
 
