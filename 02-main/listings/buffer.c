@@ -1,13 +1,12 @@
 #include <stdlib.h>
 
-void func(char *param1)
+void doRead()
 {
-  char local_buffer[100];
-  strcpy(local_buffer, param1);
+  char buffer[28];
+  gets(buffer);
 }
 
-int main(int argc, char **argv)
+int main(int argc)
 {
-  func(argv[1]);
-  return 0;
+  doRead();
 }

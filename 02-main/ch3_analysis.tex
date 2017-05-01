@@ -5,11 +5,11 @@
 
 Levee est un projet mener dans le cadre du Dependable Systems Lab \cite{dslab} par les chercheurs Volodymyr Kuznetsov, Laszlo Szekeres, Mathias Payer, George Candea, R. Sekar et Dawn Song.
 
-Le but annoncé du projet est de sécurisé tout programe informatique contre la totalité des attaques de type "control-flow hijack" via une erreur mémoire. Comme montré dans le chapitre précédant, il existe déjà quelques mécanismes (DEP, ASLR) permettants de réduire le risque de ce type d'attaque sans imposer un cout supplémentaire à la performance du programe. Cependant il est possible de les contournés (return-to-libc, ROP). D'autres mécanismes (CFI) permettent quant à eux d'améliorer fortement la sécurité, mais ne sont pas adobté majoritairement pour cause de leur cout élevé en performance.
+Le but annoncé du projet est de sécurisé tout programe informatique contre la totalité des attaques de type \og control-flow hijack \fg via une erreur mémoire. Comme montré dans le chapitre précédant, il existe déjà quelques mécanismes (\gls{dep}, \gls{aslr}) permettants de réduire le risque de ce type d'attaque sans imposer de coût supplémentaire à la performance du programme. Cependant, il est possible aujourd'hui de les contournés dans des cas concrets d'utilisation (return-to-libc, \gls{rop}). D'autres mécanismes (\gls{cfi}) permettent quant à eux d'améliorer fortement la sécurité, mais ne sont pas adobté majoritairement pour cause de leur performance.
 
-Toutes ces techniques ne permettent pas de garantire l'intégrité complète du control-flow sans imposer de cout élevé ou sans demander au programmeur de modifier le code source de son programe. Dans le cas des langages de type "memory-safe", un objet en mémoire ne peut être accedé que depuis un pointeur prévu explicitement pour l'objet en question. Cela rend la modification du control-flow impossible mais entraine une baisse de performance importante.
+Toutes ces techniques ne permettent pas de garantire l'intégrité complète du flôt de contrôle sans imposer de cout élevé ou sans demander au programmeur de modifier le code source de son programe. Dans le cas des langages de type \og memory-safe \fg, un objet en mémoire ne peut être accedé que depuis un pointeur prévu explicitement pour l'objet en question. Cela rend la modification du flôt de contrôle impossible, mais entraine une baisse de performance importante.
 
-Dans ce chapitre seront abordés les concepts théoriques sur lesquels se base Levee ainsi que son implémentation au sein du compilateur LLVM.
+Dans ce chapitre seront abordés les concepts théoriques sur lesquels se base Levee ainsi que l'analyse de son implémentation au sein du compilateur LLVM.
 
 \minitoc
 
@@ -18,13 +18,13 @@ Dans ce chapitre seront abordés les concepts théoriques sur lesquels se base L
 % -----------------------------------------------------------------------------
 \section{Concepts théoriques}
 
-Les chercheurs du projet posent comme postulat de départ qu'il est suffisant de garantir l'intégrité des pointeurs pour rendre impossible la modification du control-flow par exploitation d'erreurs mémoire.
+Les chercheurs du projet posent comme postulat de départ qu'il est suffisant de garantir l'intégrité des pointeurs pour rendre impossible la modification du flôt de contrôle par exploitation d'erreurs mémoires.
 
-Afin de garder de bonne performance tout en garantissant leur integrité, le code est analyser de manière statique à la compilation. Le concepts de CPI \cite{CPIPaper}, pour "code-pointer integrity", intervient alors afin de determiné quels pointeurs doivent être protegé.
+Seul les attaques visant à dérouté le flôt de contrôle de l'application sont prise en compte dans leur model de sécurité. Les attaques de type \og data-only \fg, visant à modifier ou récuperer des informations qui ne font pas partie du control-flow n'entrent pas en considération.
 
-Seul les attaques visant à dérouté le control-flow sont prise en compte dans leur model de sécurité. Les attaques de type "data-only", visant à modifier ou récuperer des informations qui ne font pas partie du control-flow n'entrent pas en considération.
+Afin de garder de bonne performance tout en garantissant leur integrité, le code est analyser de manière statique à la compilation. Le concept de \gls{cpi} \cite{CPIPaper} intervient alors afin de determiné quels pointeurs doivent être protegé.
 
-Ils assument le fait que l'attaquant à le controle total sur la mémoire du processus et que le chargement du programe ainsi que le bianire ne peuvent pas être alterés. De ce fait, l'instrumentation du programe résultant de la compilation peut se mettre en place avant intervention de l'attaquant.
+Ils assument le fait que l'attaquant à le controle total sur la mémoire du processus et que le chargement du programe ainsi que le bianire ne peuvent pas être alterés. De ce fait, l'instrumentation du programme résultant de la compilation peut se mettre en place avant intervention de l'attaquant.
 
 \subsection{CPI (Code-pointer integrity)}
 

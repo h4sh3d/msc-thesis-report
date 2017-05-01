@@ -14,9 +14,11 @@ La description du fonctionnement de la mémoire est inspirée des articles suiva
 % ---------------------------------------------------------------------------
 \section{Rappel sur la gestion de la mémoire}
 
-La mémoire d'un programe est gérée selon un schéma bien défini. Chaque processus du système d'exploitation voit sa mémoire définie dans un espace virtuel (virtual address space), l'isolant complétement du reste des processus. Ce espace est toujours égal à 4 Go dans un système 32 bits (dans le cas d'une architecture 64 bits, l'espace disponible n'utilise pas $2^{64}$ bytes [16 Eo], mais seulement les 48 bits les moins significatifs pour un total de 256 To [$2^{48}$] \cite{64bitComputing} \cite{VirtualAddressSpaceDetails}). Le système d'exploitation est ensuite responsable de faire le lien entre cet espace mémoire vituel et l'épace d'adresses physique.
+La mémoire d'un programe est gérée selon un schéma bien défini. Chaque processus du système d'exploitation voit sa mémoire définie dans un espace virtuel (Virtual address space), l'isolant complétement du reste des processus. Ce espace est égal à 4~Go dans un système 32~bits (dans le cas d'une architecture 64~bits, l'espace disponible n'utilise pas $2^{64}$ bytes [16~Eo], mais uniquement les 48~bits les moins significatifs, et donc $2^{48}$ bytes [256~To]) \cite{64bitComputing} \cite{VirtualAddressSpaceDetails}. Le système d'exploitation est ensuite responsable de faire le lien entre cet espace virtuel et l'épace d'adressage physique.
 
-Cette mémoire virtuelle est d'abord scindée en deux parties. Cependant cela ne signifie pas que l'espace est entièrement utilisé. La première ayant les adresses mémoires \mintinline{c}{0xc0000000} à \mintinline{c}{0xffffffff} (en 32 bits) est reservée au noyaux du système d'exploitation sous Linux. La seconde correspond à l'espace disponible au programme.
+\subsection{Segmentation}
+
+La mémoire virtuelle est scindée en deux parties principales. La première, ayant les adresses mémoires allant de \mintinline{c}{0xc0000000} à \mintinline{c}{0xffffffff} (en 32 bits), est reservée, sous Linux, au noyau du système d'exploitation. La seconde quant à elle correspond à l'espace disponible au processus courant.
 
 \begin{figure}[H]
 	\centering
@@ -27,7 +29,7 @@ Cette mémoire virtuelle est d'abord scindée en deux parties. Cependant cela ne
 	\label{fig:kernelUserMemorySplit}
 \end{figure}
 
-L'espace réserver au programme est ensuite découpé en différents segments tel que la pile (Stack) ou le tas (Heap). Ces segments sont des plages mémoires continues gérées par le système d'exploitation. Dans le cas d'un processus Linux les segments sont réparti ainsi :
+L'espace réserver au processus est ensuite découpé en différents segments tel que la pile (Stack) ou le tas (Heap). Ces segments sont des plages mémoires continues gérées par le système d'exploitation. Dans le cas d'un processus Linux les segments sont réparti ainsi :
 
 \begin{figure}[H]
 	\centering
@@ -38,13 +40,15 @@ L'espace réserver au programme est ensuite découpé en différents segments te
 	\label{fig:linuxClassicAddressSpaceLayout}
 \end{figure}
 
-La pile d'exécution permet de gérer le flôt de contrôle de l'application. À chaque appel de fonction, une nouvelle structure de pile (Stack frame) est ajoutée à la pile d'exécution et est ensuite retirée lorsque la fonction se termine. La pile d'exécution grandit vers le bas, c'est-à-dire que les adresses mémoires décroissent lorsque la pile se rempli. Il est possible que la pile veuille s'étende au-delà de sa taille maximum, c'est ce que l'on appele un dépassement de pile (Stack overflow) et dans ce cas le programme reçoit une erreur de segmentation (Segmentation fault).
+\vfill
+
+La pile d'exécution permet de gérer le flôt de contrôle de l'application. À chaque appel de fonction, une nouvelle structure de pile (Stack frame) est ajoutée à la pile, puis est retirée lorsque la fonction se termine. La pile d'exécution grandit vers le bas, c'est-à-dire que les adresses mémoires décroissent lorsque la pile se rempli. Il est possible que la pile veuille s'étende au-delà de sa taille maximum, c'est le cas du dépassement de pile (Stack overflow). Dans ce cas, le programme reçoit une erreur de segmentation (Segmentation fault) et s'arrête.
 
 Le segment \og Memory Mapping Region \fg permet au noyau de copier en mémoire le contenu de certains fichiers de manière à augmenter les performances. Ce segment est généralement utilisé pour charger les librairies dynamiques. Il peut aussi être utilisé à d'autres fins, par exemple à la place d'utiliser le tas pour stocker certaines données.
 
-En dessous se trouve le tas, permettant de stocker en mémoire les allocations dynamiques. En C ce segment est géré par la fonction \mintinline{c}|malloc()| et confrères. Dans d'autres langages bénéficiant d'un ramasse miettes tel que le C\#, l'interface pour intéragir avec le tas est le mot reservé \mintinline{c}|new|.
+En dessous se trouve le tas, permettant de stocker en mémoire les allocations dynamiques. En C ce segment est géré par la fonction \mintinline{c}|malloc()| et ses confrères. Dans d'autres langages bénéficiant d'un ramasse miettes, tel que le C\#, l'interface pour intéragir avec le tas est le mot reservé \mintinline{c}|new|.
 
-Finalement les trois derniers segments que sont BSS, Data et Text servent a stocker les variables static initialisées ou non ainsi que la source du binaire executé. En \autoref{fig:mappingBinaryImage} un exemple de ce que l'on peut retrouver dans ces segments:
+Finalement les trois derniers segments que sont BSS, Data et Text servent a stocker les variables statiques initialisées ou non ainsi que la source du binaire executé. En \autoref{fig:mappingBinaryImage} un exemple de ce que l'on peut retrouver dans ces segments:
 
 \begin{figure}[H]
 	\centering
@@ -55,7 +59,7 @@ Finalement les trois derniers segments que sont BSS, Data et Text servent a stoc
 	\label{fig:mappingBinaryImage}
 \end{figure}
 
-Lors de l'exécution d'un programme, cette espace virtuel de mémoire est géré par le système d'exploitation grâce à des descripteurs de mémoire (Memory Descriptor). Cette structure contient les adresses de début et de fin de chaque segments.
+Lors de l'exécution d'un programme, cette espace mémoire est géré par le système d'exploitation grâce à des descripteurs de mémoire (Memory Descriptor). Cette structure contient les adresses de début et de fin de chaque segments.
 
 \begin{figure}[H]
 	\centering
@@ -66,11 +70,13 @@ Lors de l'exécution d'un programme, cette espace virtuel de mémoire est géré
 	\label{fig:mm_struct}
 \end{figure}
 
-Cette structure est constituée d'une suite de plus petites structures appelées \mintinline{c}{vm_area_struct}. Chacune d'elles est un espace continu en mémoire. Elles permettent de stocker des informations tels que les droits d'écriture et de lecture ou encore les droits d'execution. Elles stockent également si et quel fichier est copié en mémoire.
+\subsection{Descripteurs mémoires}
+
+Cette structure globale est constituée d'une suite de plus petites structures appelées \mintinline{c}{vm_area_struct}. Chacune d'elles est un espace continu en mémoire. Elles permettent de stocker des informations tels que les droits d'écriture, de lecture ou encore les droits d'execution du contenu mémoire. Elles stockent également si et quel fichier est copié en mémoire.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.9\columnwidth]{memoryDescriptorAndMemoryAreas}
+	\includegraphics[width=0.8\columnwidth]{memoryDescriptorAndMemoryAreas}
 	\captionsource{Structure des espaces virtuels de mémoire (Virtual Memory Area)}
 	{Structure des espaces virtuels de mémoire (Virtual Memory Area), par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/}}
@@ -80,38 +86,73 @@ Cette structure est constituée d'une suite de plus petites structures appelées
 % ---------------------------------------------------------------------------
 \section{Buffer overflow}
 
-Le buffer overflow, dépassement de tampon en français, consiste à exploiter une fonction qui ne vérifie par la taille du contenu à copier en mémoire. En utilisant, par exemple, \mintinline{c}{strcpy()}, on peut redéfinir l'adresse de retour de la fonction et ainsi modifier le flôt de contrôle de l'application en le redirigeant à un endroit où l'attaquant aura, par exemple, péalablement injecté son code (p.ex. un shellcode).
+Le buffer overflow, dépassement de tampon en français, consiste à exploiter une fonction qui ne vérifie par la taille du contenu à copier en mémoire. En utilisant, par exemple, \mintinline{c}{strcpy()}, on peut redéfinir l'adresse de retour de la fonction et ainsi modifier le flôt de contrôle de l'application en le redirigeant à un endroit où l'attaquant aura, par exemple, péalablement injecté du code (shellcode).
 
-Lorsqu'une \og Stack frame \fg est créée, celle-ci stocke dans un schéma particulier les informations d'ont elle a besoin:
+\subsection{Stack frame}
+
+Lorsqu'une \og Stack frame \fg est créée, celle-ci stocke dans un schéma particulier les informations d'ont elle a besoin. Les premières ayant des adresses plus grandes en mémoires que les dernières. La séquence suivante est exécutée à chaque appel de fonction:
 
 \begin{enumerate}
 	\item les paramètres passé à la fonction
-	\item l'adresse de retour
-	\item une sauvegarde du pointeur \mintinline{c}{%ebp}
-	\item et les variables locales
+	\item l'adresse de retour, équivallant à l'adresse d'appele de la fonction
+	\item une sauvegarde du pointeur \mintinline{c}{%ebp} pour restaurer la frame précédente
+	\item puis les variables locales déclarée au sein de la fonction
 \end{enumerate}
 
-Cela permet, en dépassant la taille des variables locales, de modifier des zones mémoires qui ne devraient pas l'être. En regardant la \autoref{fig:stackIntro} on constate que si l'on écrit (8+4+4+4) = 20 octets dans le \mintinline{c}{local_buffer}, les 4 derniers octets auront remplacé l'adresse de retour.
+Le code d'exemple \autoref{lst:stack_example} contient une fonction \mintinline{c}{func()} qui est appelée avec deux arguements, 512 et 65536, et qui déclare des variables locales. La \autoref{fig:stackIntro} illustre l'état de la pile à la fin de la ligne 6, avant le retour de la fonction.
+
+\begin{listing}
+	\cfile{02-main/listings/stack.c}
+	\caption{Exemple de programme illustrant la gestion de la pile d'exécution}
+	\label{lst:stack_example}
+\end{listing}
+
+Les deux arguements de 4~bytes (en orange) sont d'abord mis sur la pile, l'adresse de retour ainsi que l'ancienne valeur de \mintinline{c}{%ebp} de 4~bytes [adressage en 32~bits] (en bleu claire) sont ensuite sauvées, puis les deux variables locales, 4~bytes pour l'entier et 8~bytes pour le \mintinline{c}{local_buffer} (en vert à droite) sont crées.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\columnwidth]{stackIntro}
 	\captionsource{Exemple d'une Stack frame}
-	{Exemple d'une structure de pile (Stack frame)}
+	{Exemple d'une structure de pile (Stack frame), par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/journey-to-the-stack/}}
 	\label{fig:stackIntro}
 \end{figure}
 
-Le code C montré en \autoref{lst:buffer_overflow} illustre un programme vulnérable aux dépassements de tampon en utilisant la fonction \mintinline{c}{strcpy()}. Dans cette exemple trivial il est possible d'injecter un shellcode dans le buffer et de redéfinir l'adresse de retour. On part du principe qu'aucun mécanismes de protection ne sont appliqués à la compilation. La chaîne de caractères copiée dans le \mintinline{c}{local_buffer} est directement contrôlée par l'utilisateur, ce qui rend la manoeuvre encore plus facile.
+On constat alors que l'adresse de départ du \mintinline{c}{local_buffer} est inférieur de 16~bytes à l'adresse stockant l'adresse de retour. Cette différence est déterministe et ne changera jamais lors de l'exécution.
+
+\vfill
+
+\subsection{Exemple}
+
+Grâce à cette structure, au fait que la pile grandit avec des adresses décroissantes ainsi que l'utilisation de fonction tel que \mintinline{c}{strcpy()}, il est possible, en dépassant la taille des variables locales, de modifier des zones mémoires tel que l'adresse de retour. Le code montré en \autoref{lst:buffer_example} permet d'illustrer un cas d'exploitation de la fonction \mintinline{c}{gets()} (fonction vulnérable car elle ne s'arrête que lorsqu'elle rencontre une retour à la ligne ou une \gls{eof}).
 
 \begin{listing}
 	\cfile{02-main/listings/buffer.c}
-	\caption{Exemple de programme vulnérable aux dépassements de tampon}
-	\label{lst:buffer_overflow}
+	\caption{Exemple de programme illustrant un dépassement de tampon}
+	\label{lst:buffer_example}
 \end{listing}
 
-Les mécanismes de protection décrit dans la suite de ce chapitre doivent prévenir l'exploitation de l'exemple montré en \autoref{lst:buffer_overflow} sans obligé le développeur à modifier son code d'une quelconque manière.
+En regardant la \autoref{fig:bufferCopy} on constate que si l'on écrit 28+4+4 bytes = 36 bytes dans le \mintinline{c}{buffer}, les 4 derniers bytes auront remplacé l'adresse de retour.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{bufferCopy}
+	\captionsource{Exemple de Stacke frame avant un dépassement de tampon}
+	{Exemple de Stacke frame avant un dépassement de tampon, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/epilogues-canaries-buffer-overflows/}}
+	\label{fig:bufferCopy}
+\end{figure}
+
+Dans cette exemple, il est possible d'injecter un shellcode dans le \mintinline{c}{buffer} grâce à la fonction \mintinline{c}{gets()}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{bufferOverflowExploit}
+	\captionsource{Illustration de l'état de la pile au moment d'un dépassement de tampon}
+	{Illustration de l'état de la pile au moment d'un dépassement de tampon, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/epilogues-canaries-buffer-overflows/}}
+	\label{fig:bufferOverflowExploit}
+\end{figure}
 
 \vfill
 
@@ -133,7 +174,7 @@ Une pile non-exécutable ne permet plus à l'attaquant d'exécuter son code, mai
 Grâce à la fonction \mintinline{c}{system()} présente au sein de \textbf{libc}, il est possible d'exécuter arbitrairement un programme. Lors de l'attaque on localise, par exemple, une chaîne de caractères tel que \mintinline{c}{"/bin/sh"}, que l'on prépare comme étant le paramètre à passer à la fonction \mintinline{c}{system()}.
 
 % ---------------------------------------------------------------------------
-\section{ASLR (Address space layout randomization)}
+\section{ASLR}
 
 Comme montré sur la \autoref{fig:mappingBinaryImage}, l'espace d'adressage virtuel est structuré de manière fixe. Les emplacements mémoires sont donc inchagés à chaque exécution du programme. De cette manière il est possible de prévoir où se trouve en mémoire les différents composants dont a besoin l'attaque. Une attaque de type \textbf{\og return-to-libc \fg} a besoin de connaître l'adresse de la fonction \mintinline{c}{system()} et de la chaine de caractères \mintinline{c}{"/bin/sh"}. Dans le cas où ces adresses changent à chaque lancement, la tâche devient plus compliquée.
 
@@ -145,7 +186,7 @@ Depuis juin 2005, l'Address Space Layout Randomization est supportée dans le no
 	\centering
 	\includegraphics[width=1\columnwidth]{linuxFlexibleAddressSpaceLayout}
 	\captionsource{Concept de l'Address space layout randomization sous Linux en 32 bits}
-	{Concept de l'Address space layout randomization sous Linux en 32 bits}
+	{Concept de l'Address space layout randomization sous Linux en 32 bits, par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/}}
 	\label{fig:linuxFlexibleAddressSpaceLayout}
 \end{figure}
@@ -154,15 +195,11 @@ La \autoref{fig:linuxFlexibleAddressSpaceLayout} montre bien qu'en 32~bits, l'es
 
 Malgré cela, les chercheurs Hector Marco-Gisbert et Ismael Ripoll de l'université de Valence ont écrit un papier démontrant une faiblesse d'\gls{aslr} en 64~bits sous certaines hypothèses \cite{EffectivenessFullASLR64bit}.
 
-\vfill
-
 \subsection{Limitation et contournements}
 
-Sur un OS 32 bits, la marge de manoeuvre laissée au décalage n'est pas très grande. Seule une partie des bits de l'adresse mémoire est utilisée, ce qui laisse possible une attaque de recherche exaustive réussir en quelques milliers d'essais seulement. En effet la pile est placée aléatoirement avec une entropie de 19 bits seulement et le segment de Memory Mapping avec 8 bits.
+Sur un OS 32 bits, la marge de manoeuvre laissée au décalage n'est pas très grande. Seule une partie des bits de l'adresse mémoire est utilisée, ce qui laisse possible une attaque de recherche exaustive réussir en quelques milliers d'essais seulement. En effet la pile est placée aléatoirement avec une entropie de 19 bits seulement et le segment de Memory Mapping avec 8~bits.
 
-L'exemple \autoref{lst:bruteforce_aslr} montre comment avec un code python d'une trentaine de lignes il est possible de faire une recherche exhaustive en 32 bits et d'exécuter un shellcode dans un programme n'utilisant pas \gls{dep}/\gls{nx} et les \gls{stackCookies} .
-
-\newpage
+L'exemple \autoref{lst:bruteforce_aslr} montre comment avec un code python d'une trentaine de lignes il est possible de faire une recherche exhaustive en 32 bits et d'exécuter un shellcode dans un programme n'utilisant pas \gls{dep}/\gls{nx} et les \gls{stackCookies}.
 
 \begin{listing}
 	\pythonfile{02-main/listings/aslrBruteforce.py}
@@ -170,45 +207,64 @@ L'exemple \autoref{lst:bruteforce_aslr} montre comment avec un code python d'une
 	\label{lst:bruteforce_aslr}
 \end{listing}
 
-La cas \autoref{lst:bruteforce_aslr} illustre aussi l'utilisation de l'opération \mintinline{python}{"\x90"} indiquant au processeur de passer à l'instruction suivante. En définissant une taile de 4096 bytes de NOP (No Operation) ont augmente drastiquement les chances de tomber sur le shellcode.
+Ce code est tiré du blog Sirius CTF \cite{ExploitingSimpleBufferOverflow} et illustre l'utilisation de l'opération \mintinline{python}{"\x90"} indiquant au processeur de passer à l'instruction suivante. En définissant une taile de 4096 bytes de \gls{nop} on augmente drastiquement les chances de tomber sur le shellcode. La \autoref{fig:bufferOverflowExploit} montre l'état de la pile lors d'un dépassement de tampon avec utilisation de l'instruction \gls{nop}.
+
+Le but premier d'\gls{aslr} est de venir contré la prédictivité de l'emplacement des segments. On constate qu'aucun décalage n'est appliqué au segments BSS, Data et Text, ce qui est tout à fait normal. Cependant, cela laisse la prédictibilité de l'emplacement du code source du programme et permet donc les attaques de type \gls{rop}.
+
+\vfill
 
 % ---------------------------------------------------------------------------
 \section{Stack canaries}
 
-Les \og Stack canaries \fg ou \og \gls{stackCookies} \fg sont des valeurs déposées sur la pile d'exécution après la valeur de retour lors de l'appel d'une fonction. Le nom \og canaries \fg vient par analogie des canaris que l'on plaçait dans le mine pour prévenir les fuites de monoxyde de carbone. Ces oiseaux étant petit et vite atteint par les effets du gaz, ils donnaient rapidement l'informations \cite{StackCanaries} \cite{SentinelSpecies}.
+Les \gls{stackCanaries} ou \gls{stackCookies} sont des valeurs déposées sur la pile d'exécution après la valeur de retour lors de l'appel d'une fonction. Le nom \og canaries \fg vient par analogie des canaris que l'on plaçait dans le mine pour prévenir les fuites de monoxyde de carbone. Ces oiseaux étant petit et vite atteint par les effets du gaz ils donnaient rapidement l'informations aux mineurs qu'un danger était présent \cite{StackCanaries} \cite{SentinelSpecies}.
 
-Le fonctionnement des \og stack canaries \fg est pareil, la valeur du canari est vérifiée lors de l'épilogue de la function et si celle-ci ne correspond pas à la valeur du canari d'origine, alors la tentative de dérouter le flôt de contrôle de l'application est détectée, on peut alors réagir en concéquence.
+Le fonctionnement des \gls{stackCanaries} est pareil, la valeur du canari est vérifiée lors de l'épilogue de la function et si celle-ci ne correspond pas à la valeur du canari d'origine, alors la tentative de dérouter le flôt de contrôle de l'application est détectée, on peut alors réagir en concéquence \cite{EpiloguesCanariesBufferOverflows}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{bufferCanary}
+	\captionsource{Illustration de l'état de la pile protégée par un canari}
+	{Illustration de l'état de la pile protégée par un canari, par G.~Duarte}
+	{\url{http://duartes.org/gustavo/blog/post/epilogues-canaries-buffer-overflows/}}
+	\label{fig:bufferCanary}
+\end{figure}
 
 \subsection{Implémentation}
 
-Il existe trois types de canaris: terminator, random, and random XOR. Les canaris de type terminator se base sur le constat que l'exploitation d'un dépassement de tampon est une opération sur un chaîne de caractères. De ce fait, si le canari est constitué de caractères tels que null, CR, LF ou encore -1, alors la fonction \mintinline{c}{strcpy()} se terminera avant de réécrire l'adresse de retour. Le désavantage notable de cette méthode se trouve dans le fait que l'attaquant connait la valeur du canari.
+Il existe trois types de canaris: \textbf{terminator}, \textbf{random}, and \textbf{random XOR} \cite{BufferOverflowProtection}. Les canaris de type terminator se base sur le constat que l'exploitation d'un dépassement de tampon est une opération sur un chaîne de caractères. De ce fait, si le canari est constitué de caractères tels que null, CR, LF ou encore -1, alors la fonction \mintinline{c}{strcpy()} ou \mintinline{c}{gets()} se terminera avant de réécrire l'adresse de retour. Le désavantage notable de cette méthode se trouve dans le fait que l'attaquant connait la valeur du canari.
 
-Le random canari est générée aléatoirement afin de palier au problème des terminator canaris, généralement le canari est tiré à l'initialisation du programme et est stocké dans une variable globale.
+Le random canari est générée aléatoirement afin de palier au problème du terminator. Généralement le canari est tiré à l'initialisation du programme et est stocké dans une variable globale.
 
 Le random XOR canari est une méthode un peu plus élaborée, elle fonctionne de la même manière que le random canari mais est en plus calculée en fonction de tout ou partie du programme ce qui rend encore plus difficile pour l'attaquant de forger un canari valide.
 
+L'application de la protection par canaries au sein de Clang/LLVM peut se faire grâce au composant \og StackProtector \fg \cite{LLVMStackProtector}. Il existe aussi d'autres composants, tel que \og AddressSanitizer \fg \cite{AddressSanitizer}, qui permettent de gérer les problèmes liés à la mémoire. Ce composant est composé d'une analyse à la compilation ainsi que d'une librairie utilisée lors de l'exécution.
+
 \subsection{Limitation et contournements}
 
-Dans les deux premières implémentations (terminator, random), il est possible de contourner les canaris en récupérant leur valeur. Ce qui peut être fait directement sur la pile d'exécution grâce au contrôle, par exemple, des paramètres d'une fonction tel que \mintinline{c}{printf()}.
+Dans les deux premières implémentations (terminator, random), il est possible de contourner les canaris en récupérant leur valeur. Ce qui peut être fait directement sur la pile d'exécution grâce au contrôle, par exemple, des paramètres d'une fonction tel que \mintinline{c}{printf()} qui nous permet de lire en mémoire grâce au format \mintinline{c}{%p}.
 
 Dans le cas d'un canari de type random XOR, si l'adresse de retour est modifiée, alors la valeur du canari change, car elle dépend de la valeur aléatoire de départ et des données sur la pile d'exécution. L'exploitation alors est plus complexe à mettre en place mais est toujours possible.
 
 % ---------------------------------------------------------------------------
 \section{Control-Flow integrity}
 
-Le \og Control-Flow integrity \fg est un concept dont l'implémentation est disponible au sein de Clang \cite{ControlFlowIntegrity} permettant, par analyse statique, de définir les changements possibles du flôt de contrôle de l'application pour ensuite valider ou non les changements effectifs lors de l'exécution du programme.
+Le \gls{cfi} \cite{CFIPaper} est un concept permettant, par analyse statique, de définir les changements possibles du flôt de contrôle de l'application, appelé \gls{cfg}, pour ensuite valider ou non le changement effectif lors de l'exécution du programme. Le papier original démontrant l'approche, déposé en 2005, est généralement attribué au centre de recherche de Microsoft. Depuis, de nombreux papiers ont été publiés améliorant les perfromances ou modifiant légérement l'approche.
+
+Actuellement le concept de \gls{cfi} est implémenté au sein de Clang \cite{ControlFlowIntegrity} \cite{TalkAboutCFIClang} sous le nom de \og Forward-Edge CFI \fg \cite{ControlFlowIntegrityDesignDocumentation}. Dans la section de documentation dédiée, un example de coût en performence de 15\% est relevé sur Chromium. On peut également constaté, dans d'autre sources de la litérature, que l'approche classic impose un coût de 16\% en moyenne et de 45\% dans le pire des cas \cite{ControlFlowIntegrityMaryland}. Ce qui en fait la principale faiblesse de cette approche.
+
+Les principales variations du concept se font sur la granularité choisie lors de la construction du \gls{cfg}. Deux \og modèles \fg émérge et se généralises: \og Fine-grained CFI \fg et \og Coarse-grained CFI \fg.
+
+\subsection{Fine-grained CFI}
+
+\og Fine-grained CFI \fg \cite{FineCFI} \cite{FineCFIKernel}, comme son nom l'indique, a une approche précise lors de la construction du \gls{cfg}. Chaque élément du graphe est labélisé de manière précise et lors de l'exécution du programme, à chaque changement du flôt de contrôle on vérifie si la destination labélisée correspond à un label voisin de l'élément de départ. Cependant cette manière de faire amène, par ces nombreuses vérifications, un coût important en terme de performances.
 
 \subsection{Coarse-grained CFI}
 
-\og Coarse-grained CFI \fg est une méthode créant un graphe de l'entierté du flôt de contrôle de l'application. Chaque élément du graphe est labélisé de manière unique. Lors de l'exécution du programme, à chaque changement du flôt de contrôle on vérifie si la destination labélisée correspond à un label voisin de l'élément de départ.
+\og Coarse-grained CFI \fg est une approche plus simple quant à la labélisation du \gls{cfg},  et donc plus performante, mais ouvrant la porte la certaines faiblesses. Les points de contrôle de l'application son labélisés de manière à obtenir le nombre restreint de labels. Ceux-ci sont alors réutilisés au sein du même graphe, de ce fait il est possible de partir d'un point A et aller au point C alors que cela n'est pas prévu, mais par cause d'une labélisation non unique l'erreur n'est pas détectée.
 
-Cette manière de faire amène, par ces nombreuses vérifications, un coût important en terme de performances. C'est pourquoi une variante moins coûteusse existe.
+\section{Résumé}
 
-\subsection{Finest-grained CFI}
-
-\og Finest-grained CFI \fg est une variante de \og Coarse-grained CFI \fg plus simple et donc plus performante mais ouvrant la porte la certaines attaques. Afin d'alléger les vérifications, les points de contrôle de l'application son labélisés de manière à obtenir le nombre le plus petit de labels nécessaire afin que chaque élément du graphe aie des voisins aux labels uniques.
-
-De ce fait il est possible de partir d'un point A et aller au point C alors que cela n'est pas prévu, mais par cause d'une labélisation non unique l'erreur n'est pas détectée.
+Il existe à ce jour une multitude de concepts ayant pour mission d'entravé ou de rallentir les attaques visant le flôt de contrôle d'une application. Ces concepts gérent, individuellement, qu'une partie de la problèmatique et sont donc généralement appliqués conjointement. Mais aujourd'hui il n'existe pas encore de mécanisme permettant de garantir seul à 100\% l'intégritée du flôt sans engagé des coûts trop important en performance, rendant son utilisation impossible dans un environement de production.
 
 % \newpage
 
