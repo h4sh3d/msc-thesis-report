@@ -23,6 +23,18 @@
 	description={Address Space Layout Randomization, technique permettant de rendre aléatoire la position des ségments mémoires}
 }
 
+\newglossaryentry{cg-cfi}
+{
+	name=Coarse-grained CFI,
+	description={Coarse-grained CFI est une implémentation simplifiée du principe de Control-Flow integrity, échangeant sécurité contre plus de performances}
+}
+
+\newglossaryentry{fg-cfi}
+{
+	name=Finest-grained CFI,
+	description={Finest-grained CFI est une implémentation plus complète du principe de Control-Flow integrity. Garantissant une bonne sécurité mais ayant un coût élevé en performances}
+}
+
 \newglossaryentry{dep}
 {
 	name=DEP,
@@ -50,7 +62,7 @@
 \newglossaryentry{levee}
 {
 	name={Levee},
-	description={Levee est une implémentation des concepts de protection CPI/CPS et SafeStack. Actuellement, mai 2017, une partie du projet a été intégré au sein de LLVM sous le nom de Safe Stack}
+	description={Levee est une implémentation des concepts de protection CPI, CPS et Safe Stack. Actuellement, mai 2017, une partie du projet a été intégré au sein de LLVM sous le nom de Safe Stack}
 }
 
 \newglossaryentry{llvm}
@@ -72,7 +84,7 @@
 
 \newacronym{epfl}{EPFL}{École polytechnique fédérale de Lausanne}
 \newacronym{nop}{NOP}{No Operation}
-\newacronym{cfg}{CFG}{Control-Flow Graph}
+\newacronym{cfg}{CFG}{Control-Flow graph}
 \newacronym{cfi}{CFI}{Control-Flow integrity}
 \newacronym{eof}{EOF}{End Of File}
 \newacronym{rop}{ROP}{Return Oriented Programming}
