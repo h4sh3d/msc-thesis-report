@@ -59,24 +59,24 @@ Finalement les trois derniers segments que sont \og BSS \fg, \og Data \fg et \og
 	\label{fig:mappingBinaryImage}
 \end{figure}
 
+\subsection{Descripteurs mémoires}
+
 Lors de l'exécution d'un programme, cet espace mémoire est géré par le système d'exploitation grâce à des descripteurs de mémoire appelés \og Memory Descriptor \fg. Cette structure contient les adresses de début et de fin de chaque segments.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.6\columnwidth]{mm_struct}
+	\includegraphics[width=0.5\columnwidth]{mm_struct}
 	\captionsource{Descripteur de mémoire d'un processus Linux}
 	{Descripteur de mémoire d'un processus Linux, par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/}}
 	\label{fig:mm_struct}
 \end{figure}
 
-\subsection{Descripteurs mémoires}
-
 Cette structure globale est constituée d'une suite de plus petites structures appelées espaces virtuels de mémoire \og Virtual Memory Area \fg, \mintinline{c}{vm_area_struct} sur la \autoref{fig:memoryDescriptorAndMemoryAreas}. Chacune d'elles est un espace continu en mémoire et permettent de stocker des informations tels que les droits d'écriture, de lecture ou encore les droits d'exécution du contenu mémoire. Elles stockent également si et quel fichier est mappé en mémoire.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8\columnwidth]{memoryDescriptorAndMemoryAreas}
+	\includegraphics[width=0.7\columnwidth]{memoryDescriptorAndMemoryAreas}
 	\captionsource{Structure des espaces virtuels de mémoire}
 	{Structure des espaces virtuels de mémoire, par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/}}
