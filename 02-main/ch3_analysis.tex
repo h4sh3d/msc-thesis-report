@@ -70,12 +70,6 @@ Le coût en performance dépend directement de l'heuristique et de sa récursion
 
 Afin de garantir l'intégrité de l'ensemble des pointeurs sensibles, une zone mémoire appelée \textit{safe region} est créée, voir \autoref{fig:safeRegionLayout}. Cette région est isolée et ne peut être accédée que via des instructions fournies par \gls{cpi}. Cela permet de garantir l'intégrité et la propagation des métadonnées au sein de la région. Elle est ensuite constituée d'un \og Safe pointer store \fg, pour les pointeurs sensibles, et de \og Safe stacks \fg, pour une gestion plus spécifique liée à la pile d'exécution, voir \autoref{section:safeStack}. Seule une des deux copie est utilisée suivant le type du pointeur en question.
 
-Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les métadonnées de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Les métadonnées sont constituées de l'adresse de départ et de fin de l'objet au sein de la mémoire standard ainsi que d'un identifiant temporaire de l'objet en question. L'approche est similaire à celle utilisée au sein de SoftBounds+CETS TODO REF à la différence prêt que \gls{cpi} stocke également la valeur
-
-% on stocke l'adresse du pointeur dans la région standard ainsi que ca valeur = deux adresses
-% TODO figure montrant qu'est ce qui est stocké et les liens
-
-
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\columnwidth]{safeRegionLayout}
@@ -84,6 +78,12 @@ Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les m�
 	{\url{http://dslab.epfl.ch/pubs/cpi.pdf}}
 	\label{fig:safeRegionLayout}
 \end{figure}
+
+Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les métadonnées de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Les métadonnées sont constituées de l'adresse de départ et de fin de l'objet au sein de la mémoire standard ainsi que d'un identifiant temporaire de l'objet en question. L'approche est similaire à celle utilisée au sein de SoftBounds+CETS TODO REF à la différence prêt que \gls{cpi} stocke également la valeur
+
+% on stocke l'adresse du pointeur dans la région standard ainsi que ca valeur = deux adresses
+% TODO figure montrant qu'est ce qui est stocké et les liens
+
 
 Lors de la phase d'instrumentation, des instructions sont rajoutées afin d'initialiser l'espace mémoire des pointeurs sensibles dans les deux régions.
 
