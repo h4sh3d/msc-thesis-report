@@ -64,11 +64,11 @@ Cet ensemble de types peut être adapté, étandu, suivant les besoins du progra
 
 En effectuant des test, les chercheurs se sont rendu compte que l'analyse heuristique mettait en avant un ensemble de pointeurs correspondant en moyenne à $6.5\%$ de l'ensemble global. Ce chiffre met en avant l'impact sur l'efficacité qu'a cette approche.
 
-Le coût en performance dépend directement de l'heuristique et de sa récursion. L'équipe mentione elle-même que toutes heuristiques donnant un ensemble approximé cohérent peut être utilisé. Des améliorations peuvent encore être attendues sur ce point. Le second avantage majeur de cette approche est que l'on peut facillement imaginer une nouvelle heuristique permettant de proteger un autre ensemble de pointeurs, pour par exemple protéger une partie des données au sein du programme.
+Le coût en performance dépend directement de l'heuristique et de sa récursion. L'équipe mentione elle-même que toutes heuristiques donnant un ensemble approximé cohérent peuvent être utilisées. Des améliorations peuvent encore être attendues sur ce point. Le second avantage majeur de cette approche est que l'on peut facillement imaginer une nouvelle heuristique permettant de protéger un autre ensemble de pointeurs, pour par exemple protéger une partie des données au sein du programme.
 
 \subsection{Zone de mémoire sûre (safe region)}
 
-Afin de garantir l'intégrité de l'ensemble des pointeurs sensibles, une zone mémoire appelée \textit{safe region} est créée, voir \autoref{fig:safeRegionLayout}. Cette région est isolée et ne peut être accédée que via des instructions fournies par \gls{cpi}. Cela permet de garantir l'intégrité et la propagation des métadonnées au sein de la région. Elle est ensuite constituée d'un \og Safe pointer store \fg, pour les pointeurs sensibles, et de \og Safe stacks \fg, pour une gestion plus spécifique liée à la pile d'exécution, voir \autoref{section:safeStack}. Seule une des deux copie est utilisée suivant le type du pointeur en question.
+Afin de garantir l'intégrité de l'ensemble des pointeurs sensibles, une zone mémoire appelée \og \textit{safe region} \fg est créée, voir \autoref{fig:safeRegionLayout}. Cette région est isolée et ne peut être accédée que via des instructions fournies par \gls{cpi}. Cela permet de garantir l'intégrité et la propagation des métadonnées. Elle est ensuite constituée d'un \og \textit{safe pointer store} \fg, pour les pointeurs sensibles, et de \og \textit{safe stacks} \fg, pour une gestion plus spécifique liée à la pile d'exécution, voir \autoref{section:safeStack}. Seule une des deux copies est utilisée suivant le type du pointeur en question.
 
 \begin{figure}[H]
 	\centering
@@ -79,22 +79,30 @@ Afin de garantir l'intégrité de l'ensemble des pointeurs sensibles, une zone m
 	\label{fig:safeRegionLayout}
 \end{figure}
 
-Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les métadonnées de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Les métadonnées sont constituées de l'adresse de départ et de fin de l'objet au sein de la mémoire standard ainsi que d'un identifiant temporaire de l'objet en question. L'approche est similaire à celle utilisée au sein de SoftBounds+CETS TODO REF à la différence prêt que \gls{cpi} stocke également la valeur
+Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les métadonnées de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Les métadonnées sont constituées de l'adresse de départ et de fin de l'objet au sein de la mémoire standard ainsi que d'un identifiant temporaire de l'objet en question. L'approche est similaire à celle utilisée au sein de SoftBounds+CETS \cite{SoftBound} à la différence prêt que \gls{cpi} stocke également la valeur du pointeur.
+
+\gls{cpi} garanti (i) que tout les pointeurs sensibles sont stockés dans la \og \textit{safe region} \fg, (ii) que la création et la modification lors de l'exécution de pointeurs sensible soit propagée et (iii) que toutes les indirections ou les déréférences soient vérifiées grâce au métadonnées. Afin d'y parvenir, \gls{cpi}, lors de la phase de compilation, réécrit les instructions de création et d'accès de l'ensemble des pointeurs sensibles.
 
 % on stocke l'adresse du pointeur dans la région standard ainsi que ca valeur = deux adresses
 % TODO figure montrant qu'est ce qui est stocké et les liens
 
-
-Lors de la phase d'instrumentation, des instructions sont rajoutées afin d'initialiser l'espace mémoire des pointeurs sensibles dans les deux régions.
-
-
- Les opérations effectuées sur les pointeurs sensibles sont réécrite afin
-
 \subsection{Isolation de la zone de mémoire sûre}
 
+Une fois les metadonnées et les \og \textit{safe stacks} \fg placées au sein de la région sûre, il faut pouvoir garantir leur intégrité. Pour ce faire cette région doit être isolée du reste de la mémoire et il ne doit pas être possible de la modifier sans passer par les instructions fournies par \gls{cpi}. Ce mécanisme de protection est directement dépendant de l'architecture pour laquelle le binaire est compilé.
 
 \subsubsection{Architecture 32~bits}
+
+Dans le cas d'une architecture x86-32 la \og \textit{safe region} \fg est isolée grâce à l'utilisation des ségments mémoires. Un ségment mémoire n'étant pas utilisé au sein du programme est utilisé par \gls{cpi} afin de stocké l'adresse de base de la \og \textit{safe region} \fg. Les autres ségments sont configurés afin de rendre l'accès à la région sûre impossible.
+
+\textit{TODO définition des ségments, exemple d'utilisation etc... tout la sécu se base la dessus. Sinon ca revient à de l'ASLR}
+
+La preuve de sécurité sous cette architecture repose sur le fait qu'il n'est pas possible, lors de l'exécution, d'atteindre ou de modifier le ségment qui contient la région de mémoire sûre.
+
 \subsubsection{Architecture 64~bits}
+
+Sur une architecture x86-64 la limitation des ségments n'est plus là, mais l'architecture met toujours à disposition deux registres de ségments mémoire. \gls{cpi} utilise l'un des deux ségments pour stocker l'adresse mémoire de base pour la \og \textit{safe region} \fg. Cette adresse de base est tirée aléatoirement lors du lancement de l'application, ce qui ressemble fortement à l'approche d'\gls{aslr} expliquée en \autoref{section:aslr}. Cependant, la différence mentionée dans le papier est qu'il n'éxiste aucun pointeur vers la \og \textit{safe region} \fg au sein de la région standard, ce qui fait qu'il n'est pas possible de remonter jusqu'à l'adresse de base. Les 48~bits d'adressage offre donc une sécurité suffisante et rende impraticable une attaque de type \og recherche éxaustive \fg.
+
+La preuve de sécurité, sous cette architecture x86-64, est donc basée sur des informations cachées. Ils mentionnent le fait que leur model est \og leak-proof \fg, à la différence d'\gls{aslr}, grâce à l'absence de pointeur vers la \og \textit{safe region} \fg lors de l'éxecution.
 
 
 \section{CPS (Code-pointer separation)}

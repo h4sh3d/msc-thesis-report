@@ -175,6 +175,7 @@ Grâce à la fonction \mintinline{c}{system()} présente au sein de \textbf{libc
 
 % ---------------------------------------------------------------------------
 \section{ASLR}
+\label{section:aslr}
 
 Comme montré sur la \autoref{fig:mappingBinaryImage}, l'espace d'adressage virtuel est structuré de manière fixe. Les emplacements mémoires sont donc inchangés à chaque exécution du programme. De cette manière il est possible de prévoir où se trouve en mémoire les différents composants dont a besoin l'attaque. Une attaque de type \textbf{\og return-to-libc \fg} a besoin de connaître l'adresse de la fonction \mintinline{c}{system()} et de la chaîne de caractères \mintinline{c}{"/bin/sh"}. Dans le cas où ces adresses changent à chaque lancement, la tâche devient plus compliquée.
 
