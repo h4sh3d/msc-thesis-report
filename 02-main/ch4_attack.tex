@@ -1,7 +1,9 @@
 \chapter{Proof of Concept d'une attaque}
 \label{chap:attaque}
 
-SafeStack doit normalement prévenir les attaques de types XXX. Dans ce chapitre un proof of concept d'une telle attaque est décrit ainsi que les moyens mis en oeuvre par SafeStack pour la bloquée.
+L'implémentation de \gls{safeStack} au sein de \gls{llvm} doit permettre de prévenir les attaques de types \gls{rop}. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code. Afin de rendre plus portable et reproductible cette phase de test, un environement Docker est mis en place. L'environement est détaillé dans la \autoref{section:contexte}.
+
+L'exemple d'attaque proposé dans ce chapitre est basé sur l'article \og Introduction to return oriented programming (ROP) \fg du blog \textit{codearcana.com} \cite{IntroductionToROP}.
 
 \minitoc
 
@@ -9,12 +11,25 @@ SafeStack doit normalement prévenir les attaques de types XXX. Dans ce chapitre
 
 % -----------------------------------------------------------------------------
 \section{Contexte}
+\label{section:contexte}
 
-Environement dans lequel se passe l'attaque
+% Environement dans lequel se passe l'attaque
+%
+% Description du docker
+%
+% Quels mécanisme sont actifs ou non
 
-Description du docker
+Afin de facilité la mise en place de l'attaque et la lecture de l'assembleur, la compilation se fera en 32~bits. Cependant la version du système Linux est un environement 64~bits et le système choisi pour installer la version 4.0 de \gls{llvm} est Debian 8. En plus de \gls{llvm}, \gls{gdb} ansi que les librairies nécessaires au 32~bits sont installés.
 
-Quels mécanisme sont actifs ou non
+\begin{listing}
+	\dockerfile{02-main/listings/Dockerfile}
+	\caption{Fichier décrivant l'environement choisi pour l'installation de \gls{llvm} 4 sous Debian 8}
+	\label{lst:dockerfile}
+\end{listing}
+
+L'installation de Clang 4.0, \gls{lldb} (equivalant de \gls{gdb}) et de LLD (le \og linker \fg de \gls{llvm}) se fait en rajoutant le dépôt APT de \gls{llvm}. Différentes manière ont été testées et seule celle-ci a été concluante. Après plusieurs essais, le débugeur \gls{gdb} est préféré et est par la suite utilisé à la place de \gls{lldb}. Ce dernier n'étant pas encore assez complet et globalement utilisé.
+
+
 
 % -----------------------------------------------------------------------------
 \section{Description théorique de l'attaque}
