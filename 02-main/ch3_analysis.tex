@@ -109,6 +109,14 @@ La preuve de sécurité, sous architecture x86-64, est donc basée sur des infor
 
 % Decrire la variante CPS, moins d'overhead mais permettant certain hijack
 
+Les chercheurs se sont rendus compte que dans le cas du C++, l'ensemble des pointeurs sensibles peut rapidement devenir trop important pour cause, par exemple, des fonctions virtuelles. Tous les pointeurs vers un objet contenant une fonction viruelle deviennent alors sensibles, ce qui peut amené un coût de performance trop élevé. Pour de palier à ce problème, le concept de \gls{cps} a été mis en place. L'idée est de modifier quelque peu l'approche et de baisser les coûts en performance tout en garantissant le flot de contrôle.
+
+Pour y arriver, l'heuristique utilisée pour définir l'ensemble des pointeurs lors de l'analyse statique ainsi que la définition d'un pointeur \textit{basé sur} sont modifiées. Seul les pointeurs pointant directement sur une destination du flot de contrôle sont protégés, laissant la récursion de côté. Contrairement à l'approche \gls{cpi}, il est possible de ne pas stocker de métadonnées dans la zone de mémoire sûre, en effet, en évitant par exemple les pointeurs sur des objets, chaque pointeur doit alors correspondre exactement à l'adresse de destination, les bornes ne sont plus nécessaires.
+
+Les accès mémoires prennent alors, dans la majeur partie des cas (exepté pour les pointeurs de type universels), la même quantité de ressources qu'un programme sans \gls{cps}. À la différence que les pointeurs sensibles sont accédés et stockés dans la région sûre à la place de leur emplacement original.
+
+Les chiffres avancés au niveau des gains en performance de \gls{cps} sont de l'ordre de $4.3\times$ plus rapide que \gls{cpi}. Le coût mesuré passe alors de $8.4\%$ à $1.9\%$. Évidemment ces chiffres dépendent de l'ensemble des pointeurs à protéger et donc dirrectement de l'architecture dudit programme.
+
 \section{Safe Stack}
 \label{section:safeStack}
 
