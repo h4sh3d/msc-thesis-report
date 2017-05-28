@@ -1,3 +1,4 @@
+%    Copyright 2017 Joel Gugger, HES-SO//Master
 %    Copyright 2017 Marc Demierre, HES-SO//Master
 %
 % Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,24 +65,6 @@
 % \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
 
-% List of figures
-\cleardoublepage
-\phantomsection
-\addcontentsline{toc}{chapter}{Table des figures}
-\listoffigures
-
-% List of tables
-\cleardoublepage
-\phantomsection
-\addcontentsline{toc}{chapter}{Liste des tableaux}
-\listoftables
-
-% List of listings
-\cleardoublepage
-\phantomsection
-\addcontentsline{toc}{chapter}{Liste des codes sources}
-\listoflistings
-
 % Restore paragraphs
 \setlength{\parskip}{1em}
 
@@ -100,7 +83,7 @@
 \setlength{\parskip}{0.0pt plus 1.0pt}
 
 % Chapters
-\setcounter{mtc}{5} % Help minitoc skip the front matter chapters
+\setcounter{mtc}{2} % Help minitoc skip the front matter chapters
 \include{02-main/ch1_introduction}
 \include{02-main/ch2_historical}
 \include{02-main/ch3_analysis}
@@ -110,6 +93,26 @@
 % Appendices
 \appendix
 \include{03-tail/01_docker}
+
+
+
+% List of figures
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Table des figures}
+\listoffigures
+
+% List of tables
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\listoftables
+
+% List of listings
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Liste des codes sources}
+\listoflistings
 
 % -----------------------------------------------------------------------------
 % Back matter
