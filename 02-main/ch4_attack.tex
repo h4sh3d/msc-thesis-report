@@ -50,10 +50,10 @@ L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation.
 
 Un script permettant d'afficher les mécanismes de protections d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
 
-\subsection{Méchanismes de sécurité}
+\subsection{mécanismes de sécurité}
 % aslr et script
 
-\gls{aslr} est actif au sein de l'environement. Chaque binaire est protegé soit avec \gls{stackCookies} ou avec \gls{safeStack}. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \gls{stackCookies} sont bien desactivés lors du test de \gls{safeStack} et que dans les deux cas le NX bit est actif.
+\gls{aslr} est actif au sein de l'environement. Chaque binaire est protegé soit avec \gls{stackCookies} ou avec \gls{safeStack}. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \gls{stackCookies} sont bien desactivés lors du test de \gls{safeStack} et que dans les deux cas le drapeau \gls{nx} est actif.
 
 \begin{listing}
 	\bashfile{02-main/listings/checksec.res}
@@ -61,7 +61,7 @@ Un script permettant d'afficher les mécanismes de protections d'un binaire est 
 	\label{lst:checksecRes}
 \end{listing}
 
-\textit{--- \gls{pie} est un méchanisme de protection qui n'a pas été abordé dans le chapitre \ref{chap:historique} mais qui pourrait y avoir une place. C'est un méchanisme récent (par rapport à ceux abordés dans le chapitre) permettant d'appliquer le principe d'aléatoire tel que \gls{aslr}, mais sur le segment ELF (voir \autoref{fig:linuxFlexibleAddressSpaceLayout}) et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}. ---}
+\textit{--- \gls{pie} est un mécanisme de protection qui n'a pas été abordé dans le chapitre \ref{chap:historique} mais qui pourrait y avoir une place. C'est un mécanisme récent (par rapport à ceux abordés dans le chapitre) permettant d'appliquer le principe d'aléatoire tel que \gls{aslr}, mais sur le segment ELF (voir \autoref{fig:linuxFlexibleAddressSpaceLayout}) et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}. ---}
 
 % -----------------------------------------------------------------------------
 \section{Description théorique de l'attaque}
