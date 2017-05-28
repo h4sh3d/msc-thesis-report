@@ -3,9 +3,9 @@
 
 La gestion de la mémoire est un des composants le plus complexe d'un système d'exploitation moderne, ce qui rend le sujet bien plus vaste que ce que l'on peut traiter dans ce rapport. Cependant, il m'a été nécessaire de parcourir les principaux concepts pour pouvoir en comprendre les enjeux.
 
-Dans ce chapitre, un bref récapitulatif de cette gestion est fait en préambule de la partie historique des attaques et des mécanismes de protection. Les cas expliqués dans ce rapport sont volontairement simplifiés de manière à comprendre l'aspect conceptuel et non pratique. Exploiter dans un environement réel certaines des attaques brièvement décrites par la suite peut occuper le volume d'un rapport au moins égal à celui-ci.
+Dans ce chapitre, un bref récapitulatif de cette gestion est fait en préambule de la partie historique des attaques et des mécanismes de protection. Les cas expliqués dans ce rapport sont volontairement simplifiés de manière à comprendre l'aspect conceptuel et non la mise en pratique dans un environement réel. Exploiter dans un environement réel certaines des attaques brièvement décrites par la suite peut occuper le volume d'un rapport au moins égal à celui-ci.
 
-La description du fonctionnement de la mémoire est inspirée des articles suivants \cite{AnatomyOfAProgramInMemory, HowTheKernelManagesYourMemory, JourneyToTheStackPartI} tirés du blog de Gustavo Duarte. À des fins de simplicité, les concepts exposés sont basé sur une architecture 32 bits. Dans le cas de changements notables entre architectures, un complément spécifique en 64 bits est donné. Les termes anglais sont mentionnés une première fois lors de leurs traductions, le document utilisera ensuite la traduction française.
+La description du fonctionnement de la mémoire est inspirée d'articles tirés du blog de Gustavo Duarte \cite{AnatomyOfAProgramInMemory, HowTheKernelManagesYourMemory, JourneyToTheStackPartI}. À des fins de simplicité, les concepts exposés sont basé sur une architecture 32~bits. Dans le cas de changements notables entre architectures, un complément spécifique à l'architecture 64~bits est donné. Les termes anglais sont mentionnés une première fois lors de leurs traductions, le document utilise ensuite la traduction française.
 
 \minitoc
 
@@ -86,7 +86,7 @@ Cette structure globale est constituée d'une suite de plus petites structures a
 % ---------------------------------------------------------------------------
 \section{\og Buffer overflow \fg}
 
-Le dépassement de tampon, \og buffer overflow \fg en anglais, consiste à exploiter une fonction qui ne vérifie par la taille du contenu à copier en mémoire. En utilisant, par exemple, \mintinline{c}{strcpy()}, il est possible d'écrir sur l'adresse de retour de la fonction et ainsi modifier le flot de contrôle de l'application en le redirigeant à un endroit où l'attaquant aura, par exemple, préalablement injecté du code --- \og shellcode \fg \ ---.
+Le dépassement de tampon, \og buffer overflow \fg en anglais, consiste à exploiter une fonction qui ne vérifie par la taille du contenu à copier en mémoire. En utilisant, par exemple, \mintinline{c}{strcpy()}, il est possible d'écrir sur l'adresse de retour de la fonction et ainsi modifier le flot de contrôle de l'application en le redirigeant à un endroit où l'attaquant aura, par exemple, préalablement injecté du code \og shellcode \fg.
 
 \subsection{\og Stack frame \fg}
 
@@ -169,9 +169,9 @@ La protection en soit se base sur le \og hardware \fg, le NX bit, introduit tout
 
 \subsection{Contournements grâce aux attaques \og return-to-libc \fg}
 
-Une pile non-exécutable ne permet plus à l'attaquant d'exécuter son code, mais cela ne l'empêche pas d'exécuter du code marqué comme exécutable déjà présent au sein du programme ou des bibliothèques dynamiquements chargées. Comme montré dans l'exemple de la \autoref{fig:memoryDescriptorAndMemoryAreas}, la bibliothèque partagée \textbf{libc} est chargée en mémoire, ce qui est toujours le cas et ce qui rend une attaque de type \og return-to-libc \fg \cite{ReturntolibcAttack} possible.
+Une pile non-exécutable ne permet plus à l'attaquant d'exécuter son code, mais cela ne l'empêche pas d'exécuter du code marqué comme exécutable déjà présent au sein du programme ou des bibliothèques dynamiquements chargées. Comme montré dans l'exemple de la \autoref{fig:memoryDescriptorAndMemoryAreas}, la bibliothèque partagée \texttt{libc} est chargée en mémoire, ce qui est toujours le cas et ce qui rend une attaque de type \og return-to-libc \fg \cite{ReturntolibcAttack} possible.
 
-Grâce à la fonction \mintinline{c}{system()} présente au sein de \textbf{libc}, il est possible d'exécuter arbitrairement un programme. Lors de l'attaque on localise, par exemple, une chaîne de caractères tel que \mintinline{c}{"/bin/sh"}, que l'on prépare comme étant le paramètre à passer à la fonction \mintinline{c}{system()}.
+Grâce à la fonction \mintinline{c}{system()} présente au sein de \texttt{libc}, il est possible d'exécuter arbitrairement un programme. Lors de l'attaque on localise, par exemple, une chaîne de caractères tel que \mintinline{c}{"/bin/sh"}, que l'on prépare comme étant le paramètre à passer à la fonction \mintinline{c}{system()}.
 
 % ---------------------------------------------------------------------------
 \section{ASLR}
@@ -242,7 +242,7 @@ L'application de la protection par canaries au sein de \gls{clang}/\gls{llvm} pe
 
 \subsection{Limitation et contournements}
 
-Dans les deux premières implémentations --- \og \textit{terminator canaries} \fg et \og \textit{random canaries} \fg ---, il est possible de contourner les canaris en récupérant leur valeur. Ce qui peut être fait directement sur la pile d'exécution grâce au contrôle, par exemple, des paramètres d'une fonction tel que \mintinline{c}{printf()} qui nous permet de lire en mémoire grâce au format \mintinline{c}{%p}.
+Dans les deux premières implémentations --- \og \textit{terminator canaries} \fg et \og \textit{random canaries} \fg \ ---, il est possible de contourner les canaris en récupérant leur valeur. Ce qui peut être fait directement sur la pile d'exécution grâce au contrôle, par exemple, des paramètres d'une fonction tel que \mintinline{c}{printf()} qui nous permet de lire en mémoire grâce au format \mintinline{c}{%p}.
 
 Dans le cas d'un \og \textit{random XOR canary} \fg, si l'adresse de retour est modifiée, alors la valeur du canari change, car elle dépend de la valeur aléatoire de départ et des données sur la pile d'exécution. L'exploitation devient alors plus complexe à mettre en place mais reste possible.
 
@@ -269,7 +269,7 @@ La variation \og \gls{cg-cfi} \fg est une approche plus simple quant à la labé
 
 Il existe à ce jour une multitude de concepts ayant pour mission d'entraver ou de ralentir les attaques visant le flot de contrôle d'une application. Ces concepts ne gèrent, individuellement, qu'une partie de la problématique et sont donc généralement appliqués conjointement. Aujourd'hui, il n'existe pas encore de mécanismes permettant de garantir seul, à 100\%, l'intégrité du flot sans engager des coûts trop importants en performance, rendant leur utilisation impossible dans un environnement de production. Tous les mécanismes de protection passés en revue peuvent être contourné par une attaque évoluée de type \gls{rop}.
 
-Le papier présentant CPI/CPS/SafeStack \cite{CPIPaper} et son prototype appelé \gls{levee} promettent un mécanisme permettant de contrer ce type d'attaque et à moindre coût. Afin d'y parvenir, l'équipe de chercheurs à mis en place différents concepts se raprochant de ce qui se fait au sein des languages de programmation de type \og memory-safe \fg. En effet, les implémentations actuelles permettant de garantire à 100\% le flot de contrôle --- SoftBound+CETS, CCured ou encore AddressSanitizer --- sont une application directe des concepts présent au sein des languages de type \og memory-safe \fg aux languages C/C++. Cependant cette application directe n'est pas viable en terme de performances. Les chercheurs du projet \gls{levee} ont alors proposé d'appliquer ces méthodes sur une partie spécifique du programme.
+Le papier présentant CPI/CPS/SafeStack \cite{CPIPaper} et son prototype appelé \gls{levee} promettent un mécanisme permettant de contrer ce type d'attaque et à moindre coût. Afin d'y parvenir, l'équipe de chercheurs à mis en place différents concepts se raprochant de ce qui se fait au sein des languages de programmation de type \og memory-safe \fg. En effet, les implémentations actuelles permettant de garantire à 100\% le flot de contrôle --- SoftBound+CETS, CCured ou encore AddressSanitizer --- sont une application directe des concepts présent au sein des languages de type \og memory-safe \fg aux languages \texttt{C/C++}. Cependant cette application directe n'est pas viable en terme de performances. Les chercheurs du projet \gls{levee} ont alors proposé d'appliquer ces méthodes sur une partie spécifique du programme.
 
 % \newpage
 

@@ -1,7 +1,7 @@
 \chapter{Proof of Concept d'une attaque}
 \label{chap:attaque}
 
-L'implémentation de \gls{safeStack} au sein de \gls{llvm} doit permettre de prévenir les attaques de types \gls{rop}. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code. Afin de rendre plus portable et reproductible cette phase de test, un environement spécifique est mis en place et décrit précisement.
+L'implémentation de \gls{safeStack} au sein de \gls{llvm} doit permettre de prévenir les attaques de types \gls{rop}. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code. Afin de rendre plus portable et reproductible cette phase de test, un environnement spécifique est mis en place et décrit précisement.
 
 L'exemple d'attaque proposé dans ce chapitre est basé sur l'article \og Introduction to return oriented programming (ROP) \fg du blog \textit{codearcana.com} \cite{IntroductionToROP}.
 
@@ -10,31 +10,29 @@ L'exemple d'attaque proposé dans ce chapitre est basé sur l'article \og Introd
 \newpage
 
 % -----------------------------------------------------------------------------
-\section{Environement}
+\section{environnement}
 
-% Environement dans lequel se passe l'attaque
+% environnement dans lequel se passe l'attaque
 %
 % Description du docker
 %
 % Quels mécanisme sont actifs ou non
 
-Afin de facilité la mise en place de l'attaque, la compilation est faite en 32~bits. L'environement choisi pour installer la version 4.0 de \gls{llvm} est Debian 8 en 64~bits. Afin de pouvoir correctement compiler et exécuter en 32~bits, les librairies nécessaires doivent être installés (lignes 20 à 22). En plus de \gls{llvm}, \gls{gdb} ainsi que quelques autres utilitaires sont installés.
+Afin de faciliter la mise en place de l'attaque, la compilation est faite en 32~bits. L'environnement choisi pour installer la version 4.0 de \gls{llvm} est Debian 8 en 64~bits. Afin de pouvoir correctement compiler et exécuter en 32~bits, les bibliothèques nécessaires doivent être installés (lignes 20 à 22). En plus de \gls{llvm}, \gls{gdb} ainsi que quelques autres utilitaires sont installés.
 
 \subsection{Docker}
 
-L'environement décrit ci-dessus ainsi que l'installation des outils est mis en place grâce à Docker. Le Dockerfile suivant contient toutes les instructions nécessaire afin d'installer la version 4.0 de \gls{llvm} et \gls{clang}.
+L'environnement décrit ci-dessus ainsi que l'installation des outils est mis en place grâce à Docker. Le Dockerfile suivant contient toutes les instructions nécessaire afin d'installer la version 4.0 de \gls{llvm} et \gls{clang}.
 
 \begin{listing}
 	\dockerfile{02-main/listings/Dockerfile}
-	\caption{Fichier décrivant l'environement choisi pour l'installation de \gls{llvm} 4 sous Debian 8}
+	\caption{Fichier décrivant l'environnement choisi pour l'installation de \gls{llvm} 4 sous Debian 8}
 	\label{lst:dockerfile}
 \end{listing}
 
-Il existe plusieurs manières d'installer \gls{llvm}. Il serait tout à fait possible de compiler directement depuis les sources. Plusieurs de ces techniques ont été testées, et la suivante a été retenue: l'installation de Clang 4.0, \gls{lldb} (equivalant de \gls{gdb}) et de LLD (le \og linker \fg de \gls{llvm}) se fait en rajoutant le dépôt APT de \gls{llvm}.
+Il existe plusieurs manières d'installer \gls{llvm}. Il serait tout à fait possible de compiler directement depuis les sources. Plusieurs de ces techniques ont été testées, et la suivante a été retenue: l'installation de Clang 4.0, \gls{lldb} (équivalant de \gls{gdb}) et de LLD (le \og linker \fg de \gls{llvm}) se fait en rajoutant le dépôt APT de \gls{llvm}. Après plusieurs essais, le débogueur \gls{gdb} est préféré à \gls{lldb} et est par la suite utilisé à la place de \gls{lldb}, ce dernier n'étant pas encore assez complet et globalement utilisé.
 
-Après plusieurs essais, le débugeur \gls{gdb} est préféré à \gls{lldb} et est par la suite utilisé à la place de \gls{lldb}. Ce dernier n'étant pas encore assez complet et globalement utilisé.
-
-Tout les autres fichiers de configurations de l'environement Docker sont disponibles à l'annexe \ref{chap:dockerConf}.
+Tout les autres fichiers de configurations de l'environnement Docker sont disponibles à l'annexe \ref{chap:dockerConf}.
 
 \subsection{Gestion de la compilation}
 
@@ -50,10 +48,10 @@ L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation.
 
 Un script permettant d'afficher les mécanismes de protections d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
 
-\subsection{mécanismes de sécurité}
+\subsection{Mécanismes de sécurité}
 % aslr et script
 
-\gls{aslr} est actif au sein de l'environement. Chaque binaire est protegé soit avec \gls{stackCookies} ou avec \gls{safeStack}. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \gls{stackCookies} sont bien desactivés lors du test de \gls{safeStack} et que dans les deux cas le drapeau \gls{nx} est actif.
+\gls{aslr} est actif au sein de l'environnement. Chaque binaire est protegé soit avec \gls{stackCookies} ou avec \gls{safeStack}. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \gls{stackCookies} sont bien desactivés lors du test de \gls{safeStack} et que dans les deux cas le drapeau \gls{nx} est actif.
 
 \begin{listing}
 	\bashfile{02-main/listings/checksec.res}
@@ -61,7 +59,7 @@ Un script permettant d'afficher les mécanismes de protections d'un binaire est 
 	\label{lst:checksecRes}
 \end{listing}
 
-\textit{--- \gls{pie} est un mécanisme de protection qui n'a pas été abordé dans le chapitre \ref{chap:historique} mais qui pourrait y avoir une place. C'est un mécanisme récent (par rapport à ceux abordés dans le chapitre) permettant d'appliquer le principe d'aléatoire tel que \gls{aslr}, mais sur le segment ELF (voir \autoref{fig:linuxFlexibleAddressSpaceLayout}) et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}. ---}
+\textit{--- \gls{pie} est un mécanisme de protection qui n'a pas été abordé dans le chapitre \ref{chap:historique} mais qui pourrait y avoir une place. C'est un mécanisme récent (par rapport à ceux abordés dans le chapitre) permettant d'appliquer de l'aléatoire sur des régions de code, et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}. ---}
 
 % -----------------------------------------------------------------------------
 \section{Description théorique de l'attaque}
