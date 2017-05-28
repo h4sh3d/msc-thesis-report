@@ -1,7 +1,7 @@
 \chapter{Proof of Concept d'une attaque}
 \label{chap:attaque}
 
-L'implémentation de \gls{safeStack} au sein de \gls{llvm} doit permettre de prévenir les attaques de types \gls{rop}. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code. Afin de rendre plus portable et reproductible cette phase de test, un environement Docker est mis en place. L'environement est détaillé dans la \autoref{section:contexte}.
+L'implémentation de \gls{safeStack} au sein de \gls{llvm} doit permettre de prévenir les attaques de types \gls{rop}. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code. Afin de rendre plus portable et reproductible cette phase de test, un environement spécifique est mis en place et décrit précisement.
 
 L'exemple d'attaque proposé dans ce chapitre est basé sur l'article \og Introduction to return oriented programming (ROP) \fg du blog \textit{codearcana.com} \cite{IntroductionToROP}.
 
@@ -10,8 +10,7 @@ L'exemple d'attaque proposé dans ce chapitre est basé sur l'article \og Introd
 \newpage
 
 % -----------------------------------------------------------------------------
-\section{Contexte}
-\label{section:contexte}
+\section{Environement}
 
 % Environement dans lequel se passe l'attaque
 %
@@ -19,7 +18,11 @@ L'exemple d'attaque proposé dans ce chapitre est basé sur l'article \og Introd
 %
 % Quels mécanisme sont actifs ou non
 
-Afin de facilité la mise en place de l'attaque et la lecture de l'assembleur, la compilation se fera en 32~bits. Cependant la version du système Linux est un environement 64~bits et le système choisi pour installer la version 4.0 de \gls{llvm} est Debian 8. En plus de \gls{llvm}, \gls{gdb} ansi que les librairies nécessaires au 32~bits sont installés.
+Afin de facilité la mise en place de l'attaque, la compilation est faite en 32~bits. L'environement choisi pour installer la version 4.0 de \gls{llvm} est Debian 8 en 64~bits. Afin de pouvoir correctement compiler et exécuter en 32~bits, les librairies nécessaires doivent être installés (lignes 20 à 22). En plus de \gls{llvm}, \gls{gdb} ainsi que quelques autres utilitaires sont installés.
+
+\subsection{Docker}
+
+L'environement décrit ci-dessus ainsi que l'installation des outils est mis en place grâce à Docker. Le Dockerfile suivant contient toutes les instructions nécessaire afin d'installer la version 4.0 de \gls{llvm} et \gls{clang}.
 
 \begin{listing}
 	\dockerfile{02-main/listings/Dockerfile}
@@ -27,16 +30,84 @@ Afin de facilité la mise en place de l'attaque et la lecture de l'assembleur, l
 	\label{lst:dockerfile}
 \end{listing}
 
-L'installation de Clang 4.0, \gls{lldb} (equivalant de \gls{gdb}) et de LLD (le \og linker \fg de \gls{llvm}) se fait en rajoutant le dépôt APT de \gls{llvm}. Différentes manière ont été testées et seule celle-ci a été concluante. Après plusieurs essais, le débugeur \gls{gdb} est préféré et est par la suite utilisé à la place de \gls{lldb}. Ce dernier n'étant pas encore assez complet et globalement utilisé.
+Il existe plusieurs manières d'installer \gls{llvm}. Il serait tout à fait possible de compiler directement depuis les sources. Plusieurs de ces techniques ont été testées, et la suivante a été retenue: l'installation de Clang 4.0, \gls{lldb} (equivalant de \gls{gdb}) et de LLD (le \og linker \fg de \gls{llvm}) se fait en rajoutant le dépôt APT de \gls{llvm}.
 
+Après plusieurs essais, le débugeur \gls{gdb} est préféré à \gls{lldb} et est par la suite utilisé à la place de \gls{lldb}. Ce dernier n'étant pas encore assez complet et globalement utilisé.
 
+Tout les autres fichiers de configurations de l'environement Docker sont disponibles à l'annexe \ref{chap:dockerConf}.
+
+\subsection{Gestion de la compilation}
+
+L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation. Un Makefile est mis en place afin de rassembler les différents \og flags \fg utilisés pour générer les deux versions exécutables (l'un avec \gls{safeStack} et l'autre sans). En en-tête, différentes variables utilisées par \textit{make} sont définies afin de s'assurer que \gls{clang} 4.0 est bien utilisé. Deux version de l'exécutable sont créés: \textit{safe-stack} et \textit{stack-cookie}. Le language intermédiaire de \gls{llvm} est émit lors de la compilation afin de comparer les effets de l'un et l'autre mécanisme de protection.
+
+À noté que la protection de la pile \textit{-fstack-protector} est descativée grâce à \textit{-fno-stack-protector} lorsque l'on active \gls{safeStack}. Le but est de comparer les deux et actuellement, \gls{safeStack} n'est pas compatible avec les \gls{stackCookies}.
+
+\begin{listing}
+	\makefile{02-main/listings/Makefile}
+	\caption{Makefile regroupant les différentes options de compilations}
+	\label{lst:defaultMakefile}
+\end{listing}
+
+Un script permettant d'afficher les mécanismes de protections d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
+
+\subsection{Méchanismes de sécurité}
+% aslr et script
+
+\gls{aslr} est actif au sein de l'environement. Chaque binaire est protegé soit avec \gls{stackCookies} ou avec \gls{safeStack}. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \gls{stackCookies} sont bien desactivés lors du test de \gls{safeStack} et que dans les deux cas le NX bit est actif.
+
+\begin{listing}
+	\bashfile{02-main/listings/checksec.res}
+	\caption{Resultat du test de sécurité par checksec.sh}
+	\label{lst:checksecRes}
+\end{listing}
+
+\textit{--- \gls{pie} est un méchanisme de protection qui n'a pas été abordé dans le chapitre \ref{chap:historique} mais qui pourrait y avoir une place. C'est un méchanisme récent (par rapport à ceux abordés dans le chapitre) permettant d'appliquer le principe d'aléatoire tel que \gls{aslr}, mais sur le segment ELF (voir \autoref{fig:linuxFlexibleAddressSpaceLayout}) et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}. ---}
 
 % -----------------------------------------------------------------------------
 \section{Description théorique de l'attaque}
 
-Description des étapes de l'attaque et des réaction attendue
+% Description des étapes de l'attaque et des réaction attendue
+
+TODO
 
 % -----------------------------------------------------------------------------
 \section{Implémentation}
 
-On essaie de le faire / just do it
+\subsection{Structure sur la pile d'exécution}
+
+La première tentative est faite grâce à une \textit{structure} dans laquelle est stocké un pointeur vers une fonction. Le but est, en placant la \textit{structure} ainsi qu'un tampon sur la pile d'exécution, de réécrir l'adresse du pointeur présent dans ladite \textit{structure}, avant l'appel de la fonction pointée.
+
+En écrivant ce code, le postulat de départ était qu'au sein de la \og stack frame \fg de la fonction \mintinline{c}{main()}, les variables locales serait stockée sur la frame dans l'ordre dans lesquelles elles sont déclarées, et donc de la manière suivante:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{attackStructExpected}
+	\captionsource{Résultat attendu de la \og stack frame \fg sur la première attaque}
+	{Résultat attendu de la \og stack frame \fg sur la première attaque}
+	{Auteur}
+	\label{fig:attackStructExpected}
+\end{figure}
+
+Cependant, lors que l'on inspect la pile d'exécution, on se rend compte que l'ordre dans lequel les variables sont stockées est modifié. Le \og buffer \fg est positionné en premier, ce qui rend impossible son exploitation. Ce comportement inatendu est le résultat d'une manipulation souhaitée par le compilateur, afin de se prémunir au mieux contre l'exploitation des dépassements de tampon, il place les variables de type \mintinline{c}{char*} dans les adresses les plus hautes, juste après le canari. De cette manière, si un dépassement apparaît, il est tout de suite détecté par le canari.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{attackStructReel}
+	\captionsource{Résultat obtenu de la \og stack frame \fg sur la première attaque}
+	{Résultat obtenu de la \og stack frame \fg sur la première attaque}
+	{Auteur}
+	\label{fig:attackStructReel}
+\end{figure}
+
+\begin{listing}
+	\cfile{02-main/listings/struct.c}
+	\caption{Source du premier éssai de contournement via un pointeur de fonction dans une structure}
+	\label{lst:struct}
+\end{listing}
+
+Cette attaque n'est donc pas du tout concluante, il n'est pas possible d'exploiter le dépassement de tampon.
+
+\subsection{Une autre idée...}
+faut trouver autre chose
+
+% La fonction \mintinline{c}{call(struct Number self)} permet de d'appliquer l'opérateur sur le nombre en question, puis retourne le résultat obtenu. Elle appele l'opérateur grâce au pointeur contenu dans la \textit{structure} et si ce pointeur est compromis, il est alors possible de démarer l'exécution de la chaîne de \textit{gadgets}.

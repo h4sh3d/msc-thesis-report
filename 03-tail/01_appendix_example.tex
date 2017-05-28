@@ -1,3 +1,20 @@
-\chapter{An appendix}
+\chapter{Configuration du Docker}
+\label{chap:dockerConf}
 
-\lipsum[5-8]
+Le docker-compose s'occupe du démarage d'un ou plusieurs container ainsi que de leur interaction avec l'hôte (volumes, ports, etc). Un seul volume partagé est monté au sein du container, sous l'adresse \mintinline{bash}{/shared}. Afin de pouvoir désactiver certaines protection tel que \gls{aslr}, il est nécessaire d'autorisé des privilèges suppérieurs au container (voir ligne 6).
+
+\begin{listing}
+	\yamlfile{02-main/listings/docker-compose.yml}
+	\caption{Fichier de configuration général utilisé par docker-compose}
+	\label{lst:dockerCompose}
+\end{listing}
+
+Le contenu d'un fichier \mintinline{bash}{.bash_profile} est copié lors de la phase de contruction du container dans le dossier de l'utilisateur et est rajouté au fichier \mintinline{bash}{.bashrc}, cela permet de rajouter facilement des commandes ou des raccourcis. Actuelement le fichier ne contient pas grand chose mais le méchanisme est en place.
+
+\begin{listing}
+	\bashfile{02-main/listings/bashProfile}
+	\caption{Fichier bash copier dans le .bashrc de l'utilisateur Debian}
+	\label{lst:bashProfile}
+\end{listing}
+
+Le fichier principal contenant les instructions de construction de l'image est dispnible au code \ref{lst:dockerfile}.
