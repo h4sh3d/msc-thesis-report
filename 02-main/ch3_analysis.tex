@@ -24,6 +24,8 @@ Les chercheurs du projet posent comme postulat de départ qu'il est suffisant de
 
 Afin de garder de bonnes performances tout en garantissant l'intégrité complète, le minimum d'instrumentation doit être délégué à l'exécution. Le code est alors en premier lieu analysé de manière statique à la compilation, puis des mécanismes de vérification sont ensuite délégués à l'exécution. Le concept de \og \gls{cpi} \fg \cite{CPIPaper} intervient alors, afin de déterminer quels pointeurs doivent être protégés, ce qui permet de réduire au minimum les accès à controler lors de l'exécution.
 
+
+% -----------------------------------------------------------------------------
 \section{CPI (Code-pointer integrity)}
 
 % Decrire pourquoi les pointeurs sensibles et pas sensibles. comment determiner si un pointeur est sensible
@@ -66,7 +68,7 @@ En effectuant des tests, les chercheurs se sont rendu compte que l'analyse heuri
 
 Le coût en performance dépend directement de l'heuristique et de sa récursion. L'équipe mentionne elle-même que toutes heuristiques donnant un ensemble approximatif cohérent peuvent être utilisées. Des améliorations peuvent encore être attendues sur ce point. Le second avantage majeur de cette approche réside dans le fait que l'on peut facilement imaginer de nouvelles heuristiques permettant de protéger d'autres ensembles de pointeurs, par exemple, pour protéger une partie des données au sein du programme.
 
-\subsection{Zone de mémoire sûre \og safe region \fg}
+\subsection{Zone de mémoire sûre}
 
 Afin de garantir l'intégrité de l'ensemble des pointeurs sensibles, une zone mémoire appelée \og \textit{safe region} \fg est créée, voir la \autoref{fig:safeRegionLayout}. Cette région est isolée et ne peut être accédée que via des instructions fournies par \gls{cpi}. Cela permet de garantir l'intégrité des données et la propagation des métadonnées. Elle est ensuite constituée d'un \og \textit{safe pointer store} \fg, pour les pointeurs sensibles, et de \og \textit{safe stacks} \fg, pour une gestion plus spécifique liée à la pile d'exécution, voir la \autoref{section:safeStack}. Seule l'une des deux copies présente dans les deux régions est utilisée suivant le type du pointeur en question.
 
@@ -105,6 +107,7 @@ Au sein d'une architecture \texttt{x86-64} la limitation des segments n'est plus
 La preuve de sécurité, sous architecture \texttt{x86-64}, est donc basée sur des informations cachées. Ils mentionnent le fait que leur modèle est \og leak-proof \fg \ --- c’est-à-dire qu'il ne laisse pas fuiter d'informations concernant la localisation de la région sûre ---, à la différence d'\gls{aslr}, grâce à l'absence de pointeur vers la \og \textit{safe region} \fg lors de l'execution.
 
 
+% -----------------------------------------------------------------------------
 \section{CPS (Code-pointer separation)}
 
 % Decrire la variante CPS, moins d'overhead mais permettant certain hijack
@@ -119,10 +122,30 @@ Les accès mémoires prennent alors, dans la majeur partie des cas (excepté pou
 
 Les chiffres avancés au niveau des gains en performance de \gls{cps} sont de l'ordre de $4.3\times$ plus rapide que \gls{cpi}. Le coût mesuré passe alors de $8.4\%$ à $1.9\%$. Évidemment ces chiffres dépendent de l'ensemble des pointeurs à protéger et donc dirrectement de l'architecture dudit programme.
 
-\section{Safe Stack}
+
+% -----------------------------------------------------------------------------
+\section{\og Safe Stack \fg}
 \label{section:safeStack}
 
-% quel est le concept de la safe stack
+Le composant \og \gls{safeStack} \fg est un équivalant, mais potentiellement plus complet, aux \og \gls{stackCookies} \fg. Son but est de protéger les variables sensibles stockées sur la pile d'exécution. Pour ce faire, à la manière dont fonctionne \gls{cpi}, \og \gls{safeStack} \fg sépare certaines variables dans deux régions mémoires différentes. Cependant, dans le cas de \og \gls{safeStack} \fg, l'approche est différentes. Seul sont déplacés les variables dont l'allocation ou les accès sont considérés comme non-sécurisé. Les allocations et les accès à ces variables sont ensuite remplacés lors de la phase de compilation par \og \gls{safeStack} \fg afin de les initialiser dans une zone mémoire non protégée. Cette zone mémoire est initialisée au lancement de l'application, au sein du segment de \og memory mapping \fg.
+
+Comme montré sur la \ref{fig:safeRegionLayout}, la zone mémoire sûre, ou région sûre, est constituée d'une ou plusieurs \og safe stacks \fg. Chaque \og safe stack \fg appartient à un \texttt{thread}, celui-ci contient un pointeur vers la pile standard et un pointeur vers la pile sûre. Le registre \mintinline{c}{%esp} sur l'architecture \texttt{x86-32} pointe vers la \og \gls{safeStack} \fg --- \mintinline{c}{%rsp} sur \texttt{x86-64} ---, tandis qu'une variable locale au \texttt{thread} pointe vers la \og unsafe stack \fg, présente dans le segment de \og memory mapping \fg.
+
+\subsection{Analyse à la compilation}
+
+Il est nécessaire de passer par un phase d'analyse afin de determiner, comme pour \gls{cpi}, quelles variables déplacées.
+La fonction \mintinline{c}{IsSafeStackAlloca} determine quels types de variables peuvent être accédées de manière non-sécurisée et sont alors déplacées. Une variable est déclarée non-sécurisée si l'un des critères est retenu:
+
+\begin{enumerate}
+	\item un pointeur vers la variable est stocké quelque part en mémoire
+	\item un élément appartenant à un tableau est accédé par un index non-constant (une autre variable)
+	\item un tableau dynamique est accédé (via une variable ou un index constant)
+	\item un pointeur vers la variable est donnée en arguement à une fonction
+\end{enumerate}
+
+\subsection{Support à l'exécution}
+
+Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisée, une bibliothèque est fournie à l'exécution.
 
 % -----------------------------------------------------------------------------
 \section{Implémentation au sein de LLVM}
@@ -131,12 +154,37 @@ Les chiffres avancés au niveau des gains en performance de \gls{cps} sont de l'
 %
 % structure de LLVM front-end, l'optimizer, et le back-end, son fonctionnement, origine
 
+La première implémentation de \gls{levee} a été effectuée sur la version 3.3 de \gls{llvm} (juin 2013). Lors de ce prototypage, l'équipe de \gls{levee} a due modifier quelque peu l'infrastructure. Des modifications ont été faites sur les bibliothèques de \gls{llvm} ainsi que dans \gls{clang}. Depuis la version 3.8 (mars 2016), \gls{safeStack} est disponible nativement au sein de \gls{llvm}, l'intégration a été faite par Peter Collingbourne de Google. Actuellement (mai 2017), dans la version 4.0 de \gls{llvm}, les prototypes de \gls{cpi} et \gls{cps} ne sont toujours pas présent et aucune date d'intégration n'a été annoncée.
+
 \subsection{Structure de LLVM}
 
 
-\subsection{Architecture de Levee}
+\subsection{Architecture de \og safe stack \fg}
 
 % description des actions effectuée dans le front-end, l'optimizer, et le back-end
+
+\subsubsection{Compiler-rt}
+implemented as a compiler-rt library that is automatically linked in when the program is compiled with SafeStack
+
+
+
+\begin{listing}
+	\begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+/// Check whether a given allocation must be put on the safe
+/// stack or not. The function analyzes all uses of AI and checks whether it is
+/// only accessed in a memory safe way (as decided statically).
+bool SafeStack::IsSafeStackAlloca(const Value *AllocaPtr, uint64_t AllocaSize);
+	\end{minted}
+	\caption{Signature de la méthode permettant de déterminer si une allocation est sûre}
+	\label{lst:IsSafeStackAllocaHeader}
+\end{listing}
+
+
+L'implémentation de la méthode à la version 4.0 de \gls{llvm} est disponible en annexe et sur GitHub
+
+\url{https://github.com/llvm-mirror/llvm/blob/93e6e5414ded14bcbb233baaaa5567132fee9a0c/lib/CodeGen/SafeStack.cpp#L263-L357}
+
+
 
 % -----------------------------------------------------------------------------
 \section{Rayon d'action}
