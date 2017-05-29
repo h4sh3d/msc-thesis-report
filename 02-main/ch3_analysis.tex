@@ -34,7 +34,7 @@ Afin de garder de bonnes performances tout en garantissant l'intégrité complè
 
 Afin de formaliser les pointeurs de code (code-pointers), le papier propose la définition suivante :
 
-On dit que l'indirection ou le déréférencement d'un pointeur est sûr si et seulement si l'adresse mémoire à laquelle il tente d'accéder est comprise au sein de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Un \textit{objet mémoire} est une abstraction liée au langage définissant tout types de structures stockées en mémoire (variables globales, variables locales, structures, objets), de sous-structures (un champ d'une structure) ou encore des points de contrôle du flot (adresse de départ d'une fonction, adresse de retour). Ces \textit{objets mémoires} ont un cycle de vie défini, lorsqu'on libére la mémoire liée à un tableau et qu'on alloue un nouveau tableau avec la même adresse, un nouvel \textit{objet mémoire} est créé.
+\og On dit que l'indirection ou le déréférencement d'un pointeur est sûr si et seulement si l'adresse mémoire à laquelle il tente d'accéder est comprise au sein de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Un \textit{objet mémoire} est une abstraction liée au langage définissant tout types de structures stockées en mémoire (variables globales, variables locales, structures, objets), de sous-structures (un champ d'une structure) ou encore des points de contrôle du flot (adresse de départ d'une fonction, adresse de retour). Ces \textit{objets mémoires} ont un cycle de vie défini, lorsqu'on libére la mémoire liée à un tableau et qu'on alloue un nouveau tableau avec la même adresse, un nouvel \textit{objet mémoire} est créé. \fg
 
 Le papier formalise ensuite la définition de pointeur \textit{basé sur} un \textit{objet mémoire}. On dit qu'un pointeur est \textit{basé sur} sur un \textit{objet mémoire X} si et seulement si le pointeur est obtenu lors de l'exécution par (i) allocation de \textit{X} sur la pile, (ii) référencement explicit de l'adresse de \textit{X}, (iii) en référencant l'adresse d'un sous-objet \textit{y} de \textit{X} (accès au champ \textit{y} d'une structure \textit{X}), ou (iv) en effectuant une expression sur un pointeur (calculs arithmétiques, position au sein d'un tableau, copie de pointeur) impliquant l'adresse de l'\textit{objet mémoire X}. Cette définition est basée sur la définition des pointeurs \textit{basé sur} présente au sein de la norme \texttt{C99}.
 
@@ -59,7 +59,7 @@ Afin de déterminer l'ensemble des pointeurs devant être considérés comme sen
 	\item pointeurs vers des pointeurs sensibles
 	\item pointeurs vers des types composés (\mintinline{c}{array}, \mintinline{c}{struct}) qui contiennent un ou plusieurs pointeurs sensibles
 	\item pointeurs universels (\mintinline{c}{void*}, \mintinline{c}{char*})
-  \item pointeurs explicitements créés par le compilateur ou à l'exécution (adresse de retour, tables virtuelles en C++ \cite{fonctionsVirtuelles}, \mintinline{c}{setjmp} \cite{setjmp})
+  \item pointeurs explicitements créés par le compilateur ou à l'exécution (adresse de retour, tables virtuelles en \texttt{C++} \cite{fonctionsVirtuelles}, \mintinline{c}{setjmp} \cite{setjmp})
 \end{enumerate}
 
 Cet ensemble de types peut être adapté, étendu, suivant les besoins du programme ou de la plateforme. Le papier mentionne en exemple la structure \mintinline{c}{ucred} utilisée dans le noyau FreeBSD, qui est marquée comme sensible car elle contient les UIDs des processus et d'autres informations.
@@ -88,7 +88,7 @@ Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les m�
 % on stocke l'adresse du pointeur dans la région standard ainsi que ca valeur = deux adresses
 % TODO figure montrant qu'est ce qui est stocké et les liens
 
-\subsection{Isolation de la zone de mémoire sûre}
+\subsection{Isolation de la zone mémoire sûre}
 
 Une fois les metadonnées et les \og \textit{safe stacks} \fg placées au sein de la région sûre, il faut pouvoir garantir leur intégrité. Pour ce faire cette région doit être isolée du reste de la mémoire et il ne doit pas être possible de la modifier sans passer par les instructions fournies par \gls{cpi}. Ce mécanisme de protection est directement dépendant de l'architecture pour laquelle le binaire est compilé. Dans les deux cas, la région sûre est placée dans le segment de \og memory mapping \fg avec un accès en lecture et écriture.
 
@@ -145,7 +145,7 @@ La fonction \mintinline{c}{IsSafeStackAlloca} determine quels types de variables
 
 \subsection{Support à l'exécution}
 
-Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisée, une bibliothèque est fournie à l'exécution.
+Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisée, une bibliothèque est fournie à l'exécution. Plus de détails sont donnés dans la \autoref{subsection:architectureSafeStack} Architecture de \og safe stack \fg.
 
 % -----------------------------------------------------------------------------
 \section{Implémentation au sein de LLVM}
@@ -154,14 +154,124 @@ Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisé
 %
 % structure de LLVM front-end, l'optimizer, et le back-end, son fonctionnement, origine
 
-La première implémentation de \gls{levee} a été effectuée sur la version 3.3 de \gls{llvm} (juin 2013). Lors de ce prototypage, l'équipe de \gls{levee} a due modifier quelque peu l'infrastructure. Des modifications ont été faites sur les bibliothèques de \gls{llvm} ainsi que dans \gls{clang}. Depuis la version 3.8 (mars 2016), \gls{safeStack} est disponible nativement au sein de \gls{llvm}, l'intégration a été faite par Peter Collingbourne de Google. Actuellement (mai 2017), dans la version 4.0 de \gls{llvm}, les prototypes de \gls{cpi} et \gls{cps} ne sont toujours pas présent et aucune date d'intégration n'a été annoncée.
+La première implémentation de \gls{levee} a été portée au sein de la version 3.3 de \gls{llvm} (juin 2013). Pour ce prototype, l'équipe de \gls{levee} a du modifier quelque peu l'infrastructure, des modifications ont été faites sur les bibliothèques de \gls{llvm} ainsi que dans \gls{clang}. Depuis la version 3.8, en mars 2016, \gls{safeStack} est disponible au sein de \gls{llvm} et \gls{clang}, cette intégration a été faite par un employé de Google, Peter Collingbourne. Actuellement, en mai 2017, dans la version 4.0 de \gls{llvm}, les prototypes de \gls{cpi} et \gls{cps} ne sont toujours pas présent et aucune date d'intégration n'a été annoncée.
+
+\subsection{Historique de LLVM}
+
+Le projet débute dans le début des années 2000, par ce qui est au début un travail de recherche universitaire de Chris Lattner \cite{ChrisLattner}. A cet époque, il est courant de voir des implémentations monolitiques au sein des compilateurs, par exemple GCC pour la famille des langages \texttt{C}. Au sein de ces implémentations, Lattner remarque qu'il est également difficile de réutilisé du code pour sérvir différents interets, utilisé l'analyseur \og parser \fg de GCC pour effectuer une analyse statique n'est pas possible et les partie de code en commun son relativement petite.
+
+Lattner propose alors une collection, open source, souple et réutilisable, de technologies permettant de développer des \og frontends \fg et \og backends \fg de compilateur. Le design le plus populaire utilisé par les compilateurs est constitué de trois phases, (i) le \og frontend \fg, responsable de d'analyser le code et de généer une représentation abstraite --- appelée \og \gls{ast} \fg \ --- (ii) l'\og optimizer \fg, améliore cette représentation (supprimer les redondances, simplification des opérations mathématiques, etc.), puis (iii) le \og backend \fg, transcrit la représentation intermédiaire en code machine suivant la plateforme ciblée.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\columnwidth]{SimpleCompiler}
+	\captionsource{Composants majeurs d'un compilateur en trois phases}
+	{Composants majeurs d'un compilateur en trois phases}
+	{\url{http://www.aosabook.org/en/llvm.html}}
+	\label{fig:SimpleCompiler}
+\end{figure}
+
+Il y a plusieurs avantages majeurs à cette approche, premièrement lorsque l'on souhaite supporter un nouveau langage, seul le \og frontend \fg doit être écrit. De la même manière, si l'on souhaite rajouter une plateforme, les \og frontend \fg existant peuvent facilement en profiter. Deuxièmement, au niveau des projets open source, il est très avantageux d'avoir, au sein du même projet, différents langages ciblés, car cela accroît la communauté potentiel et donc le nombre de contributeurs. En finalité, le fait qu'il n'est pas nécessaire d'avoir les mêmes compétences pour écrire un \og frontend \fg, un \og optimizer \fg ou un \og backend \fg aide à trouver des contributeurs, un projet open source veut réduire au maximum le pas à franchir pour contribuer.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.6\columnwidth]{RetargetableCompiler}
+	\captionsource{Modularité d'une structure en trois phases}
+	{Modularité d'une structure en trois phases}
+	{\url{http://www.aosabook.org/en/llvm.html}}
+	\label{fig:RetargetableCompiler}
+\end{figure}
+
+Dans un premier temps, \gls{llvm} est l'acronyme de \og low level virtual machine \fg, mais rapidement le projet se développe et le nom \gls{llvm} devient une marque rassemblant sous son nom différents projets tel que \gls{llvmIR}, \gls{lldb}, LLD ou encore LLVM \texttt{C++ Standard Library}, une implémentation de la bibliothèque standard \texttt{C++11} et \texttt{C++14}.
 
 \subsection{Structure de LLVM}
 
+\gls{llvm} reprend le desing des trois phases et l'implémente en plusieurs parties. Parmis ces parties, le langage intermédiaire joue un trés grand rôle. C'est lui qui donne le plus de sens à l'architecture choisie et qui rend si puissant \gls{llvm}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\columnwidth]{LLVMCompiler1}
+	\captionsource{Vue d'ensemble des composants de LLVM}
+	{Vue d'ensemble des composants de LLVM}
+	{\url{http://www.aosabook.org/en/llvm.html}}
+	\label{fig:LLVMCompiler1}
+\end{figure}
+
+\subsubsection{Représentation intermédiaire}
+
+\gls{llvmIR} est un langage en soit, normé et bien définit, fortement typé, ayant pour seul but de répondre aux besoins de l'optimisation. Sa définition en fait un langage permettant d'être très fortement modifié et restructuré lors de la phase en question.
+
+\begin{listing}
+	\bashfile{02-main/listings/sample.ll}
+	\caption{Example de code \gls{llvmIR}, source : \url{http://www.aosabook.org/en/llvm.html}}
+	\label{lst:sampleLLIR}
+\end{listing}
+
+La représentation \autoref{lst:sampleLLIRC} est le résultat du code \texttt{C} en \autoref{lst:sampleLLIR}. Le défit réside dans la propagation des informations, lorsque l'on transforme du code \texttt{C} en une représentation, certaines informations peuvent être perdues. Lorsque l'équipe de \gls{levee} a commencé à travailler sur le projet, ils se sont rendu compte que certaines informations étaient perduent lors de la transformation en \gls{llvmIR} et ont du compléter les métadonnées émises par \gls{clang}.
+
+\begin{listing}
+	\cfile{02-main/listings/sample.c}
+	\caption{Code source \texttt{C} de l'exemple de représentation intermédiaire, source : \url{http://www.aosabook.org/en/llvm.html}}
+	\label{lst:sampleLLIRC}
+\end{listing}
+
+Le langage intermédiaire est constitué d'instruction ressemblant fortement au langage machine. \gls{llvmIR} s'en rapproche beaucoup mais à quelques différences prêtes, par exemple: (i) les conventions d'appel de \texttt{ret} ou \texttt{call} sont abstraite --- c'est au \og backend \fg de se soucier de ce genre de conventions ---, (ii) un nombre infini de variables commencant par \texttt{\%} est à disposition et (iii) celles-ci sont typées grâce à un système simple \texttt{i32} pour un entier de 32~bits, \texttt{i32**} pour un pointeur de pointeur sur un entier de 32~bits.
+
+\gls{llvmIR} peut être stocké et manipulé sous trois forme différentes: (i) la forme textuelle, comme montrée en \autoref{lst:sampleLLIR}, (ii) sous forme de données structurées en mémoires --- forme utilisée par les optimiseurs --- et (iii) sous une forme de \og bitcode \fg, sauvgardée sur le disque, permettant une gestion plus efficace et plus dense de l'information. Des outils de conversion du \og bitcode \fg (\texttt{.bc}) au format textuel (\texttt{.ll}) et vis-versa sont présents dans la suite \gls{llvm}.
+
+\subsubsection{LLVM \og frontends \fg}
+
+\gls{llvmIR} est la seule interface au sein de \gls{llvm}, ce qui signifie que le seul pré-requis pour écrire un \og frontend \fg \gls{llvm} est de connaître son fonctionnement. Du fait que ce langage soit un langage textuel, il suffit au \og frontend \fg d'écrir le résultat dans fichier text et une simple commande tel que les \og Unix pipes \fg permettent de profiter de toute l'infrastructure.
+
+\subsubsection{LLVM \og optimizers \fg}
+
+Le fonctionnement d'un \og optimizers \fg est plutôt simple: il prend en entrée le code sous forme de la représentation intermédiaire et produit du code, toujours sous la forme \gls{llvmIR}, sensé être plus efficace. Les \og optimizers \fg sont organisé sous forme de pipeline, chaque \og optimizer \fg représente une \og pass \fg, suivant le niveau d'optimisation souhaité lors de la compilation, par exemple \texttt{-O3}, le nombre de \og pass \fg fluctue.
+
+Chaque \og pass \fg au sein de \gls{llvm} est écrite en \texttt{C++} et dérive --- indérectement --- de la classe \texttt{Pass}. Les \og pass \fg doivent être les plus indépendantes possible les unes des autres, leur architecture permet d'inclure seulement les \og pass \fg utilisées lors de la compilation.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\columnwidth]{PassLinkage}
+	\captionsource{Exemple de construction d'un optimiseur LLVM}
+	{Exemple de construction d'un optimiseur LLVM}
+	{\url{http://www.aosabook.org/en/llvm.html}}
+	\label{fig:PassLinkage}
+\end{figure}
+
+L'interface très claire des \og pass \fg permet une très grande modularité ainsi qu'une certaine puissance et cela laisse la possibilité d'implémenter n'importe quelle fonctionnalité au sein de \gls{llvm}.
+
+\subsubsection{LLVM \og backends \fg}
+
+La transition entre le langage intermédiaire et le code machine est géré par le composant \og LLVM code generator \fg. Il est nécessaire de produire le code le plus spécifique et le plus optimisé sur chaque plateforme, de ce fait il est préférable que chaque \og backend \fg produise en code machine unique. Cependant, il est aussi intéressant de pouvoir partager une partie de la logique. Pour ce faire, le système de \og pass \fg également appliqué lors de la génération du code machine.
+
+Afin de répondre à cette problèmatique, \gls{llvm} met à disposition une list de \og pass \fg présentes par défaut, répondant à des problèmatiques récurentes, ainsi l'auteur de la plateforme ciblée peut choisir de redéfinir certaine \og pass \fg, de les enlever ou d'en rajouter.
+
+Cette approche amène alors le défi de fournir des \og pass \fg génériques, mais spécifiques à chaque plateforme. \gls{llvm} répond à ce défi grâce à un langage spécifique, les \og LLVM target description files \fg (\texttt{.td}), permettant de fournir, pour chaque plateforme, la description de celle-ci pour la \og pass \fg en question.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.5\columnwidth]{X86Target}
+	\captionsource{Simplification du processus de définition spécifique à la plateforme \texttt{x86}}
+	{Simplification du processus de définition spécifique à la plateforme \texttt{x86}}
+	{\url{http://www.aosabook.org/en/llvm.html}}
+	\label{fig:X86Target}
+\end{figure}
+
+Le \autoref{lst:x86RegisterTd} est un exemple de \texttt{.td} décrivant les registres à disposition pour la plateforme \texttt{x86}. Différentes informations sont présentes, par exemple le fait que les registres sont en 32~bits, de préférence alignés, etc. D'autres informations tel que l'ordre d'utilisation sont décrite dans ces fichiers.
+
+\begin{listing}
+	\begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+def GR32 : RegisterClass<[i32], 32,
+  [EAX, ECX, EDX, ESI, EDI, EBX, EBP, ESP,
+   R8D, R9D, R10D, R11D, R14D, R15D, R12D, R13D]> { … }
+	\end{minted}
+	\caption{Description des registres disponibles pour le \og backend \fg \texttt{x86}}
+	\label{lst:x86RegisterTd}
+\end{listing}
+
 
 \subsection{Architecture de \og safe stack \fg}
-
-% description des actions effectuée dans le front-end, l'optimizer, et le back-end
+\label{subsection:architectureSafeStack}
 
 \subsubsection{Compiler-rt}
 implemented as a compiler-rt library that is automatically linked in when the program is compiled with SafeStack
@@ -179,10 +289,27 @@ bool SafeStack::IsSafeStackAlloca(const Value *AllocaPtr, uint64_t AllocaSize);
 	\label{lst:IsSafeStackAllocaHeader}
 \end{listing}
 
+\begin{listing}
+	\begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+class SafeStackLegacyPass : public FunctionPass;
+	\end{minted}
+	\caption{Signature de la méthode permettant de déterminer si une allocation est sûre}
+	\label{lst:SafeStackLegacyPassClass}
+\end{listing}
+
+
+
+
+
 
 L'implémentation de la méthode à la version 4.0 de \gls{llvm} est disponible en annexe et sur GitHub
 
 \url{https://github.com/llvm-mirror/llvm/blob/93e6e5414ded14bcbb233baaaa5567132fee9a0c/lib/CodeGen/SafeStack.cpp#L263-L357}
+
+
+
+Le commit qui ajoute le patch SafeStack à llvm
+\url{https://github.com/llvm-mirror/llvm/commit/7ffec838a2b72e6841d9fb993b5fe6a45f3b2a90#diff-0ae4221c82094c2703f2511b921530e0}
 
 
 
