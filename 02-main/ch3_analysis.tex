@@ -127,7 +127,7 @@ Les chiffres avancés au niveau des gains en performance de \gls{cps} sont de l'
 \section{\og Safe Stack \fg}
 \label{section:safeStack}
 
-Le composant \og \gls{safeStack} \fg est un équivalant, mais potentiellement plus complet, aux \og \gls{stackCookies} \fg. Son but est de protéger les variables sensibles stockées sur la pile d'exécution. Pour ce faire, à la manière dont fonctionne \gls{cpi}, \og \gls{safeStack} \fg sépare certaines variables dans deux régions mémoires différentes. Cependant, dans le cas de \og \gls{safeStack} \fg, l'approche est différentes. Seul sont déplacés les variables dont l'allocation ou les accès sont considérés comme non-sécurisé. Les allocations et les accès à ces variables sont ensuite remplacés lors de la phase de compilation par \og \gls{safeStack} \fg afin de les initialiser dans une zone mémoire non protégée. Cette zone mémoire est initialisée au lancement de l'application, au sein du segment de \og memory mapping \fg.
+Le composant \og \gls{safeStack} \fg est un équivalant, mais potentiellement plus complet, aux \og \gls{stackCookies} \fg. Son but est de protéger les variables sensibles stockées sur la pile d'exécution. Pour ce faire, à la manière dont fonctionne \gls{cpi}, \og \gls{safeStack} \fg sépare les variables dans deux régions mémoires différentes. Cependant, dans le cas de \og \gls{safeStack} \fg, l'approche est différentes. Seul sont déplacées les variables dont l'allocation ou les accès sont considérés comme non-sécurisé. Les allocations et les accès à ces variables sont ensuite remplacés lors de la phase de compilation par \og \gls{safeStack} \fg afin de les initialiser dans une zone mémoire non protégée. Cette zone mémoire est initialisée au lancement de l'application, au sein du segment de \og memory mapping \fg.
 
 Comme montré sur la \ref{fig:safeRegionLayout}, la zone mémoire sûre, ou région sûre, est constituée d'une ou plusieurs \og safe stacks \fg. Chaque \og safe stack \fg appartient à un \texttt{thread}, celui-ci contient un pointeur vers la pile standard et un pointeur vers la pile sûre. Le registre \mintinline{c}{%esp} sur l'architecture \texttt{x86-32} pointe vers la \og \gls{safeStack} \fg --- \mintinline{c}{%rsp} sur \texttt{x86-64} ---, tandis qu'une variable locale au \texttt{thread} pointe vers la \og unsafe stack \fg, présente dans le segment de \og memory mapping \fg.
 
@@ -231,7 +231,7 @@ Chaque \og pass \fg au sein de \gls{llvm} est écrite en \texttt{C++} et dérive
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.5\columnwidth]{PassLinkage}
+	\includegraphics[width=0.6\columnwidth]{PassLinkage}
 	\captionsource{Exemple de construction d'un optimiseur LLVM}
 	{Exemple de construction d'un optimiseur LLVM}
 	{\url{http://www.aosabook.org/en/llvm.html}}
@@ -242,7 +242,7 @@ L'interface très claire des \og pass \fg permet une très grande modularité ai
 
 \subsubsection{LLVM \og backends \fg}
 
-La transition entre le langage intermédiaire et le code machine est géré par le composant \og LLVM code generator \fg. Il est nécessaire de produire le code le plus spécifique et le plus optimisé sur chaque plateforme, de ce fait il est préférable que chaque \og backend \fg produise en code machine unique. Cependant, il est aussi intéressant de pouvoir partager une partie de la logique. Pour ce faire, le système de \og pass \fg également appliqué lors de la génération du code machine.
+La transcription entre le langage intermédiaire et le code machine est géré par le composant \og LLVM code generator \fg. Il est nécessaire de produire le code le plus spécifique et le plus optimisé sur chaque plateforme, de ce fait il est préférable que chaque \og backend \fg produise en code machine unique. Cependant, il est aussi intéressant de pouvoir partager une partie de la logique. Pour ce faire, le système de \og pass \fg également appliqué lors de la génération du code machine.
 
 Afin de répondre à cette problèmatique, \gls{llvm} met à disposition une list de \og pass \fg présentes par défaut, répondant à des problèmatiques récurentes, ainsi l'auteur de la plateforme ciblée peut choisir de redéfinir certaine \og pass \fg, de les enlever ou d'en rajouter.
 
@@ -250,14 +250,14 @@ Cette approche amène alors le défi de fournir des \og pass \fg génériques, m
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.5\columnwidth]{X86Target}
+	\includegraphics[width=0.6\columnwidth]{X86Target}
 	\captionsource{Simplification du processus de définition spécifique à la plateforme \texttt{x86}}
 	{Simplification du processus de définition spécifique à la plateforme \texttt{x86}}
 	{\url{http://www.aosabook.org/en/llvm.html}}
 	\label{fig:X86Target}
 \end{figure}
 
-Le \autoref{lst:x86RegisterTd} est un exemple de \texttt{.td} décrivant les registres à disposition pour la plateforme \texttt{x86}. Différentes informations sont présentes, par exemple le fait que les registres sont en 32~bits, de préférence alignés, etc. D'autres informations tel que l'ordre d'utilisation sont décrite dans ces fichiers.
+\vfill
 
 \begin{listing}
 	\begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
@@ -268,6 +268,8 @@ def GR32 : RegisterClass<[i32], 32,
 	\caption{Description des registres disponibles pour le \og backend \fg \texttt{x86}}
 	\label{lst:x86RegisterTd}
 \end{listing}
+
+Le \autoref{lst:x86RegisterTd} est un exemple de \texttt{.td} décrivant les registres à disposition pour la plateforme \texttt{x86}. Différentes informations sont présentes, par exemple le fait que les registres sont en 32~bits, de préférence alignés, etc. D'autres informations tel que l'ordre d'utilisation sont décrite dans ces fichiers.
 
 
 \subsection{Architecture de \og safe stack \fg}
