@@ -70,6 +70,7 @@ En effectuant des tests, les chercheurs se sont rendu compte que l'analyse heuri
 Le coût en performance dépend directement de l'heuristique et de sa récursion. L'équipe mentionne elle-même que toutes les heuristiques donnant un ensemble approximatif cohérent peuvent être utilisées. Des améliorations peuvent encore être attendues sur ce point. Le second avantage majeur de cette approche réside dans le fait que l'on peut facilement imaginer de nouvelles heuristiques permettant de protéger d'autres ensembles de pointeurs, par exemple, pour protéger une partie des données au sein du programme.
 
 \subsection{Zone de mémoire sûre}
+\label{subsection:zoneMemoireSure}
 
 Afin de garantir l'intégrité de l'ensemble des pointeurs sensibles, une zone mémoire appelée \og \textit{safe region} \fg est créée, voir la \autoref{fig:safeRegionLayout}. Cette région est isolée et ne peut être accédée que via des instructions fournies par \gls{cpi}. Cela permet de garantir l'intégrité des données et la propagation des métadonnées. Elle est ensuite constituée d'un \og \textit{safe pointer store} \fg, pour les pointeurs sensibles, et de \og \textit{safe stacks} \fg, pour une gestion plus spécifique liée à la pile d'exécution, voir la \autoref{section:safeStack}. Seule l'une des deux copies présente dans les deux régions est utilisée suivant le type du pointeur en question.
 
@@ -88,6 +89,7 @@ Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les m�
 
 
 \subsection{Isolation de la zone mémoire sûre}
+\label{subsection:isolationZoneMemoire}
 
 Une fois les métadonnées et les \og \textit{safe stacks} \fg placées au sein de la région sûre, il faut pouvoir garantir leur intégrité. Pour ce faire cette région doit être isolée du reste de la mémoire et il ne doit pas être possible de la modifier sans passer par les instructions fournies par \gls{cpi}. Ce mécanisme de protection est directement dépendant de l'architecture pour laquelle le binaire est compilé. Dans tous les cas, la région sûre est placée dans le segment de \og memory mapping \fg avec un accès en lecture et écriture.
 
@@ -268,9 +270,11 @@ Le \autoref{lst:x86RegisterTd} est un exemple de \texttt{.td} décrivant les reg
 
 \subsection{Implémentation de CPI}
 
-L'implémentation de \gls{cpi} commme \gls{levee} le propose au sein de la version 3.3 de \gls{llvm} est composée de deux \og pass \fg. La première permettant d'identifier les pointeurs sensibles selon le design expliqué en \autoref{subsection:detEnsemblePointeursSensible} et la deuxième permettant de mettre en place la séparation des pointeurs et d'assurer leur intégrité.
+L'implémentation de \gls{cpi} commme \gls{levee} le propose au sein de la version 3.3 de \gls{llvm} est composée de deux \og pass \fg. La première permettant d'identifier les pointeurs sensibles selon le design expliqué en \autoref{subsection:detEnsemblePointeursSensible} et la deuxième permettant de mettre en place la séparation des pointeurs et d'assurer leur intégrité commen expliqué en \autoref{subsection:zoneMemoireSure} et en \autoref{subsection:isolationZoneMemoire}.
 
-Comme mentioné précédement, il se peut que de l'information soit perdue lors de la transformation du code source en \gls{llvmIR}. Dans le cas de cette implémentation, le cas de figure c'est imposé. \gls{clang} ne conservait pas le type original des pointeurs étant transformé en \mintinline{c}{void*} quand ceux-ci sont passés à la fonction \mintinline{c}{memset} par exemple. Ou alors, \gls{llvmIR} ne faisait pas la différence entre un pointeur de type \mintinline{c}{void*} et \mintinline{c}{char*} --- les deux étant représenté par un \texttt{i8*} ---, ce qui est une information utile dans le cas de \gls{cpi}. L'équipe a donc dû améliorer \gls{clang} afin de préserver ces informations lors du passage du \texttt{C/C++} au \gls{llvmIR}.
+Comme mentioné précédement, il se peut que de l'information soit perdue lors de la transformation du code source en \gls{llvmIR}. Dans le cas de cette implémentation, le cas de figure c'est imposé. \gls{clang} ne conservait pas le type original des pointeurs étant transformé en \mintinline{c}{void*} quand ceux-ci sont passés à la fonction \mintinline{c}{memset} par exemple. Ou encore que \gls{llvmIR} ne faisait pas la différence entre un pointeur de type \mintinline{c}{void*} et \mintinline{c}{char*} --- les deux étant représenté par un \texttt{i8*} ---, ce qui est une information utile dans le cas de \gls{cpi}. L'équipe a donc dû améliorer \gls{clang} afin de préserver ces informations lors du passage du \texttt{C/C++} au \gls{llvmIR} entant que \og LLVM metadata \fg.
+
+La seconde \og pass \fg permettant de mettre en place l'instrumentation rajoute, dans la plupart des cas, des appels aux fonctions tels que \mintinline{c}{cpi_ptr_store()} ou encore \mintinline{c}{cpi_memcopy()}. Ces fonctions sont implémentées au sein du \og \texttt{compiler-rt} \fg et sont compilées entant que \og LLVM bitcode \fg puis liées aux objets compilés par \gls{clang}.
 
 \subsection{Architecture de \og safe stack \fg}
 \label{subsection:architectureSafeStack}
