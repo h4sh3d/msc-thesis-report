@@ -129,6 +129,7 @@ Le composant \og \gls{safeStack} \fg est un équivalant, mais potentiellement pl
 Comme montré sur la \ref{fig:safeRegionLayout}, la zone mémoire sûre, ou région sûre, est constituée d'une ou plusieurs \og safe stacks \fg. Chaque \og safe stack \fg appartient à un \texttt{thread}, celui-ci contient un pointeur vers la pile standard et un pointeur vers la pile sûre. Le registre \mintinline{c}{%esp} sur l'architecture \texttt{x86-32} pointe vers la \og \gls{safeStack} \fg --- \mintinline{c}{%rsp} sur \texttt{x86-64} ---, tandis qu'une variable locale au \texttt{thread} pointe vers la \og unsafe stack \fg, présente dans le segment de \og memory mapping \fg.
 
 \subsection{Analyse à la compilation}
+\label{subsection:analyseCompilation}
 
 Il est nécessaire de passer par un phase d'analyse afin de determiner, comme pour \gls{cpi}, quelles variables déplacer.
 La fonction \mintinline{c}{IsSafeStackAlloca()} détermine quels types de variables peuvent être accédés de manière non-sécurisée. Une variable est déclarée non-sécurisée si l'un des critères est retenu:
@@ -279,10 +280,62 @@ La seconde \og pass \fg permettant de mettre en place l'instrumentation rajoute,
 \subsection{Architecture de \og safe stack \fg}
 \label{subsection:architectureSafeStack}
 
-\subsubsection{Compiler-rt}
-implemented as a compiler-rt library that is automatically linked in when the program is compiled with SafeStack
+L'implémentation de \og \gls{safeStack} \fg, dans la version 4.0 de \gls{llvm}, est découpée en deux parties: (i) une \og pass \fg d'analyse et d'optimisation et (ii) l'implémentation de la bibliothèque d'exécution.
 
+\subsubsection{Anaylse et optimisation}
 
+Une seule \og pass \fg au sein de l'\og optimizer \fg est résponsable d'appliquer \og \gls{safeStack} \fg et est présente sous le nom de \texttt{SafeStackLegacyPass}.
+
+La classe implémente plusieurs méthodes dont (i) une méthode permettant de vérifier une allocation donnée, (ii) une méthode permettant de déplacer les variables non-sécurisée statiques, (iii) une méthode permettant de déplacer les variables non-sécurisée dynamiques ou encore (iv) une méthode permettant d'appliquer \og \gls{safeStack} \fg sur une fonction donnée.
+
+\newpage
+
+\begin{listing}
+	\begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+/// The SafeStack pass splits the stack of each function into the safe
+/// stack, which is only accessed through memory safe dereferences (as
+/// determined statically), and the unsafe stack, which contains all
+/// local variables that are accessed in ways that we can't prove to
+/// be safe.
+class SafeStackLegacyPass : public FunctionPass {
+
+  /// \brief Allocate space for all static allocas in \p StaticAllocas,
+  /// replace allocas with pointers into the unsafe stack and generate code to
+  /// restore the stack pointer before all return instructions in \p Returns.
+  ///
+  /// \returns A pointer to the top of the unsafe stack after all unsafe static
+  /// allocas are allocated.
+  Value *moveStaticAllocasToUnsafeStack(IRBuilder<> &IRB, Function &F,
+                                        ArrayRef<AllocaInst *> StaticAllocas,
+                                        ArrayRef<Argument *> ByValArguments,
+                                        ArrayRef<ReturnInst *> Returns,
+                                        Instruction *BasePointer,
+                                        AllocaInst *StackGuardSlot);
+
+  /// \brief Replace all allocas in \p DynamicAllocas with code to allocate
+  /// space dynamically on the unsafe stack and store the dynamic unsafe stack
+  /// top to \p DynamicTop if non-null.
+  void moveDynamicAllocasToUnsafeStack(Function &F, Value *UnsafeStackPtr,
+                                       AllocaInst *DynamicTop,
+                                       ArrayRef<AllocaInst *> DynamicAllocas);
+
+  bool IsSafeStackAlloca(const Value *AllocaPtr, uint64_t AllocaSize);
+
+  bool IsMemIntrinsicSafe(const MemIntrinsic *MI, const Use &U,
+                          const Value *AllocaPtr, uint64_t AllocaSize);
+
+  bool IsAccessSafe(Value *Addr, uint64_t Size, const Value *AllocaPtr,
+                    uint64_t AllocaSize);
+
+public:
+	bool runOnFunction(Function &F) override;
+}
+	\end{minted}
+	\caption{Déclaration partielle de la classe \og \gls{safeStack} \fg montrant certaines des méthodes mentionnées}
+	\label{lst:SafeStackLegacyPassClass}
+\end{listing}
+
+La méthode \mintinline{c}{runOnFunction()} permet de séparer la pile d'exécution, si besoin est, de la fonction passée en paramètre. C'est le point de départ de l'analyse et de l'instrumentation de \og \gls{safeStack} \fg. Cette méthode fait appel à \mintinline{c}{IsSafeStackAlloca()}, voir \autoref{lst:IsSafeStackAllocaHeader}, permettant de determiner si une allocation doit être déplacée ou non, selon les explications en \autoref{subsection:analyseCompilation}.
 
 \begin{listing}
 	\begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
@@ -295,31 +348,50 @@ bool SafeStack::IsSafeStackAlloca(const Value *AllocaPtr, uint64_t AllocaSize);
 	\label{lst:IsSafeStackAllocaHeader}
 \end{listing}
 
+La méthode \mintinline{c}{moveStaticAllocasToUnsafeStack()}, voir \autoref{lst:moveAllocasToUnsafeStack}, ainsi que la méthode  \mintinline{c}{moveDynamicAllocasToUnsafeStack()} permettent de générer et remplacer le code nécessaire afin de modifier les allocations marquées par la méthode \mintinline{c}{IsSafeStackAlloca()}. Lors de l'appel à la méthode \mintinline{c}{runOnFunction()} les allocations des variables statiques sont dabord modifiées, puis un pointeur vers le haut de la pile non-sécurisée est récuperé avant de modifier les allocations dynamiques, partant dudit pointeur.
+
 \begin{listing}
 	\begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-class SafeStackLegacyPass : public FunctionPass;
+/// \brief Allocate space for all static allocas in \p StaticAllocas,
+/// replace allocas with pointers into the unsafe stack and generate code to
+/// restore the stack pointer before all return instructions in \p Returns.
+///
+/// \returns A pointer to the top of the unsafe stack after all unsafe static
+/// allocas are allocated.
+Value *moveStaticAllocasToUnsafeStack(IRBuilder<> &IRB, Function &F,
+                                      ArrayRef<AllocaInst *> StaticAllocas,
+                                      ArrayRef<Argument *> ByValArguments,
+                                      ArrayRef<ReturnInst *> Returns,
+                                      Instruction *BasePointer,
+                                      AllocaInst *StackGuardSlot);
+
+/// \brief Replace all allocas in \p DynamicAllocas with code to allocate
+/// space dynamically on the unsafe stack and store the dynamic unsafe stack
+/// top to \p DynamicTop if non-null.
+void moveDynamicAllocasToUnsafeStack(Function &F, Value *UnsafeStackPtr,
+                                     AllocaInst *DynamicTop,
+                                     ArrayRef<AllocaInst *> DynamicAllocas);
 	\end{minted}
-	\caption{Signature de la méthode permettant de déterminer si une allocation est sûre}
-	\label{lst:SafeStackLegacyPassClass}
+	\caption{Signatures des méthodes permettant de déplacer les allocations dans la zone non-sécurisée}
+	\label{lst:moveAllocasToUnsafeStack}
 \end{listing}
 
+Afin de lire et comprendre toute l'implémentation de \og \gls{safeStack} \fg dans la version 4.0, vous trouverez \og \gls{safeStack} \fg sur le dépôt miroire de \gls{llvm} disponible \href{https://github.com/llvm-mirror/llvm/blob/release_40/lib/CodeGen/SafeStack.cpp}{ici}. Le commit ajoutant \og \gls{safeStack} \fg à \gls{llvm} est disponible \href{https://github.com/llvm-mirror/llvm/commit/7ffec838a2b72e6841d9fb993b5fe6a45f3b2a90#diff-0ae4221c82094c2703f2511b921530e0}{ici}.
 
+\subsubsection{Bibliothèque d'exécution}
 
+% implemented as a compiler-rt library that is automatically linked in when the program is compiled with SafeStack
 
-
-
-L'implémentation de la méthode à la version 4.0 de \gls{llvm} est disponible en annexe et sur GitHub
-
-\url{https://github.com/llvm-mirror/llvm/blob/93e6e5414ded14bcbb233baaaa5567132fee9a0c/lib/CodeGen/SafeStack.cpp#L263-L357}
-
-
-
-Le commit qui ajoute le patch SafeStack à llvm
-\url{https://github.com/llvm-mirror/llvm/commit/7ffec838a2b72e6841d9fb993b5fe6a45f3b2a90#diff-0ae4221c82094c2703f2511b921530e0}
-
+Comme pour \gls{cpi}, \og \gls{safeStack} \fg est dotée d'une bibliothèque permettant de géréer son initialisation. On retrouve dans cette bilbiothèque les fonctions s'occupant d'intercépter les événements des \texttt{threads} afin d'initialiser et libérer les piles d'exécution non-sécurisées, ainsi que les fonctions de gestion de la pile, voir \autoref{lst:safeStackRuntime}. L'implémentation complète est disponible, dans sa version 4.0, \href{https://github.com/llvm-mirror/compiler-rt/blob/release_40/lib/safestack/safestack.cc}{ici}.
 
 
 % -----------------------------------------------------------------------------
 \section{Rayon d'action}
 
 % qu'est qu'il est sensé proteger par rapport au chapitre historique
+
+La combinaison \gls{cpi} et \og \gls{safeStack} \fg permet effectivement de couvrire tout les attaques contre le flot de contôle se basant sur une erreur provenant de la gestion de la mémoire. La protection \og \gls{safeStack} \fg seule, tel qu'implémentée au sein de \gls{llvm} actuellement, permet de se prémunir contre les dépassements de tampon ayant lieu uniquement sur la pile d'exécution. \og Safe stack \fg ne couvre donc qu'une partie des attaques connues au jour d'aujourd'hui.
+
+\subsection{\og Safe stack \fg ou canaris}
+
+\og Safe stack \fg est désigné comme équivalant, voir en remplacement des canaris. La question se pose alors, quels sont les avantages de \og \gls{safeStack} \fg sur les canaris ? La mise en pratique d'une attaque, voir \autoref{chap:attaque}, a montré que seul certains cas particuliers supplémentaires sont couvert par \og \gls{safeStack} \fg. L'implémentation n'introduit pas de coût en performance significatif et est au même niveau des \og \gls{stackCookies} \fg, les quelques pourcent de couverture supplémentaire sont donc bienvenus.
