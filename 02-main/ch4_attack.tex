@@ -1,9 +1,9 @@
 \chapter{Proof of concept d'une attaque}
 \label{chap:attaque}
 
-L'implémentation de \gls{safeStack} au sein de \gls{llvm} doit permettre de prévenir les attaques se basant sur l'exploitation d'un dépassement de tampon. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code fictif. Afin de rendre plus portable et reproductible cette phase de test, un environnement spécifique est mis en place et décrit précisement ainsi que la recette utilisée lors de la phase de compilation.
+L'implémentation de \og \gls{safeStack} \fg au sein de \gls{llvm} doit permettre de prévenir les attaques se basant sur l'exploitation d'un dépassement de tampon. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code fictif. Afin de rendre plus portable et reproductible cette phase de test, un environnement spécifique est mis en place et décrit précisément ainsi que la recette utilisée lors de la phase de compilation.
 
-L'objectif est de démontrer l'efficacité de \gls{levee} et de comparer l'approche avec celle des \gls{stackCookies}. Pour ce faire, une première attaque a été pensée, malheureusement celle-ci n'avais pas la possibilité d'aboutir. Basé sur ses conclusions, une autre attaque a été mise en place. Leur description théorique ainsi que leurs implémentation sont décrites en détail.
+L'objectif est de démontrer l'efficacité de \gls{levee} et de comparer l'approche avec celle des \og \gls{stackCookies} \fg. Pour ce faire, une première attaque a été pensée, malheureusement celle-ci n'avais pas la possibilité d'aboutir. Basé sur ses conclusions, une autre attaque a été mise en place. Leur description théorique ainsi que leurs implémentation sont décrites en détail.
 
 Un des exemples d'attaque proposé dans ce chapitre est basé sur l'article \og Introduction to return oriented programming (ROP) \fg du blog \textit{codearcana.com} \cite{IntroductionToROP}.
 
@@ -14,7 +14,7 @@ Un des exemples d'attaque proposé dans ce chapitre est basé sur l'article \og 
 % -----------------------------------------------------------------------------
 \section{Environnement}
 
-Afin de faciliter la mise en place de l'attaque, la compilation est faite en 32~bits. L'environnement choisi pour installer la version 4.0 de \gls{llvm} est Debian 8 en 64~bits. Afin de pouvoir correctement compiler et exécuter en 32~bits, les bibliothèques nécessaires doivent être installés (lignes 20 à 22). En plus de \gls{llvm}, \gls{gdb} ainsi que quelques autres utilitaires sont installés.
+Afin de faciliter la mise en place de l'attaque, la compilation est faite en 32~bits. L'environnement choisi pour installer la version 4.0 de \gls{llvm} est Debian 8 en 64~bits. Afin de pouvoir correctement compiler et exécuter en 32~bits, les bibliothèques nécessaires doivent être installées (lignes 20 à 22). En plus de \gls{llvm}, \gls{gdb} ainsi que quelques autres utilitaires sont installés.
 
 \subsection{Docker}
 
@@ -32,9 +32,9 @@ Tout les autres fichiers de configurations de l'environnement Docker sont dispon
 
 \subsection{Gestion de la compilation}
 
-L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation. Un Makefile est mis en place afin de rassembler les différents \og flags \fg utilisés pour générer les deux versions exécutables (l'un avec \gls{safeStack} et l'autre sans). En en-tête, différentes variables utilisées par \textit{make} sont définies afin de s'assurer que \gls{clang} 4.0 est bien utilisé. Deux version de l'exécutable sont créés: \textit{safe-stack} et \textit{stack-cookie}. Le language intermédiaire de \gls{llvm} est émit lors de la compilation afin de comparer les effets de l'un et l'autre mécanisme de protection.
+L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation. Un Makefile est mis en place afin de rassembler les différents \og flags \fg utilisés pour générer les deux versions exécutables (l'un avec \gls{safeStack} et l'autre sans). En en-tête, différentes variables utilisées par \textit{make} sont définies afin de s'assurer que \gls{clang} 4.0 est bien utilisé. Deux version de l'exécutable sont créés: \textit{safe-stack} et \textit{stack-cookie}. Le language intermédiaire de \gls{llvm} est émis lors de la compilation afin de comparer les effets de l'un et l'autre mécanisme de protection.
 
-À noté que la protection de la pile \textit{-fstack-protector} est descativée grâce à \textit{-fno-stack-protector} lorsque l'on active \gls{safeStack}. Le but est de comparer les deux et actuellement, \gls{safeStack} n'est pas compatible avec les \gls{stackCookies}.
+À noter que la protection de la pile \textit{-fstack-protector} est desactivée grâce à \textit{-fno-stack-protector} lorsque l'on active \gls{safeStack}. Le but est de comparer les deux et actuellement, \og \gls{safeStack} \fg n'est pas compatible avec les \og \gls{stackCookies} \fg.
 
 \begin{listing}
 	\makefile{02-main/listings/Makefile}
@@ -42,11 +42,11 @@ L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation.
 	\label{lst:defaultMakefile}
 \end{listing}
 
-Un script permettant d'afficher les mécanismes de protections d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
+Un script permettant d'afficher les mécanismes de protection d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
 
 \subsection{Mécanismes de sécurité actifs}
 
-\gls{aslr} est actif au sein de l'environnement. Chaque binaire est protegé soit avec \gls{stackCookies} ou avec \gls{safeStack}. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \gls{stackCookies} sont bien desactivés lors du test de \gls{safeStack} et que dans les deux cas le drapeau \gls{nx} est actif.
+\gls{aslr} est actif au sein de l'environnement. Chaque binaire est protegé soit avec \og \gls{stackCookies} \fg ou avec \og \gls{safeStack} \fg. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \og \gls{stackCookies} \fg sont bien désactivés lors du test de \og \gls{safeStack} \fg et que dans les deux cas le drapeau \gls{nx} est actif.
 
 \begin{listing}
 	\bashfile{02-main/listings/checksec.res}
@@ -54,7 +54,7 @@ Un script permettant d'afficher les mécanismes de protections d'un binaire est 
 	\label{lst:checksecRes}
 \end{listing}
 
-\textit{--- \gls{pie} est un mécanisme de protection qui n'a pas été abordé dans le chapitre \ref{chap:historique} mais qui pourrait y avoir une place. C'est un mécanisme récent (par rapport à ceux abordés dans le chapitre) permettant d'appliquer de l'aléatoire sur des régions de code, et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}. ---}
+\gls{pie} est un mécanisme de protection récent qui permet d'appliquer de l'aléatoire sur des régions de code, et ainsi rendre plus difficile la mise en place d'une attque de type \gls{rop}.
 
 
 % -----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ Un script permettant d'afficher les mécanismes de protections d'un binaire est 
 
 \subsection{Description théorique de l'attaque}
 
-La première tentative se base sur une \textit{structure} dans laquelle est stocké un pointeur vers une fonction. En placant la \textit{structure} et le tampon sur la pile d'exécution, l'idée est de réécrir l'adresse du pointeur présent dans ladite \textit{structure} afin de lancer la chaîne de gadgets à l'appel du pointeur.
+La première tentative se base sur une \textit{structure} dans laquelle est stocké un pointeur vers une fonction. En plaçant la \textit{structure} et le tampon sur la pile d'exécution, l'idée est de réécrire l'adresse du pointeur présent dans ladite \textit{structure} afin de lancer la chaîne de gadgets à l'appel du pointeur.
 
 Le but est de mettre en place une \og stack frame \fg correspondant à la fonction \mintinline{c}{main()} ayant les variables locales stockées dans l'ordre dans lesquelles elles sont déclarées, comme le montre la \autoref{fig:attackStructExpected}.
 
@@ -77,7 +77,7 @@ Le but est de mettre en place une \og stack frame \fg correspondant à la foncti
 
 \subsection{Implémentation}
 
-Le code correspondant au scénario, présenté en \autoref{lst:struct}, comprend: (i) une structure nommée \texttt{Number}, (ii) une fonction \texttt{call()} permettant d'appliquer la fonction pointée par la structure et (iii) une fonction retournant le carré --- trés mal optimisé --- de la valeur passée en paramètre. La fonction \texttt{main()} initialise la structure sur la pile ainsi que le \texttt{buffer}, puis copie dans le buffer l'argument \texttt{argv[1]} passé à l'exécution et appel la fonction \texttt{call()}. De manière thèorique il est alors possible, via l'arguement \texttt{argv[1]}, de réécrire l'adresse stockée dans la structure.
+Le code correspondant au scénario, présenté en \autoref{lst:struct}, comprend: (i) une structure nommée \texttt{Number}, (ii) une fonction \texttt{call()} permettant d'appliquer la fonction pointée par la structure et (iii) une fonction retournant le carré --- très mal optimisé --- de la valeur passée en paramètre. La fonction \texttt{main()} initialise la structure sur la pile ainsi que le \texttt{buffer}, puis copie dans le buffer l'argument \texttt{argv[1]} passé à l'exécution et appelle la fonction \texttt{call()}. De manière théorique il est alors possible, via l'argument \texttt{argv[1]}, de réécrire l'adresse stockée dans la structure.
 
 \begin{listing}
 	\cfile{02-main/listings/struct.c}
@@ -85,7 +85,7 @@ Le code correspondant au scénario, présenté en \autoref{lst:struct}, comprend
 	\label{lst:struct}
 \end{listing}
 
-Cependant, lors que l'on inspect la pile d'exécution, on se rend compte que l'ordre dans lequel les variables sont stockées a été modifié. Le \og buffer \fg est positionné en premier --- vers la gauche ---, ce qui rend impossible son exploitation. Ce comportement inatendu est le résultat d'une manipulation souhaitée par le compilateur. Afin de se prémunir au mieux contre l'exploitation des dépassements de tampon, il place les variables de type \mintinline{c}{char*} dans les adresses les plus hautes, juste après le canari. De cette manière, si un dépassement apparaît, il est tout de suite détecté par le canari.
+Cependant, lors que l'on inspecte la pile d'exécution, on se rend compte que l'ordre dans lequel les variables sont stockées a été modifié. Le \og buffer \fg est positionné en premier --- vers la gauche ---, ce qui rend impossible son exploitation. Ce comportement inattendu est le résultat d'une manipulation souhaitée par le compilateur. Afin de se prémunir au mieux contre l'exploitation des dépassements de tampon, il place les variables de type \mintinline{c}{char*} dans les adresses les plus hautes, juste après le canari. De cette manière, si un dépassement apparaît, il est tout de suite détecté par le canari.
 
 \begin{figure}[H]
 	\centering
@@ -98,7 +98,7 @@ Cependant, lors que l'on inspect la pile d'exécution, on se rend compte que l'o
 
 \subsection{Conclusion}
 
-Cette attaque ne peux pas aboutir et est detectée avec les deux mécanismes de protection. Le but ici est de démontré les cas de figures où \gls{safeStack} permet de se protéger contre des attaques qui ne seraient pas gardée par les \gls{stackCookies}, cette attaque est donc abandonée au profit d'une nouvelle approche.
+Cette attaque ne peux pas aboutir et est détectée avec les deux mécanismes de protection. Le but ici est de démontrer les cas de figures où \og \gls{safeStack} \fg permet de se protéger contre des attaques qui ne seraient pas gardée par les \og \gls{stackCookies} \fg, cette attaque est donc abandonée au profit d'une nouvelle approche.
 
 
 % -----------------------------------------------------------------------------
