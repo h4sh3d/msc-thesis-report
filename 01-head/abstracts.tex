@@ -19,7 +19,7 @@
 
 Nos programmes sont le plus souvent écrits avec des langages de bas niveau comme le \texttt{C/C++}, qui forcent le développeur à gérer la mémoire lui-même. Cela implique que, sans de bonnes connaissances et une attention particulière, un adversaire peut facilement exploiter des bugs qui surviennent au sein de ces mécanismes de gestion. Grâce à cela, l’attaquant peut modifier le flot de contrôle de l'application et exécuter son propre code avec les privilèges donnés au programme ciblé.
 
-Des mécanismes de protections et les manières de les contourner apparaissent régulièrement. Ce rapport dresse un bref historique des principaux mécanismes de protection puis analyse un nouveau venu (2014) appelé \gls{levee} et ses concepts théoriques CPI/CPS/\og SafeStack \fg. Afin de tester le fonctionnement de l'un des composants une attaque est mise en place.
+Des mécanismes de protections et les manières de les contourner apparaissent régulièrement. Ce rapport dresse un bref historique des principaux mécanismes de protection puis analyse un nouveau venu appelé \gls{levee} (2014) ainsi que les concepts théoriques CPI/CPS/SafeStack qui y sont associés. Afin de tester le fonctionnement du composant \og safe stack \fg, une attaque est décrite de manière théorique puis est mise en place, le tout dans un environement reproductible sous Docker.
 
 \vskip0.5cm
 \noindent\textbf{Mots clés:}
