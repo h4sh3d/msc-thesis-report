@@ -5,9 +5,9 @@
 
 \gls{levee} est un projet mené dans le cadre du Dependable Systems Lab \cite{dslab} par les chercheurs Volodymyr Kuznetsov, Laszlo Szekeres, Mathias Payer, George Candea, R. Sekar et Dawn Song. Le but annoncé du projet est de sécuriser tout programme informatique contre la totalité des attaques de type \og control-flow hijack \fg via une erreur mémoire, du moment où celui-ci a été compilé grâce à \gls{clang} avec les options nécessaires.
 
-Comme montré dans le chapitre précédent, il existe déjà plusieurs mécanismes (\gls{dep}, \gls{aslr}) permettant de réduire le risque de ce type d'attaque sans imposer au programme de coût supplémentaire en matière de performance. Cependant, il est aujourd'hui possible de les contourner, même au sein d'un environnement de production, grâce à des attaques évoluées telles que le \gls{rop}. D'autres mécanismes plus évolués (\gls{cfi}, SoftBound+CETS, CCured ou encore AddressSanitizer) permettent quant à eux d'améliorer trés fortement la sécurité, mais ne permettent pas, soit de garantir une totale intégrité et reste à ce jour contournable, soit ils ne sont pas adoptés à grande échelle à cause de leurs effets beaucoup trop négatifs sur la performance du programme --- jusqu'à 116\% de coût en performance ---.
+Comme montré dans le chapitre précédent, il existe déjà plusieurs mécanismes (\gls{dep}, \gls{aslr}) permettant de réduire le risque de ce type d'attaque sans imposer au programme de coût supplémentaire en matière de performance. Cependant, il est aujourd'hui possible de les contourner, même au sein d'un environnement de production, grâce à des attaques évoluées telles que le \gls{rop}. D'autres mécanismes plus évolués (\gls{cfi}, SoftBound+CETS, CCured ou encore AddressSanitizer) permettent quant à eux d'améliorer très fortement la sécurité, mais ne permettent pas, soit de garantir une totale intégrité et reste à ce jour contournable, soit ils ne sont pas adoptés à grande échelle à cause de leurs effets beaucoup trop négatifs sur la performance du programme --- jusqu'à 116\% de coût en performance ---.
 
-Le défi relevé par l'équipe de recherche a été de proposer un modèle de sécurité entrainant des coûts faibles en matière de performance tout en garantissant l'intégrité complète du flot de contrôle. \gls{levee} est le prototype d'implémentation de ce modèle et ce chapitre se concentre sur ses aspects théoriques, son implémentation au sein des outils de compilation \gls{llvm} et son rayon d'action.
+Le défi relevé par l'équipe de recherche a été de proposer un modèle de sécurité entraînant des coûts faibles en matière de performance tout en garantissant l'intégrité complète du flot de contrôle. \gls{levee} est le prototype d'implémentation de ce modèle et ce chapitre se concentre sur ses aspects théoriques, son implémentation au sein des outils de compilation \gls{llvm} et son rayon d'action.
 
 \minitoc
 
@@ -16,27 +16,27 @@ Le défi relevé par l'équipe de recherche a été de proposer un modèle de s�
 % -----------------------------------------------------------------------------
 \section{Concepts théoriques}
 
-Seules les attaques visant à dérouter le flot de contrôle de l'application sont prises en compte dans le modèle de sécurité. Les attaques du types \og data-only \fg, visant à modifier ou récupérer des informations qui ne font pas partie du flot, n'entrent pas en considération.
+Seules les attaques visant à dérouter le flot de contrôle de l'application sont prises en compte dans le modèle de sécurité. Les attaques du types \og data-only \fg, visant à modifier ou récupérer des informations qui ne font pas partie du flot de contrôle, n'entrent pas en considération.
 
 Ils émettent l'hypothèse que l'attaquant a le contrôle total sur la mémoire du processus et que le chargement du programme ainsi que le binaire ne peuvent pas être altérés. De ce fait, les mécanismes de protection résultant de la compilation peuvent se mettre en place avant l'intervention de l'attaquant.
 
-Les chercheurs du projet posent comme postulat de départ qu'il est suffisant de garantir l'intégrité des pointeurs pour rendre impossible la modification du flot de contrôle via exploitation d'erreurs mémoires. Dans le cas des langages de types \og memory-safe \fg, un objet en mémoire ne peut être accédé que depuis un pointeur prévu explicitement pour l'objet en question. Cela rend la modification du flot de contrôle impossible, mais entraîne une baisse de performances importante.
+Les chercheurs du projet posent comme postulat de départ qu'il est suffisant de garantir l'intégrité des pointeurs pour rendre impossible la modification du flot de contrôle via l'exploitation d'erreurs mémoires. Dans le cas des langages de types \og memory-safe \fg, un objet en mémoire ne peut être accédé que depuis un pointeur prévu explicitement pour l'objet en question. Cela rend la modification du flot de contrôle impossible, mais entraîne une baisse de performances importante.
 
-Afin de garder de bonnes performances tout en garantissant l'intégrité complète, le minimum d'instrumentation doit être délégué à l'exécution. Le code est alors en premier lieu analysé de manière statique à la compilation, puis des mécanismes de vérification sont ensuite délégués à l'exécution. Le concept de \og \gls{cpi} \fg \cite{CPIPaper} intervient alors, afin de déterminer quels pointeurs doivent être protégés, ce qui permet de réduire au minimum les accès à controler lors de l'exécution.
+Afin de garder de bonnes performances tout en garantissant l'intégrité complète, un minimum d'instrumentation doit être délégué à l'exécution. Le code est alors en premier lieu analysé de manière statique à la compilation, puis des mécanismes de vérification sont ensuite délégués à l'exécution. Le concept de \og \gls{cpi} \fg \cite{CPIPaper} intervient alors, afin de déterminer quels pointeurs doivent être protégés, ce qui permet de réduire au minimum les accès à contrôler lors de l'exécution.
 
 
 % -----------------------------------------------------------------------------
-\section{CPI (Code-pointer integrity)}
+\section{\og Code-pointer integrity \fg (CPI)}
 
 % Decrire pourquoi les pointeurs sensibles et pas sensibles. comment determiner si un pointeur est sensible
 
 \subsection{Définition d'un \og code-pointer \fg}
 
-Afin de formaliser les pointeurs de code (code-pointers), le papier propose la définition suivante :
+Afin de formaliser les pointeurs de code \og code-pointers \fg, le papier propose la définition suivante :
 
 \og On dit que l'indirection ou le déréférencement d'un pointeur est sûr si et seulement si l'adresse mémoire à laquelle il tente d'accéder est comprise au sein de l'\textit{objet mémoire} sur lequel le pointeur est \textit{basé}. Un \textit{objet mémoire} est une abstraction liée au langage définissant tout types de structures stockées en mémoire (variables globales, variables locales, structures, objets), de sous-structures (un champ d'une structure) ou encore des points de contrôle du flot (adresse de départ d'une fonction, adresse de retour). Ces \textit{objets mémoires} ont un cycle de vie défini, lorsqu'on libére la mémoire liée à un tableau et qu'on alloue un nouveau tableau avec la même adresse, un nouvel \textit{objet mémoire} est créé. \fg
 
-Le papier formalise ensuite la définition de pointeur \textit{basé sur} un \textit{objet mémoire}. On dit qu'un pointeur est \textit{basé sur} sur un \textit{objet mémoire X} si et seulement si le pointeur est obtenu lors de l'exécution par (i) allocation de \textit{X} sur la pile, (ii) référencement explicit de l'adresse de \textit{X}, (iii) en référencant l'adresse d'un sous-objet \textit{y} de \textit{X} (accès au champ \textit{y} d'une structure \textit{X}), ou (iv) en effectuant une expression sur un pointeur (calculs arithmétiques, position au sein d'un tableau, copie de pointeur) impliquant l'adresse de l'\textit{objet mémoire X}. Cette définition est basée sur la définition des pointeurs \textit{basé sur} présente au sein de la norme \texttt{C99}.
+Le papier formalise ensuite la définition de pointeur \textit{basé sur} un \textit{objet mémoire}. On dit qu'un pointeur est \textit{basé sur} sur un \textit{objet mémoire X} si et seulement si le pointeur est obtenu lors de l'exécution par (i) allocation de \textit{X} sur la pile, (ii) référencement explicite de l'adresse de \textit{X}, (iii) en référençant l'adresse d'un sous-objet \textit{y} de \textit{X} (accès au champ \textit{y} d'une structure \textit{X}), ou (iv) en effectuant une expression sur un pointeur (calculs arithmétiques, position au sein d'un tableau, copie de pointeur) impliquant l'adresse de l'\textit{objet mémoire X}. Cette définition est basée sur la définition des pointeurs \textit{basé sur} présente au sein de la norme \texttt{C99}.
 
 \newpage
 
@@ -44,29 +44,30 @@ Si l'on part maintenant du principe que ces deux définitions sont strictement r
 
 \subsection{Concept théorique}
 
-Le mécanisme de \gls{cpi} est statisfait si toutes les indirections ou les déréférencements sur les pointeurs accédant ou déréférençant des pointeurs jugés \og sensibles \fg sont sûrs. La définition des pointeurs jugés sensibles est donc récursive. Les pointeurs de départ devant être protégés sont les pointeurs responsables de transférer le flot de contrôle de l'application. Cette notion de récursivité est donc dynamique, un pointeur de type \mintinline{c}{void*} doit être considéré comme sensible s'il pointe vers une fonction ou sur un autre pointeur jugé sensible, mais ne doit pas être considéré comme sensible s'il pointe vers un type \mintinline{c}{int}.
+Le mécanisme de \gls{cpi} est satisfait si toutes les indirections ou les déréférencements sur les pointeurs accédant ou déréférençant des pointeurs jugés \og sensibles \fg sont sûrs. La définition des pointeurs jugés sensibles est donc récursive. Les pointeurs de départ devant être protégés sont les pointeurs responsables de transférer le flot de contrôle de l'application. Cette notion de récursivité est donc dynamique, un pointeur de type \mintinline{c}{void*} doit être considéré comme sensible s'il pointe vers une fonction ou sur un autre pointeur jugé sensible, mais ne doit pas être considéré comme sensible s'il pointe vers un type \mintinline{c}{int}.
 
 Les langages de programmation bénéficiant d'une mémoire supervisée satisfont le concept de \gls{cpi}. Cependant, ils ne différencient pas les pointeurs sensibles des autres, ce qui entraîne une forte baisse de performance par rapport aux langages de type \texttt{C/C++} (le papier mentionne une perte de $\geq2\times$ au sein des meilleures implémentations actuelles).
 
-L'observation faite par l'équipe de chercheurs est la suivante: afin de garantir le flot de contrôle de l'application, seul l'accès aux pointeurs jugés sensibles doit être vérifié et ces pointeurs forment un ensemble de petite taille sur l'ensemble des pointeurs. Les pointeurs agissant sur les données peuvent se permettre de ne pas être controlés, ce qui augmente l'efficacité tout en maintenant un très haut taux de protection.
+L'observation faite par l'équipe de chercheurs est la suivante: afin de garantir le flot de contrôle de l'application, seul l'accès aux pointeurs jugés sensibles doit être vérifié et ces pointeurs forment un ensemble de petite taille sur l'ensemble des pointeurs. Les pointeurs agissant sur les données peuvent se permettre de ne pas être contrôlés, ce qui augmente l'efficacité tout en maintenant un très haut taux de protection.
 
 \subsection{Déterminer l'ensemble des pointeurs sensibles}
+\label{subsection:detEnsemblePointeursSensible}
 
 Afin de déterminer l'ensemble des pointeurs devant être considérés comme sensibles, une analyse statique est effectuée. Pour ce faire une heuristique simple est utilisée: \og un pointeur est jugé sensible si son type est sensible \fg. Les types marqués comme étant sensibles sont:
 
 \begin{enumerate}
-	\item pointeurs de fonction
-	\item pointeurs vers des pointeurs sensibles
-	\item pointeurs vers des types composés (\mintinline{c}{array}, \mintinline{c}{struct}) qui contiennent un ou plusieurs pointeurs sensibles
-	\item pointeurs universels (\mintinline{c}{void*}, \mintinline{c}{char*})
-  \item pointeurs explicitements créés par le compilateur ou à l'exécution (adresse de retour, tables virtuelles en \texttt{C++} \cite{fonctionsVirtuelles}, \mintinline{c}{setjmp} \cite{setjmp})
+	\item les pointeurs de fonction
+	\item les pointeurs pointant sur des pointeurs sensibles
+	\item les pointeurs pointant sur des types composés (\mintinline{c}{array}, \mintinline{c}{struct}) qui contiennent un ou plusieurs pointeurs sensibles
+	\item les pointeurs universels (\mintinline{c}{void*}, \mintinline{c}{char*})
+  \item les pointeurs explicitements créés par le compilateur ou à l'exécution (adresse de retour, tables virtuelles en \texttt{C++} \cite{fonctionsVirtuelles}, \mintinline{c}{setjmp} \cite{setjmp})
 \end{enumerate}
 
 Cet ensemble de types peut être adapté, étendu, suivant les besoins du programme ou de la plateforme. Le papier mentionne en exemple la structure \mintinline{c}{ucred} utilisée dans le noyau FreeBSD, qui est marquée comme sensible car elle contient les UIDs des processus et d'autres informations.
 
 En effectuant des tests, les chercheurs se sont rendu compte que l'analyse heuristique mettait en avant un ensemble de pointeurs correspondant en moyenne à $6.5\%$ de l'ensemble global. Ce chiffre met en avant l'impact sur l'efficacité qu'a cette approche.
 
-Le coût en performance dépend directement de l'heuristique et de sa récursion. L'équipe mentionne elle-même que toutes heuristiques donnant un ensemble approximatif cohérent peuvent être utilisées. Des améliorations peuvent encore être attendues sur ce point. Le second avantage majeur de cette approche réside dans le fait que l'on peut facilement imaginer de nouvelles heuristiques permettant de protéger d'autres ensembles de pointeurs, par exemple, pour protéger une partie des données au sein du programme.
+Le coût en performance dépend directement de l'heuristique et de sa récursion. L'équipe mentionne elle-même que toutes les heuristiques donnant un ensemble approximatif cohérent peuvent être utilisées. Des améliorations peuvent encore être attendues sur ce point. Le second avantage majeur de cette approche réside dans le fait que l'on peut facilement imaginer de nouvelles heuristiques permettant de protéger d'autres ensembles de pointeurs, par exemple, pour protéger une partie des données au sein du programme.
 
 \subsection{Zone de mémoire sûre}
 
@@ -85,18 +86,14 @@ Le \textit{safe pointer store} permet de stocker la valeur du pointeur et les m�
 
 \gls{cpi} garantit (i) que tous les pointeurs sensibles sont stockés dans la \og \textit{safe region} \fg, (ii) que la création et la modification lors de l'exécution de pointeurs sensibles soit propagée et (iii) que toutes les indirections ou les déréférences soient vérifiées grâce au métadonnées. Afin d'y parvenir, \gls{cpi}, lors de la phase de compilation, réécrit les instructions de création et d'accès de l'ensemble des pointeurs sensibles.
 
-% on stocke l'adresse du pointeur dans la région standard ainsi que ca valeur = deux adresses
-% TODO figure montrant qu'est ce qui est stocké et les liens
 
 \subsection{Isolation de la zone mémoire sûre}
 
-Une fois les metadonnées et les \og \textit{safe stacks} \fg placées au sein de la région sûre, il faut pouvoir garantir leur intégrité. Pour ce faire cette région doit être isolée du reste de la mémoire et il ne doit pas être possible de la modifier sans passer par les instructions fournies par \gls{cpi}. Ce mécanisme de protection est directement dépendant de l'architecture pour laquelle le binaire est compilé. Dans les deux cas, la région sûre est placée dans le segment de \og memory mapping \fg avec un accès en lecture et écriture.
+Une fois les métadonnées et les \og \textit{safe stacks} \fg placées au sein de la région sûre, il faut pouvoir garantir leur intégrité. Pour ce faire cette région doit être isolée du reste de la mémoire et il ne doit pas être possible de la modifier sans passer par les instructions fournies par \gls{cpi}. Ce mécanisme de protection est directement dépendant de l'architecture pour laquelle le binaire est compilé. Dans tous les cas, la région sûre est placée dans le segment de \og memory mapping \fg avec un accès en lecture et écriture.
 
 \subsubsection{Architecture 32~bits}
 
 Dans le cas d'une architecture \texttt{x86-32}, la \og \textit{safe region} \fg est isolée grâce à l'utilisation des segments mémoires. Un segment mémoire n'étant pas utilisé au sein du programme est utilisé par \gls{cpi} afin de stocker l'adresse de base de la \og \textit{safe region} \fg. Les autres segments sont configurés afin de rendre l'accès à la région sûre impossible.
-
-% \textit{TODO définition des segments, exemple d'utilisation etc... tout la sécu se base la dessus. Sinon ca revient à de l'ASLR}
 
 La preuve de sécurité sous cette architecture repose sur le fait qu'il n'est pas possible, lors de l'exécution, d'atteindre ou de modifier le segment qui contient la région de mémoire sûre.
 
@@ -104,15 +101,13 @@ La preuve de sécurité sous cette architecture repose sur le fait qu'il n'est p
 
 Au sein d'une architecture \texttt{x86-64} la limitation des segments n'est plus présente, mais l'architecture met toujours à disposition deux registres de segments mémoire. \gls{cpi} utilise l'un des deux segments pour stocker l'adresse mémoire de base pour la \og \textit{safe region} \fg. Cette adresse de base est tirée aléatoirement lors du lancement de l'application, ce qui ressemble fortement à l'approche d'\gls{aslr} expliquée en \autoref{section:aslr}. Cependant, la différence mentionée dans le papier est qu'il n'existe aucun pointeur vers la \og \textit{safe region} \fg au sein de la région standard, ce qui fait qu'il n'est pas possible de remonter jusqu'à l'adresse de base. Les 48~bits d'adressage offrent donc une sécurité suffisante et rendent impraticable une attaque par recherche exhaustive.
 
-La preuve de sécurité, sous architecture \texttt{x86-64}, est donc basée sur des informations cachées. Ils mentionnent le fait que leur modèle est \og leak-proof \fg \ --- c’est-à-dire qu'il ne laisse pas fuiter d'informations concernant la localisation de la région sûre ---, à la différence d'\gls{aslr}, grâce à l'absence de pointeur vers la \og \textit{safe region} \fg lors de l'execution.
+La preuve de sécurité, sous architecture \texttt{x86-64}, est donc basée sur des informations cachées. Ils mentionnent le fait que leur modèle est \og leak-proof \fg \ --- c’est-à-dire qu'il ne laisse pas fuiter d'informations concernant la localisation de la région sûre ---, à la différence d'\gls{aslr}, grâce à l'absence de pointeur vers la \og \textit{safe region} \fg lors de l'exécution.
 
 
 % -----------------------------------------------------------------------------
-\section{CPS (Code-pointer separation)}
+\section{\og Code-pointer separation \fg (CPS)}
 
-% Decrire la variante CPS, moins d'overhead mais permettant certain hijack
-
-Les chercheurs se sont rendus compte que dans le cas du \texttt{C++}, l'ensemble des pointeurs sensibles peut rapidement devenir trop important pour cause, par exemple, d'utilisation de fonctions virtuelles. Tous les pointeurs vers un objet contenant une fonction viruelle deviennent alors sensibles, ce qui peut induire un coût de performance trop élevé. Pour palier à ce problème, le concept de \og \gls{cps} \fg a été mis en place. L'idée est de modifier quelque peu l'approche et de baisser les coûts en performance tout en garantissant le flot de contrôle.
+Les chercheurs se sont rendus compte que dans le cas du \texttt{C++}, l'ensemble des pointeurs sensibles peut rapidement devenir trop important pour cause, par exemple, d'utilisation de fonctions virtuelles. Tous les pointeurs vers un objet contenant une fonction virtuelle deviennent alors sensibles, ce qui peut induire un coût de performance trop élevé. Pour palier à ce problème, le concept de \og \gls{cps} \fg a été mis en place. L'idée est de modifier quelque peu l'approche et de baisser les coûts en performance tout en garantissant le flot de contrôle.
 
 Pour y arriver, l'heuristique utilisée pour définir l'ensemble des pointeurs lors de l'analyse statique ainsi que la définition d'un pointeur \textit{basé sur} sont modifiées. Seul les pointeurs pointant directement sur une destination du flot de contrôle sont protégés, laissant la récursion de côté. Contrairement à l'approche \gls{cpi}, il est possible de ne pas stocker de métadonnées dans la zone de mémoire sûre, en effet, en évitant par exemple les pointeurs sur des objets, chaque pointeur doit alors correspondre exactement à l'adresse de destination, les bornes ne sont plus nécessaires.
 
@@ -127,25 +122,25 @@ Les chiffres avancés au niveau des gains en performance de \gls{cps} sont de l'
 \section{\og Safe Stack \fg}
 \label{section:safeStack}
 
-Le composant \og \gls{safeStack} \fg est un équivalant, mais potentiellement plus complet, aux \og \gls{stackCookies} \fg. Son but est de protéger les variables sensibles stockées sur la pile d'exécution. Pour ce faire, à la manière dont fonctionne \gls{cpi}, \og \gls{safeStack} \fg sépare les variables dans deux régions mémoires différentes. Cependant, dans le cas de \og \gls{safeStack} \fg, l'approche est différentes. Seul sont déplacées les variables dont l'allocation ou les accès sont considérés comme non-sécurisé. Les allocations et les accès à ces variables sont ensuite remplacés lors de la phase de compilation par \og \gls{safeStack} \fg afin de les initialiser dans une zone mémoire non protégée. Cette zone mémoire est initialisée au lancement de l'application, au sein du segment de \og memory mapping \fg.
+Le composant \og \gls{safeStack} \fg est un équivalant, mais potentiellement plus complet, aux \og \gls{stackCookies} \fg. Son but est de protéger les variables sensibles stockées sur la pile d'exécution. Pour ce faire, à la manière dont fonctionne \gls{cpi}, \og \gls{safeStack} \fg sépare les variables dans deux régions mémoires différentes. Cependant, dans le cas de \og \gls{safeStack} \fg, l'approche est différentes. Seules sont déplacées les variables dont l'allocation ou les accès sont considérés comme non-sécurisés. Les allocations et les accès à ces variables sont ensuite remplacés lors de la phase de compilation par \og \gls{safeStack} \fg afin de les initialiser dans une zone mémoire non protégée. Cette zone mémoire est initialisée au lancement de l'application, au sein du segment de \og memory mapping \fg.
 
 Comme montré sur la \ref{fig:safeRegionLayout}, la zone mémoire sûre, ou région sûre, est constituée d'une ou plusieurs \og safe stacks \fg. Chaque \og safe stack \fg appartient à un \texttt{thread}, celui-ci contient un pointeur vers la pile standard et un pointeur vers la pile sûre. Le registre \mintinline{c}{%esp} sur l'architecture \texttt{x86-32} pointe vers la \og \gls{safeStack} \fg --- \mintinline{c}{%rsp} sur \texttt{x86-64} ---, tandis qu'une variable locale au \texttt{thread} pointe vers la \og unsafe stack \fg, présente dans le segment de \og memory mapping \fg.
 
 \subsection{Analyse à la compilation}
 
-Il est nécessaire de passer par un phase d'analyse afin de determiner, comme pour \gls{cpi}, quelles variables déplacées.
-La fonction \mintinline{c}{IsSafeStackAlloca} determine quels types de variables peuvent être accédées de manière non-sécurisée et sont alors déplacées. Une variable est déclarée non-sécurisée si l'un des critères est retenu:
+Il est nécessaire de passer par un phase d'analyse afin de determiner, comme pour \gls{cpi}, quelles variables déplacer.
+La fonction \mintinline{c}{IsSafeStackAlloca()} détermine quels types de variables peuvent être accédés de manière non-sécurisée. Une variable est déclarée non-sécurisée si l'un des critères est retenu:
 
 \begin{enumerate}
-	\item un pointeur vers la variable est stocké quelque part en mémoire
-	\item un élément appartenant à un tableau est accédé par un index non-constant (une autre variable)
-	\item un tableau dynamique est accédé (via une variable ou un index constant)
-	\item un pointeur vers la variable est donnée en arguement à une fonction
+	\item un pointeur vers la variable est stocké quelque part en mémoire;
+	\item un élément appartenant à un tableau est accédé par un index non-constant (une autre variable);
+	\item un tableau dynamique est accédé (via une variable ou un index constant);
+	\item un pointeur vers la variable est donnée en arguement à une fonction.
 \end{enumerate}
 
 \subsection{Support à l'exécution}
 
-Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisée, une bibliothèque est fournie à l'exécution. Plus de détails sont donnés dans la \autoref{subsection:architectureSafeStack} Architecture de \og safe stack \fg.
+Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisée, une bibliothèque est fournie à l'exécution. Plus de détails sont donnés dans la \autoref{subsection:architectureSafeStack}.
 
 % -----------------------------------------------------------------------------
 \section{Implémentation au sein de LLVM}
@@ -154,13 +149,13 @@ Afin d'initialiser et gérer les allocations mémoires de la zone non-sécurisé
 %
 % structure de LLVM front-end, l'optimizer, et le back-end, son fonctionnement, origine
 
-La première implémentation de \gls{levee} a été portée au sein de la version 3.3 de \gls{llvm} (juin 2013). Pour ce prototype, l'équipe de \gls{levee} a du modifier quelque peu l'infrastructure, des modifications ont été faites sur les bibliothèques de \gls{llvm} ainsi que dans \gls{clang}. Depuis la version 3.8, en mars 2016, \gls{safeStack} est disponible au sein de \gls{llvm} et \gls{clang}, cette intégration a été faite par un employé de Google, Peter Collingbourne. Actuellement, en mai 2017, dans la version 4.0 de \gls{llvm}, les prototypes de \gls{cpi} et \gls{cps} ne sont toujours pas présent et aucune date d'intégration n'a été annoncée.
+La première implémentation de \gls{levee} a été portée au sein de la version 3.3 de \gls{llvm} (juin 2013). Pour ce prototype, l'équipe de \gls{levee} a dû modifier quelque peu l'infrastructure, des modifications ont été faites sur les bibliothèques de \gls{llvm} ainsi que dans \gls{clang}. Depuis la version 3.8, en mars 2016, \og \gls{safeStack} \fg est disponible au sein de \gls{llvm} et \gls{clang}, cette intégration a été faite par un employé de Google, Peter Collingbourne. Actuellement, en mai 2017, dans la version 4.0 de \gls{llvm}, les prototypes de \gls{cpi} et \gls{cps} ne sont toujours pas présents et aucune date d'intégration n'a été annoncée.
 
 \subsection{Historique de LLVM}
 
-Le projet débute dans le début des années 2000, par ce qui est au début un travail de recherche universitaire de Chris Lattner \cite{ChrisLattner}. A cet époque, il est courant de voir des implémentations monolitiques au sein des compilateurs, par exemple GCC pour la famille des langages \texttt{C}. Au sein de ces implémentations, Lattner remarque qu'il est également difficile de réutilisé du code pour sérvir différents interets, utilisé l'analyseur \og parser \fg de GCC pour effectuer une analyse statique n'est pas possible et les partie de code en commun son relativement petite.
+Le projet débute dans le début des années 2000, par ce qui est au début un travail de recherche universitaire de Chris Lattner \cite{ChrisLattner}. À cette époque, il est courant de voir pour les compilateurs une implémentation monolitique, par exemple GCC pour la famille des langages \texttt{C}. Au sein de ces implémentations, Lattner remarque qu'il est également difficile de réutiliser du code pour servir différents intérêts, utiliser l'analyseur --- \og parser \fg --- de GCC pour effectuer une analyse statique n'est pas possible et les parties de code en commun sont relativement petites.
 
-Lattner propose alors une collection, open source, souple et réutilisable, de technologies permettant de développer des \og frontends \fg et \og backends \fg de compilateur. Le design le plus populaire utilisé par les compilateurs est constitué de trois phases, (i) le \og frontend \fg, responsable de d'analyser le code et de généer une représentation abstraite --- appelée \og \gls{ast} \fg \ --- (ii) l'\og optimizer \fg, améliore cette représentation (supprimer les redondances, simplification des opérations mathématiques, etc.), puis (iii) le \og backend \fg, transcrit la représentation intermédiaire en code machine suivant la plateforme ciblée.
+Lattner propose alors une collection, open source, souple et réutilisable, de technologies permettant de développer des \og frontends \fg et \og backends \fg de compilateur. Le design le plus populaire utilisé par les compilateurs est constitué de trois phases, (i) le \og frontend \fg, responsable d'analyser le code et de générer une représentation abstraite --- appelée \og \gls{ast} \fg \ --- (ii) l'\og optimizer \fg, améliore cette représentation (suppression des redondances, simplification des opérations mathématiques, etc.), puis (iii) le \og backend \fg, transcrit la représentation intermédiaire en code machine suivant la plateforme ciblée.
 
 \begin{figure}[H]
 	\centering
@@ -171,7 +166,7 @@ Lattner propose alors une collection, open source, souple et réutilisable, de t
 	\label{fig:SimpleCompiler}
 \end{figure}
 
-Il y a plusieurs avantages majeurs à cette approche, premièrement lorsque l'on souhaite supporter un nouveau langage, seul le \og frontend \fg doit être écrit. De la même manière, si l'on souhaite rajouter une plateforme, les \og frontend \fg existant peuvent facilement en profiter. Deuxièmement, au niveau des projets open source, il est très avantageux d'avoir, au sein du même projet, différents langages ciblés, car cela accroît la communauté potentiel et donc le nombre de contributeurs. En finalité, le fait qu'il n'est pas nécessaire d'avoir les mêmes compétences pour écrire un \og frontend \fg, un \og optimizer \fg ou un \og backend \fg aide à trouver des contributeurs, un projet open source veut réduire au maximum le pas à franchir pour contribuer.
+Il y a plusieurs avantages majeurs à cette approche, premièrement lorsque l'on souhaite supporter un nouveau langage, seul le \og frontend \fg doit être écrit. De la même manière, si l'on souhaite rajouter une plateforme, les \og frontend \fg existant peuvent facilement en profiter. Deuxièmement, au niveau des projets open source, il est très avantageux d'avoir, au sein du même projet, différents langages ciblés, car cela accroît la communauté potentielle et donc le nombre de contributeurs. En finalité, le fait qu'il n'est pas nécessaire d'avoir les mêmes compétences pour écrire un \og frontend \fg, un \og optimizer \fg ou un \og backend \fg aide à trouver des contributeurs, un projet open source veut réduire au maximum le pas à franchir pour contribuer.
 
 \begin{figure}[H]
 	\centering
@@ -186,7 +181,7 @@ Dans un premier temps, \gls{llvm} est l'acronyme de \og low level virtual machin
 
 \subsection{Structure de LLVM}
 
-\gls{llvm} reprend le desing des trois phases et l'implémente en plusieurs parties. Parmis ces parties, le langage intermédiaire joue un trés grand rôle. C'est lui qui donne le plus de sens à l'architecture choisie et qui rend si puissant \gls{llvm}.
+\gls{llvm} reprend le design des trois phases et l'implémente en plusieurs parties. Parmi ces parties, le langage intermédiaire joue un très grand rôle. C'est lui qui donne le plus de sens à l'architecture choisie et qui rend si puissant \gls{llvm}.
 
 \begin{figure}[H]
 	\centering
@@ -199,7 +194,7 @@ Dans un premier temps, \gls{llvm} est l'acronyme de \og low level virtual machin
 
 \subsubsection{Représentation intermédiaire}
 
-\gls{llvmIR} est un langage en soit, normé et bien définit, fortement typé, ayant pour seul but de répondre aux besoins de l'optimisation. Sa définition en fait un langage permettant d'être très fortement modifié et restructuré lors de la phase en question.
+\gls{llvmIR} est un langage en soit, normé et bien défini, fortement typé, ayant pour seul but de répondre aux besoins de l'optimisation. Sa définition en fait un langage permettant d'être très fortement modifié et restructuré lors de la phase en question.
 
 \begin{listing}
 	\bashfile{02-main/listings/sample.ll}
@@ -207,7 +202,7 @@ Dans un premier temps, \gls{llvm} est l'acronyme de \og low level virtual machin
 	\label{lst:sampleLLIR}
 \end{listing}
 
-La représentation \autoref{lst:sampleLLIRC} est le résultat du code \texttt{C} en \autoref{lst:sampleLLIR}. Le défit réside dans la propagation des informations, lorsque l'on transforme du code \texttt{C} en une représentation, certaines informations peuvent être perdues. Lorsque l'équipe de \gls{levee} a commencé à travailler sur le projet, ils se sont rendu compte que certaines informations étaient perduent lors de la transformation en \gls{llvmIR} et ont du compléter les métadonnées émises par \gls{clang}.
+La représentation \autoref{lst:sampleLLIRC} est le résultat du code \texttt{C} en \autoref{lst:sampleLLIR}. Le défi réside dans la propagation des informations, lorsque l'on transforme du code \texttt{C} en une quelconque autre représentation, certaines informations peuvent être perdues. Lorsque l'équipe de \gls{levee} a commencé à travailler sur le projet, ils se sont rendu compte que certaines informations étaient perdues lors de la transformation en \gls{llvmIR} et ont dû compléter les métadonnées émises par \gls{clang}.
 
 \begin{listing}
 	\cfile{02-main/listings/sample.c}
@@ -215,19 +210,19 @@ La représentation \autoref{lst:sampleLLIRC} est le résultat du code \texttt{C}
 	\label{lst:sampleLLIRC}
 \end{listing}
 
-Le langage intermédiaire est constitué d'instruction ressemblant fortement au langage machine. \gls{llvmIR} s'en rapproche beaucoup mais à quelques différences prêtes, par exemple: (i) les conventions d'appel de \texttt{ret} ou \texttt{call} sont abstraite --- c'est au \og backend \fg de se soucier de ce genre de conventions ---, (ii) un nombre infini de variables commencant par \texttt{\%} est à disposition et (iii) celles-ci sont typées grâce à un système simple \texttt{i32} pour un entier de 32~bits, \texttt{i32**} pour un pointeur de pointeur sur un entier de 32~bits.
+Le langage intermédiaire \gls{llvmIR} est constitué d'instructions ressemblant fortement au langage machine, mais à quelques différences. De manière non-exhaustive, (i) les conventions d'appel de \texttt{ret} ou \texttt{call} sont abstraites --- c'est au \og backend \fg de se soucier de ce genre de conventions ---, (ii) un nombre infini de variables commençant par \texttt{\%} est à disposition et (iii) celles-ci sont typées grâce à un système simple: \texttt{i32} pour un entier de 32~bits, \texttt{i32**} pour un pointeur de pointeur sur un entier de 32~bits, et cetera.
 
-\gls{llvmIR} peut être stocké et manipulé sous trois forme différentes: (i) la forme textuelle, comme montrée en \autoref{lst:sampleLLIR}, (ii) sous forme de données structurées en mémoires --- forme utilisée par les optimiseurs --- et (iii) sous une forme de \og bitcode \fg, sauvgardée sur le disque, permettant une gestion plus efficace et plus dense de l'information. Des outils de conversion du \og bitcode \fg (\texttt{.bc}) au format textuel (\texttt{.ll}) et vis-versa sont présents dans la suite \gls{llvm}.
+\gls{llvmIR} peut être stocké et manipulé sous trois forme différentes: (i) la forme textuelle, comme montrée en \autoref{lst:sampleLLIR}, (ii) sous forme de données structurées en mémoire --- forme utilisée par les optimiseurs --- et (iii) sous une forme de \og bitcode \fg, sauvegardée sur le disque, permettant une gestion plus efficace et plus dense de l'information. Des outils de conversion du \og bitcode \fg (\texttt{.bc}) au format textuel (\texttt{.ll}) et vice versa sont présents dans la suite \gls{llvm}.
 
 \subsubsection{LLVM \og frontends \fg}
 
-\gls{llvmIR} est la seule interface au sein de \gls{llvm}, ce qui signifie que le seul pré-requis pour écrire un \og frontend \fg \gls{llvm} est de connaître son fonctionnement. Du fait que ce langage soit un langage textuel, il suffit au \og frontend \fg d'écrir le résultat dans fichier text et une simple commande tel que les \og Unix pipes \fg permettent de profiter de toute l'infrastructure.
+\gls{llvmIR} est la seule interface au sein de \gls{llvm}, ce qui signifie que le seul pré-requis pour écrire un \og frontend \fg \gls{llvm} est de connaître son fonctionnement. Du fait que ce langage soit un langage textuel, il suffit au \og frontend \fg d'écrire le résultat dans un fichier texte et une simple commande tel que les \og Unix pipes \fg permettent de profiter de tout la suite de l'infrastructure.
 
 \subsubsection{LLVM \og optimizers \fg}
 
-Le fonctionnement d'un \og optimizers \fg est plutôt simple: il prend en entrée le code sous forme de la représentation intermédiaire et produit du code, toujours sous la forme \gls{llvmIR}, sensé être plus efficace. Les \og optimizers \fg sont organisé sous forme de pipeline, chaque \og optimizer \fg représente une \og pass \fg, suivant le niveau d'optimisation souhaité lors de la compilation, par exemple \texttt{-O3}, le nombre de \og pass \fg fluctue.
+Le fonctionnement d'un \og optimizer \fg est plutôt simple: il prend en entrée le code sous forme de la représentation intermédiaire et produit du code, toujours sous la forme \gls{llvmIR}, normalement plus efficace. Les \og optimizers \fg sont organisés sous forme de pipeline, chaque \og optimizer \fg représente une \og pass \fg dans celui-ci. Suivant le niveau d'optimisation souhaité lors de la compilation, par exemple \texttt{-O3}, le plus haut niveau, le nombre de \og pass \fg fluctue.
 
-Chaque \og pass \fg au sein de \gls{llvm} est écrite en \texttt{C++} et dérive --- indérectement --- de la classe \texttt{Pass}. Les \og pass \fg doivent être les plus indépendantes possible les unes des autres, leur architecture permet d'inclure seulement les \og pass \fg utilisées lors de la compilation.
+Chaque \og pass \fg au sein de \gls{llvm} est écrite en \texttt{C++} et dérive --- indirectement --- de la classe \texttt{Pass}. Les \og pass \fg doivent être les plus indépendantes possible les unes des autres, leur architecture permet d'inclure seulement les \og pass \fg utilisées lors de la compilation.
 
 \begin{figure}[H]
 	\centering
@@ -238,13 +233,13 @@ Chaque \og pass \fg au sein de \gls{llvm} est écrite en \texttt{C++} et dérive
 	\label{fig:PassLinkage}
 \end{figure}
 
-L'interface très claire des \og pass \fg permet une très grande modularité ainsi qu'une certaine puissance et cela laisse la possibilité d'implémenter n'importe quelle fonctionnalité au sein de \gls{llvm}.
+L'interface, très claire, des \og pass \fg permet une très grande modularité ainsi qu'une certaine puissance et cela laisse la possibilité d'implémenter n'importe quelle fonctionnalité au sein de \gls{llvm}.
 
 \subsubsection{LLVM \og backends \fg}
 
-La transcription entre le langage intermédiaire et le code machine est géré par le composant \og LLVM code generator \fg. Il est nécessaire de produire le code le plus spécifique et le plus optimisé sur chaque plateforme, de ce fait il est préférable que chaque \og backend \fg produise en code machine unique. Cependant, il est aussi intéressant de pouvoir partager une partie de la logique. Pour ce faire, le système de \og pass \fg également appliqué lors de la génération du code machine.
+La transcription entre le langage intermédiaire et le code machine est géré par le composant \og LLVM code generator \fg. Il est nécessaire de produire le code le plus spécifique et le plus optimisé sur chaque plateforme, de ce fait il est préférable que chaque \og backend \fg produise un code machine unique. Cependant, il est aussi intéressant de pouvoir partager une partie de la logique parmi --- par exemple l'allocation des variables \texttt{\%} au sein des registres ---. Pour ce faire, le système de \og pass \fg est également appliqué lors de la génération du code machine.
 
-Afin de répondre à cette problèmatique, \gls{llvm} met à disposition une list de \og pass \fg présentes par défaut, répondant à des problèmatiques récurentes, ainsi l'auteur de la plateforme ciblée peut choisir de redéfinir certaine \og pass \fg, de les enlever ou d'en rajouter.
+\gls{llvm} met à disposition une liste de \og pass \fg présentes par défaut, répondant à des problématiques récurentes, ainsi l'auteur de la plateforme ciblée peut choisir de redéfinir certaine \og pass \fg, de les enlever ou d'en rajouter.
 
 Cette approche amène alors le défi de fournir des \og pass \fg génériques, mais spécifiques à chaque plateforme. \gls{llvm} répond à ce défi grâce à un langage spécifique, les \og LLVM target description files \fg (\texttt{.td}), permettant de fournir, pour chaque plateforme, la description de celle-ci pour la \og pass \fg en question.
 
@@ -269,8 +264,13 @@ def GR32 : RegisterClass<[i32], 32,
 	\label{lst:x86RegisterTd}
 \end{listing}
 
-Le \autoref{lst:x86RegisterTd} est un exemple de \texttt{.td} décrivant les registres à disposition pour la plateforme \texttt{x86}. Différentes informations sont présentes, par exemple le fait que les registres sont en 32~bits, de préférence alignés, etc. D'autres informations tel que l'ordre d'utilisation sont décrite dans ces fichiers.
+Le \autoref{lst:x86RegisterTd} est un exemple de \texttt{.td} décrivant les registres à disposition pour la plateforme \texttt{x86}. Différentes informations sont présentes, par exemple le fait que les registres sont en 32~bits, de préférence alignés, etc. D'autres informations tel que l'ordre d'utilisation préféré sont décrites dans ces fichiers.
 
+\subsection{Implémentation de CPI}
+
+L'implémentation de \gls{cpi} commme \gls{levee} le propose au sein de la version 3.3 de \gls{llvm} est composée de deux \og pass \fg. La première permettant d'identifier les pointeurs sensibles selon le design expliqué en \autoref{subsection:detEnsemblePointeursSensible} et la deuxième permettant de mettre en place la séparation des pointeurs et d'assurer leur intégrité.
+
+Comme mentioné précédement, il se peut que de l'information soit perdue lors de la transformation du code source en \gls{llvmIR}. Dans le cas de cette implémentation, le cas de figure c'est imposé. \gls{clang} ne conservait pas le type original des pointeurs étant transformé en \mintinline{c}{void*} quand ceux-ci sont passés à la fonction \mintinline{c}{memset} par exemple. Ou alors, \gls{llvmIR} ne faisait pas la différence entre un pointeur de type \mintinline{c}{void*} et \mintinline{c}{char*} --- les deux étant représenté par un \texttt{i8*} ---, ce qui est une information utile dans le cas de \gls{cpi}. L'équipe a donc dû améliorer \gls{clang} afin de préserver ces informations lors du passage du \texttt{C/C++} au \gls{llvmIR}.
 
 \subsection{Architecture de \og safe stack \fg}
 \label{subsection:architectureSafeStack}
