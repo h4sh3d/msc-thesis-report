@@ -3,7 +3,7 @@
 
 L'implémentation de \og \gls{safeStack} \fg au sein de \gls{llvm} doit permettre de prévenir les attaques se basant sur l'exploitation d'un dépassement de tampon. Dans ce chapitre un \og proof of concept \fg d'une telle attaque est décrit sur un exemple de code fictif. Afin de rendre plus portable et reproductible cette phase de test, un environnement spécifique est mis en place et décrit précisément ainsi que la recette utilisée lors de la phase de compilation.
 
-L'objectif est de démontrer l'efficacité de \gls{levee} et de comparer l'approche avec celle des \og \gls{stackCookies} \fg. Pour ce faire, une première attaque a été pensée, malheureusement celle-ci n'avais pas la possibilité d'aboutir. Basé sur ses conclusions, une autre attaque a été mise en place. Leur description théorique ainsi que leurs implémentation sont décrites en détail.
+L'objectif est de démontrer l'efficacité de \gls{levee} et de comparer l'approche avec celle des \og \gls{stackCookies} \fg. Pour ce faire, une première attaque a été pensée, malheureusement celle-ci n'avais pas la possibilité d'aboutir. Basée sur ces conclusions, une autre attaque a été mise en place. Leur descriptions théorique ainsi que leurs implémentations sont décrites dans ce chapitre.
 
 Un des exemples d'attaque proposé dans ce chapitre est basé sur l'article \og Introduction to return oriented programming (ROP) \fg du blog \textit{codearcana.com} \cite{IntroductionToROP}.
 
@@ -18,7 +18,7 @@ Afin de faciliter la mise en place de l'attaque, la compilation est faite en 32~
 
 \subsection{Docker}
 
-L'environnement décrit ci-dessus ainsi que l'installation des outils est mis en place grâce à Docker. Le Dockerfile suivant contient toutes les instructions nécessaire afin d'installer la version 4.0 de \gls{llvm} et \gls{clang}.
+L'environnement décrit ci-dessus ainsi que l'installation des outils sont mis en place grâce à Docker. Le Dockerfile suivant contient toutes les instructions nécessaires afin d'installer la version 4.0 de \gls{llvm} et \gls{clang}.
 
 \begin{listing}
 	\dockerfile{02-main/listings/Dockerfile}
@@ -34,7 +34,7 @@ Tout les autres fichiers de configurations de l'environnement Docker sont dispon
 
 L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation. Un Makefile est mis en place afin de rassembler les différents \og flags \fg utilisés pour générer les deux versions exécutables (l'un avec \gls{safeStack} et l'autre sans). En en-tête, différentes variables utilisées par \textit{make} sont définies afin de s'assurer que \gls{clang} 4.0 est bien utilisé. Deux version de l'exécutable sont créés: \textit{safe-stack} et \textit{stack-cookie}. Le language intermédiaire de \gls{llvm} est émis lors de la compilation afin de comparer les effets de l'un et l'autre mécanisme de protection.
 
-À noter que la protection de la pile \textit{-fstack-protector} est desactivée grâce à \textit{-fno-stack-protector} lorsque l'on active \gls{safeStack}. Le but est de comparer les deux et actuellement, \og \gls{safeStack} \fg n'est pas compatible avec les \og \gls{stackCookies} \fg.
+À noter que la protection de la pile \texttt{\textit{-fstack-protector}} est desactivée grâce à \texttt{\textit{-fno-stack-protector}} lorsque l'on active \og \gls{safeStack} \fg. Le but étant de comparer les deux mécanismes, qui plus est, actuellement \og \gls{safeStack} \fg n'est pas compatible avec les \og \gls{stackCookies} \fg.
 
 \begin{listing}
 	\makefile{02-main/listings/Makefile}
@@ -44,9 +44,11 @@ L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation.
 
 Un script permettant d'afficher les mécanismes de protection d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
 
+\vfill
+
 \subsection{Mécanismes de sécurité actifs}
 
-\gls{aslr} est actif au sein de l'environnement. Chaque binaire est protegé soit avec \og \gls{stackCookies} \fg ou avec \og \gls{safeStack} \fg. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \og \gls{stackCookies} \fg sont bien désactivés lors du test de \og \gls{safeStack} \fg et que dans les deux cas le drapeau \gls{nx} est actif.
+\gls{aslr} est actif au sein de l'environnement. Chaque binaire est protégé soit avec \og \gls{stackCookies} \fg ou avec \og \gls{safeStack} \fg. Le script \mintinline{bash}{checksec.sh} \cite{CheckSec} est utilisé pour afficher les mécanismes actifs sur chaque binaire. On peut constater sur le résultat ci-dessous que les \og \gls{stackCookies} \fg sont bien désactivés lors du test de \og \gls{safeStack} \fg et que dans les deux cas le drapeau \gls{nx} est actif.
 
 \begin{listing}
 	\bashfile{02-main/listings/checksec.res}
@@ -85,7 +87,7 @@ Le code correspondant au scénario, présenté en \autoref{lst:struct}, comprend
 	\label{lst:struct}
 \end{listing}
 
-Cependant, lors que l'on inspecte la pile d'exécution, on se rend compte que l'ordre dans lequel les variables sont stockées a été modifié. Le \og buffer \fg est positionné en premier --- vers la gauche ---, ce qui rend impossible son exploitation. Ce comportement inattendu est le résultat d'une manipulation souhaitée par le compilateur. Afin de se prémunir au mieux contre l'exploitation des dépassements de tampon, il place les variables de type \mintinline{c}{char*} dans les adresses les plus hautes, juste après le canari. De cette manière, si un dépassement apparaît, il est tout de suite détecté par le canari.
+Cependant, lorsque l'on inspecte la pile d'exécution, on se rend compte que l'ordre dans lequel les variables sont stockées a été modifié. Le \og buffer \fg est positionné en premier --- vers la gauche ---, ce qui rend impossible son exploitation. Ce comportement inattendu est le résultat d'une manipulation souhaitée par le compilateur. Afin de se prémunir au mieux contre l'exploitation des dépassements de tampon, il place les variables de type \mintinline{c}{char*} dans les adresses les plus hautes, juste après le canari. De cette manière, si un dépassement apparaît, il est tout de suite détecté par le canari.
 
 \begin{figure}[H]
 	\centering

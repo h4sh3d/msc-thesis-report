@@ -5,12 +5,12 @@
 \section{Les innovations apportées par Levee}
 
 L'innovation majeur présente au sein de \gls{cpi} est l'approche avec laquelle
-les chercheurs ont abordés la problèmatique de protection du flot de contrôle.
+les chercheurs ont abordés la problématique de protection du flot de contrôle.
 Comme montré, il existe déjà des mécanismes tels que SoftBound+CETS,
 permettant de se prémunir à 100\% contre les \og control-flow hijack \fg.
 Ces mécanismes appliquent les principes des langages \og memory safe \fg sur
-l'entiereter du programme, alors que l'approche de \gls{cpi} sélectionne une
-partie réduite des pointeurs résponsable du flot de contrôle du programme.
+l'entièreté du programme, alors que l'approche de \gls{cpi} sélectionne une
+partie réduite des pointeurs responsables du flot de contrôle du programme.
 Les résultats obtenu, tant en terme de performance qu'en terme d'efficacité,
 sont très bons.
 
@@ -28,7 +28,7 @@ du noyau Linux depuis la version 3.19.
 \og Safe stack \fg se démarque des \og \gls{stackCookies} \fg également par
 son approche, au lieu de vouloir protéger seulement les arguements et les adresses
 présentes sur la pile d'exécution, les variables accèdées de manière dangereuse
-sont déplacées. Les canaris empêchent déjà le démarage d'une attaque \gls{rop} depuis
+sont déplacées. Les canaris empêchent déjà le démarrage d'une attaque \gls{rop} depuis
 la pile, cependant il est possible, sous certaines conditions, de réécrire correctement
 le canari et donc de passer outre la protection.
 
@@ -50,18 +50,20 @@ ainsi que de \og \gls{safeStack} \fg ont été décrits.
 
 L'objectif optionnel d'analyser les coûts d'un portage de \gls{levee} sur la plateforme
 ARM n'a pas été réalisé au moment où ses lignes sont rédigées, bien que la plupart
-des éléments nécessaires à cette analyse soit présent dans ce rapport, le temps
+des éléments nécessaires à cette analyse soit présente dans ce rapport, le temps
 a manqué à produire un chapitre ou une section bien documentée concernant les
 enjeux à prendre en compte.
+
+\newpage
 
 % -----------------------------------------------------------------------------
 \section{Difficultés rencontrées}
 
 La maîtrise du sujet traité a fait défaut au début du travail, une phase importante
-de recherche et de compréhension des éléments sur lesquels se base les
+de recherche et de compréhension des éléments sur lesquels se basent les
 concepts décrits a été nécessaire. C'est aussi pourquoi les sections dédiées aux
 récapitulatifs sont aussi fournies pour un rapport de ce type. Aujourd'hui je peux
-dire que le sujet en général a bien été parcouru et certains aspets ont été
+dire que le sujet en général a bien été parcouru et certains aspects ont été
 étudiés plus en profondeur. Les enjeux majeurs et les concepts les plus importants
 ont été relayés dans ce rapport avec les explications nécessaires à leur bonne
 compréhension.
@@ -76,9 +78,11 @@ fournie.
 On peut distinguer deux parties, \gls{cpi} et \og \gls{safeStack} \fg.
 Pour \gls{cpi} les sujets de recherche à développer en premier serait l'intégration
 de la technologique Intel MPX, le papier la mentionnait comme étant une technologie
-à paraître, maintenant que celle-ci existe il serait interessant de l'étudier de
+à paraître, maintenant que celle-ci existe il serait intéressant de l'étudier de
 plus prêt.
 
 Pour \og \gls{safeStack} \fg, le sujet à développer plus en profondeur pourrait
-être sa comparaison avec d'autres moyens permettant de se proteger des dépassements
+être sa comparaison avec d'autres moyens permettant de se protéger des dépassements
 de tampons.
+
+% Rajout de la description thèorique de CPI proof of correctness

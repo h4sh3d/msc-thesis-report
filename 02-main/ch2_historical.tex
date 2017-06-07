@@ -5,7 +5,7 @@ La gestion de la mémoire est un des composants le plus complexe d'un système d
 
 Dans ce chapitre, un bref récapitulatif de cette gestion est fait en préambule de la partie historique des attaques et des mécanismes de protection. Les cas expliqués dans ce rapport sont volontairement simplifiés de manière à comprendre l'aspect conceptuel et non la mise en pratique dans un environement réel. Exploiter dans un environement réel certaines des attaques brièvement décrites par la suite peut occuper le volume d'un rapport au moins égal à celui-ci.
 
-La description du fonctionnement de la mémoire est inspirée d'articles tirés du blog de Gustavo Duarte \cite{AnatomyOfAProgramInMemory, HowTheKernelManagesYourMemory, JourneyToTheStackPartI}. À des fins de simplicité, les concepts exposés sont basé sur une architecture 32~bits. Dans le cas de changements notables entre architectures, un complément spécifique à l'architecture 64~bits est donné. Les termes anglais sont mentionnés une première fois lors de leurs traductions, le document utilise ensuite la traduction française.
+La description du fonctionnement de la mémoire est inspirée d'articles tirés du blog de Gustavo Duarte \cite{AnatomyOfAProgramInMemory, HowTheKernelManagesYourMemory, JourneyToTheStackPartI}. À des fins de simplicité, les concepts exposés sont basés sur une architecture 32~bits. Dans le cas de changements notables entre architectures, un complément spécifique à l'architecture 64~bits est donné. Les termes anglais sont mentionnés une première fois lors de leurs traductions, le document utilise ensuite la traduction française.
 
 \minitoc
 
@@ -14,11 +14,11 @@ La description du fonctionnement de la mémoire est inspirée d'articles tirés 
 % ---------------------------------------------------------------------------
 \section{Rappel sur la gestion de la mémoire}
 
-La mémoire d'un programe est gérée selon un schéma bien défini. Chaque processus du système d'exploitation voit sa mémoire définie dans un espace virtuel \og virtual address space \fg, l'isolant complètement du reste des processus. Ce espace est égal à 4~Go dans un système 32~bits. Dans le cas d'une architecture 64~bits, l'espace disponible n'utilise pas $2^{64}$ octets (16~Eo), mais uniquement les 48~bits les moins significatifs, et donc $2^{48}$ octets (256~To) \cite{64bitComputing,VirtualAddressSpaceDetails}. Le système d'exploitation est ensuite responsable de faire le lien entre cet espace virtuel et l'espace d'adressage physique.
+La mémoire d'un programme est gérée selon un schéma bien défini. Chaque processus du système d'exploitation voit sa mémoire définie dans un espace virtuel \og virtual address space \fg, l'isolant complètement des autres processus. Ce espace est égal à 4~Go dans un système 32~bits. Dans le cas d'une architecture 64~bits, l'espace à disposition n'utilise pas $2^{64}$ octets (16~Eo), mais uniquement les 48~bits les moins significatifs, et donc $2^{48}$ octets (256~To) \cite{64bitComputing,VirtualAddressSpaceDetails}. Le système d'exploitation est ensuite responsable de faire le lien entre cet espace virtuel et l'espace d'adressage physique.
 
 \subsection{Segmentation}
 
-La mémoire virtuelle est scindée en deux parties principales. La première, ayant les adresses mémoires allant de \mintinline{c}{0xc0000000} à \mintinline{c}{0xffffffff} (en 32 bits), est reservée, sous Linux, au noyau du système d'exploitation. La seconde, quant à elle, correspond à l'espace disponible du processus courant.
+La mémoire virtuelle est scindée en deux parties principales. La première, ayant les adresses mémoires allant de \texttt{0xc0000000} à \texttt{0xffffffff} (en 32 bits), est réservée, sous Linux, au noyau du système d'exploitation. La seconde, quant à elle, correspond à l'espace disponible du processus courant.
 
 \begin{figure}[H]
 	\centering
@@ -42,13 +42,13 @@ L'espace réservé au processus est ensuite découpé en différents segments te
 
 \vfill
 
-La pile d'exécution permet de gérer le flot de contrôle de l'application. À chaque appel de fonction, une nouvelle structure de pile \og stack frame \fg est ajoutée à la pile, puis est retirée lorsque la fonction se termine. La pile d'exécution grandit vers le bas, c'est-à-dire que les adresses mémoires décroissent lorsque la pile se remplit. Il est possible que la pile veuille s'étendre au-delà de sa taille maximum, c'est le cas du dépassement de pile \og stack overflow \fg. Dans ce cas, le programme reçoit une erreur de segmentation, \og segmentation fault \fg en anglais, et s'arrête.
+La pile d'exécution permet de gérer le flot de contrôle de l'application. À chaque appel de fonction, une nouvelle structure de pile \og stack frame \fg est ajoutée à la pile, puis est retirée lorsque la fonction se termine. La pile d'exécution grandit vers le bas, c'est-à-dire que les adresses mémoires décroissent lorsque la pile se remplit. Il est possible que la pile veuille s'étendre au-delà de sa taille maximum, c'est le cas du dépassement de pile \og stack overflow \fg. Dans ce cas, le programme reçoit une erreur de segmentation \og segmentation fault \fg et s'arrête.
 
 Le segment \og memory mapping region \fg permet au noyau de copier en mémoire le contenu de certains fichiers de manière à augmenter les performances. Ce segment est généralement utilisé pour charger les bilbiothèques dynamiques. Il peut aussi être utilisé à d'autres fins, par exemple pour stocker des données, tel le tas.
 
-En dessous se trouve le tas, permettant de stocker en mémoire les allocations dynamiques. En C, ce segment est géré par la fonction \mintinline{c}|malloc()| et ses confrères. Dans d'autres langages bénéficiant d'un ramasse-miettes, tel que le C\#, l'interface pour intéragir avec le tas est le mot réservé \mintinline{c}|new|.
+En dessous se trouve le tas, permettant de stocker en mémoire les allocations dynamiques. En \texttt{C}, ce segment est géré par la fonction \mintinline{c}|malloc()| et ses confrères. Dans d'autres langages bénéficiant d'un ramasse-miettes, tel que le \texttt{C\#}, l'interface pour intéragir avec le tas est le mot réservé \mintinline{c}|new|.
 
-Finalement les trois derniers segments que sont \og BSS \fg, \og data \fg et \og text \fg servent à stocker les variables statiques initialisées ou non ainsi que la source du binaire executé. La \autoref{fig:mappingBinaryImage} illustre un exemple de ce que l'on peut retrouver dans ces segments.
+Finalement les trois derniers segments que sont \og BSS \fg, \og data \fg et \og text \fg servent à stocker les variables statiques initialisées ou non, ainsi que la source du binaire executé. La \autoref{fig:mappingBinaryImage} illustre un exemple de ce que l'on peut retrouver dans ces segments.
 
 \begin{figure}[H]
 	\centering
@@ -61,7 +61,7 @@ Finalement les trois derniers segments que sont \og BSS \fg, \og data \fg et \og
 
 \subsection{Descripteurs mémoires}
 
-Lors de l'exécution d'un programme, cet espace mémoire est géré par le système d'exploitation grâce à des descripteurs de mémoire appelés \og memory descriptor \fg. Cette structure contient les adresses de début et de fin de chaque segments.
+Lors de l'exécution d'un programme, cet espace mémoire est géré par le système d'exploitation grâce à des descripteurs de mémoire appelés \og memory descriptor \fg. Cette structure contient les adresses de début et de fin de chaque segment.
 
 \begin{figure}[H]
 	\centering
@@ -86,18 +86,20 @@ Cette structure globale est constituée d'une suite de plus petites structures a
 % ---------------------------------------------------------------------------
 \section{\og Buffer overflow \fg}
 
-Le dépassement de tampon, \og buffer overflow \fg en anglais, consiste à exploiter une fonction qui ne vérifie par la taille du contenu à copier en mémoire. En utilisant, par exemple, \mintinline{c}{strcpy()}, il est possible d'écrir sur l'adresse de retour de la fonction et ainsi modifier le flot de contrôle de l'application en le redirigeant à un endroit où l'attaquant aura, par exemple, préalablement injecté du code \og shellcode \fg.
+Le dépassement de tampon, \og buffer overflow \fg, consiste à exploiter une fonction qui ne vérifie par la taille du contenu à copier en mémoire. En utilisant, par exemple, \mintinline{c}{strcpy()}, il est possible d'écrir sur l'adresse de retour de la fonction et ainsi modifier le flot de contrôle de l'application en le redirigeant à un endroit où l'attaquant aura, par exemple, préalablement injecté du code \og shellcode \fg.
 
 \subsection{\og Stack frame \fg}
 
-Une \og stack frame \fg permet de stocker toutes les informations nécessaires à l'exécution d'une fonction. Elle est créée sur la pile lors de l'appel de ladite fonction, par le prologue, et est détruite, avant l'appel de retour, par l'épilogue. Elle n'est pas détruite à proprement parlé, le pointeur \mintinline{c}{%ebp} est restauré dans son état précédent.
+Une \og stack frame \fg permet de stocker toutes les informations nécessaires à l'exécution d'une fonction. Elle est créée sur la pile lors de l'appel de ladite fonction, par le prologue, et est détruite, avant l'appel de retour, dans l'épilogue. Elle n'est pas détruite à proprement parler, le pointeur \mintinline{c}{%ebp}
+est restauré dans son état précédent.
 
 Lorsqu'une \og stack frame \fg est créée, celle-ci stocke dans un schéma particulier les informations dont elle a besoin. Les premières informations ont des adresses plus grandes en mémoires que les dernières, car la pile grandit de manière décroissante. La séquence suivante est exécutée à chaque prologue de fonction afin d'initialiser la \og frame \fg; sont placés sur la pile successivement:
 
 \begin{enumerate}
 	\item les paramètres passés à la fonction
 	\item l'adresse de retour, équivalant à l'adresse de la fonction appelante
-	\item une sauvegarde du pointeur \mintinline{c}{%ebp}, pour restaurer la \og frame \fg précédente lors de l'épilogue
+	\item une sauvegarde du pointeur \mintinline{c}{%ebp},
+	pour restaurer la \og frame \fg précédente lors de l'épilogue
 	\item puis les variables locales, déclarées au sein de la fonction
 \end{enumerate}
 
@@ -109,7 +111,8 @@ Le code d'exemple \autoref{lst:stack_example} contient une fonction \mintinline{
 	\label{lst:stack_example}
 \end{listing}
 
-Les deux arguments de 4~octets (en orange) sont d'abord mis sur la pile, l'adresse de retour ainsi que l'ancienne valeur de \mintinline{c}{%ebp} de 4~octets [adressage en 32~bits] (en bleu clair) sont ensuite sauvées, puis les deux variables locales, 4~octets pour l'entier et 8~octets pour le \mintinline{c}{local_buffer} (en vert à droite) sont crées.
+Les deux arguments de 4~octets (en orange) sont d'abord mis sur la pile, l'adresse de retour ainsi que l'ancienne valeur de \mintinline{c}{%ebp}
+de 4~octets [adressage en 32~bits] (en bleu clair) sont ensuite sauvées, puis les deux variables locales, 4~octets pour l'entier et 8~octets pour le \mintinline{c}{local_buffer} (en vert à droite) sont crées.
 
 \begin{figure}[H]
 	\centering
@@ -124,32 +127,33 @@ On constate alors que l'adresse de départ du \mintinline{c}{local_buffer} est i
 
 \subsection{Exemple}
 
-Grâce à cette structure, du fait que la pile grandit avec des adresses décroissantes ainsi que l'utilisation de fonction tel que \mintinline{c}{strcpy()}, il est possible, en dépassant la taille des variables locales, de modifier des zones mémoires telles que l'adresse de retour. Le code montré en \autoref{lst:buffer_example} permet d'illustrer un cas d'exploitation de la fonction \mintinline{c}{gets()} --- fonction vulnérable car elle ne s'arrête que lorsqu'elle rencontre un retour à la ligne ou un  \og \gls{eof} \fg \ ---.
+Grâce à cette structure, du fait que la pile grandit avec des adresses décroissantes ainsi que l'utilisation de fonction tel que \mintinline{c}{strcpy()}, il est possible, en dépassant la taille des variables locales, de modifier des zones mémoires telles que l'adresse de retour. Le code montré en \autoref{lst:buffer_example} permet d'illustrer un cas où l'exploitation de la fonction \mintinline{c}{gets()} --- fonction vulnérable car elle ne s'arrête que lorsqu'elle rencontre un retour à la ligne ou un  \og \gls{eof} \fg \ --- est possible.
 
 \begin{listing}
 	\cfile{02-main/listings/buffer.c}
-	\caption{Exemple de programme illustrant un dépassement de tampon}
+	\caption{Exemple de programme vulnérable aux dépassements de tampons}
 	\label{lst:buffer_example}
 \end{listing}
 
-En regardant la \autoref{fig:bufferCopy} on constate que si l'on écrit 28+4+4 octets = 36 octets dans le \mintinline{c}{buffer}, les 4 derniers octets auront écrasé l'adresse de retour.
+En regardant la \autoref{fig:bufferCopy} on constate que si l'on écrit 28+4+4 octets  (36 octets) dans le \mintinline{c}{buffer}, les 4 derniers octets auront écrasé l'adresse de retour.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.8\columnwidth]{bufferCopy}
 	\captionsource{Exemple de \og stack frame \fg avant un dépassement de tampon}
-	{Exemple de \og stack frame \fg avant un dépassement de tampon, par G.~Duarte}
+	{Illustration de l'état de la pile avant un dépassement de tampon, par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/epilogues-canaries-buffer-overflows/}}
 	\label{fig:bufferCopy}
 \end{figure}
 
-Dans cette exemple, il est possible d'injecter un \og shellcode \fg dans le \mintinline{c}{buffer} grâce à la fonction \mintinline{c}{gets()}.
+Dans cette exemple, il est possible d'injecter un \og shellcode \fg dans le \mintinline{c}{buffer} grâce à la fonction \mintinline{c}{gets()}. L'adresse de retour
+pointe sur une des adresses au début du \mintinline{c}{buffer} contenant la valeur \texttt{\textbackslash x90} indiquant au processeur de passer à l'instruction suivante, jusqu'à arriver au \og shellcode \fg.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.8\columnwidth]{bufferOverflowExploit}
 	\captionsource{Illustration de l'état de la pile au moment d'un dépassement de tampon}
-	{Illustration de l'état de la pile au moment d'un dépassement de tampon, par G.~Duarte}
+	{Illustration de l'état de la pile après dépassement de tampon, par G.~Duarte}
 	{\url{http://duartes.org/gustavo/blog/post/epilogues-canaries-buffer-overflows/}}
 	\label{fig:bufferOverflowExploit}
 \end{figure}
@@ -165,13 +169,13 @@ Le mécanisme \gls{dep}/\gls{nx} a été mis en place pour éviter, lors d'un d�
 
 Le mécanisme de Data Execution Prevention (\gls{dep}) a été introduit sur Linux en 2004 avec la version 2.6.8 du noyau, durant la même année pour Windows et deux ans plus tard pour Mac OS X, lors de la transition des puces PowerPC d'IBM vers l'architecture x86 d'Intel de 2006 à 2007 \cite{DataExecutionPrevention, PowerPC}.
 
-La protection en soit se base sur le \og hardware \fg, le NX bit, introduit tout d'abord par AMD en 2003, puis repris par Intel sous le nom de \og XD bit \fg une année après \cite{ExecutableSpaceProtection, NXBit}. Ce bit indique au processeur s'il s'agit d'une zone d'instructions ou de données. Cette fonctionalité \og hardware \fg peut aussi être simulée, mais cela entraîne de ce fait une baisse de performance importante.
+La protection en soi se base sur le \og hardware \fg, le NX bit, introduit tout d'abord par AMD en 2003, puis repris par Intel sous le nom de \og XD bit \fg une année après \cite{ExecutableSpaceProtection, NXBit}. Ce bit indique au processeur s'il s'agit d'une zone d'instructions ou de données. Cette fonctionalité \og hardware \fg peut aussi être simulée, mais cela entraîne de ce fait une baisse importante de performance.
 
 \subsection{Contournements grâce aux attaques \og return-to-libc \fg}
 
-Une pile non-exécutable ne permet plus à l'attaquant d'exécuter son code, mais cela ne l'empêche pas d'exécuter du code marqué comme exécutable déjà présent au sein du programme ou des bibliothèques dynamiquements chargées. Comme montré dans l'exemple de la \autoref{fig:memoryDescriptorAndMemoryAreas}, la bibliothèque partagée \texttt{libc} est chargée en mémoire, ce qui est toujours le cas et ce qui rend une attaque de type \og return-to-libc \fg \cite{ReturntolibcAttack} possible.
+Une pile non-exécutable ne permet plus à l'attaquant d'exécuter son code, mais cela ne lui empêche pas d'exécuter du code marqué comme exécutable, déjà présent au sein du programme ou des bibliothèques dynamiquements chargées. Comme montré dans l'exemple de la \autoref{fig:memoryDescriptorAndMemoryAreas}, la bibliothèque partagée \texttt{libc} est chargée en mémoire, ce qui est toujours le cas et ce qui rend une attaque de type \og return-to-libc \fg \cite{ReturntolibcAttack} possible.
 
-Grâce à la fonction \mintinline{c}{system()} présente au sein de \texttt{libc}, il est possible d'exécuter arbitrairement un programme. Lors de l'attaque on localise, par exemple, une chaîne de caractères tel que \mintinline{c}{"/bin/sh"}, que l'on prépare comme étant le paramètre à passer à la fonction \mintinline{c}{system()}.
+Grâce à la fonction \mintinline{c}{system()} présente au sein de la \texttt{libc}, il est possible d'exécuter arbitrairement un programme. Lors de l'attaque on localise, par exemple, une chaîne de caractères tel que \mintinline{c}{"/bin/sh"}, que l'on prépare comme étant le paramètre à passer à la fonction \mintinline{c}{system()}.
 
 % ---------------------------------------------------------------------------
 \section{ASLR}
@@ -181,7 +185,7 @@ Comme montré sur la \autoref{fig:mappingBinaryImage}, l'espace d'adressage virt
 
 \subsection{Mécanisme de protection}
 
-Depuis juin 2005, le mécanisme d'\og address space layout randomization \fg est supporté dans le noyau Linux avec la version 2.6.12 \cite{AddressSpaceLayoutRandomizationFR, AddressSpaceLayoutRandomizationEN}. Afin de rendre imprédictible les adresses sensibles, trois décalages aléatoires sont effectués au sein de la mémoire virtuelle. Le premier permet de décaler la pile vers le bas, le second décale lui aussi vers le bas le \og memory mapping segment \fg et le dernier décale vers le haut le segment du tas.
+Depuis juin 2005, le mécanisme d'\og address space layout randomization \fg est supporté dans le noyau Linux avec la version 2.6.12 \cite{AddressSpaceLayoutRandomizationFR, AddressSpaceLayoutRandomizationEN}. Afin de rendre imprédictible les adresses sensibles, trois décalages aléatoires sont effectués au sein de la mémoire virtuelle. Le premier permet de décaler la pile vers le bas, le second décale lui aussi vers le bas le \og memory mapping segment \fg et le dernier décale, vers le haut, le segment du tas.
 
 \begin{figure}[H]
 	\centering
@@ -210,7 +214,7 @@ L'exemple \autoref{lst:bruteforce_aslr} montre comment avec un code Python d'une
 
 Ce code est tiré du blog \og Sirius CTF \fg \cite{ExploitingSimpleBufferOverflow} et illustre l'utilisation de l'opération \mintinline{python}{"\x90"} indiquant au processeur de passer à l'instruction suivante. En définissant une taille de 4096 octets de \og \gls{nop} \fg on augmente drastiquement les chances de tomber sur le \og shellcode \fg. La \autoref{fig:bufferOverflowExploit} montre également l'état de la pile lors d'un dépassement de tampon avec utilisation de l'instruction \gls{nop}.
 
-Le but premier d'\gls{aslr} est de venir contrer la prédictivité de l'emplacement des segments. On constate cependant que sur la \autoref{fig:linuxFlexibleAddressSpaceLayout}, aucun décalage n'est appliqué au segments \og BSS \fg, \og data \fg et \og text \fg, ce qui est tout à fait normal, \gls{aslr} ne modifie pas le segment \og text \fg. Malheureusement cela laisse la prédictibilité de l'emplacement du code exécutable et ouvre la porte à de nouvelles attaques, par exemple de type \og \gls{rop} \fg. Il existe d'autres mécanismes, tel que \og \gls{pie} \fg \cite{PositionIndependentExecutables}, vennant appliquer de l'aléatoire sur certaines partie du code et des bibliothèques. Mais ces mécanismes ne sont pas décrit dans ce rapport.
+Le but premier d'\gls{aslr} est de venir contrer la prédictivité de l'emplacement des segments. On constate cependant que sur la \autoref{fig:linuxFlexibleAddressSpaceLayout}, aucun décalage n'est appliqué au segments \og BSS \fg, \og data \fg et \og text \fg, ce qui est tout à fait normal, \gls{aslr} ne modifie pas le segment \og text \fg. Malheureusement cela laisse la prédictibilité de l'emplacement du code exécutable et ouvre la porte à de nouvelles attaques, par exemple de type \og \gls{rop} \fg. Il existe d'autres mécanismes, tel que \og \gls{pie} \fg \cite{PositionIndependentExecutables}, venant appliquer de l'aléatoire sur certaines partie du code et des bibliothèques. Mais ces mécanismes ne sont pas décrits dans ce rapport.
 
 \vfill
 
@@ -249,7 +253,7 @@ Dans le cas d'un \og \textit{random XOR canary} \fg, si l'adresse de retour est 
 % ---------------------------------------------------------------------------
 \section{\og Control-flow integrity \fg}
 
-\gls{cfi} est un concept permettant, par analyse statique, de définir les changements possibles du flot de contrôle de l'application, appelé \og \gls{cfg} \fg, pour ensuite valider ou non le changement effectif lors de l'exécution du programme. Le papier original démontrant l'approche \cite{CFIPaper}, publié en 2005, est généralement attribué au centre de recherche de Microsoft. Depuis, de nombreux papiers ont été publiés améliorant les performances ou modifiant légèrement l'approche.
+\gls{cfi} est un concept permettant, par analyse statique, de définir les changements possibles du flot de contrôle de l'application, appelé \og \gls{cfg} \fg, pour ensuite valider ou non le changement effectif lors de l'exécution du programme. Le papier original démontrant l'approche \cite{CFIPaper}, publié en 2005, est communément  attribué au centre de recherche de Microsoft. Depuis, de nombreux papiers ont été publiés améliorant les performances ou modifiant légèrement l'approche.
 
 Actuellement le concept de \gls{cfi} est implémenté au sein de \gls{clang} sous le nom de \og forward-edge CFI \fg \cite{ControlFlowIntegrity, TalkAboutCFIClang, ControlFlowIntegrityDesignDocumentation}. Dans la documentation dédiée, un example de coût en performance de 15\% est relevé sur Chromium. On peut également constater, dans d'autre sources de la litérature, que l'approche classique impose un coût de 16\% en moyenne et de 45\% dans le pire des cas \cite{ControlFlowIntegrityMaryland}. Ce qui en fait la principale faiblesse de cette approche.
 
@@ -261,105 +265,13 @@ La variation \og \gls{fg-cfi} \fg \cite{FineCFI, FineCFIKernel}, comme son nom l
 
 \subsection{\og Coarse-grained CFI \fg}
 
-La variation \og \gls{cg-cfi} \fg est une approche plus simple quant à la labélisation du \gls{cfg},  et donc plus performante, mais ouvrant la porte à certaines faiblesses. Les points de contrôle de l'application son labélisés de manière à obtenir un nombre restreint de labels. Ceux-ci sont alors réutilisés au sein du même graphe, de ce fait il est possible de partir d'un point A et aller au point C alors que cela n'est pas prévu, mais par cause d'une labélisation non unique l'erreur n'est pas détectée.
+La variation \og \gls{cg-cfi} \fg est une approche plus simple quant à la labélisation du \gls{cfg},  et donc plus performante, mais apportant certaines faiblesses. Les points de contrôle de l'application son labélisés de manière à obtenir un nombre restreint de labels. Ceux-ci sont alors réutilisés au sein du même graphe, de ce fait il est possible de partir d'un point A et aller au point C alors que cela n'est pas prévu, mais par cause d'une labélisation non unique l'erreur n'est pas détectée.
 
 \newpage
 
 \section{Résumé}
 
-Il existe à ce jour une multitude de concepts ayant pour mission d'entraver ou de ralentir les attaques visant le flot de contrôle d'une application. Ces concepts ne gèrent, individuellement, qu'une partie de la problématique et sont donc généralement appliqués conjointement. Aujourd'hui, il n'existe pas encore de mécanismes permettant de garantir seul, à 100\%, l'intégrité du flot sans engager des coûts trop importants en performance, rendant leur utilisation impossible dans un environnement de production. Tous les mécanismes de protection passés en revue peuvent être contourné par une attaque évoluée de type \gls{rop}.
+Il existe à ce jour une multitude de concepts ayant pour mission d'entraver ou de ralentir les attaques visant le flot de contrôle d'une application. Ces concepts ne gèrent, individuellement, qu'une partie de la problématique et sont donc généralement appliqués conjointement. Aujourd'hui, il n'existe pas encore de mécanismes permettant de garantir seul, à 100\%, l'intégrité du flot de contrôle sans engager des coûts trop importants en performance, rendant leur utilisation impossible dans un environnement de production. Tous les mécanismes de protection passés en revue peuvent être contourné par une attaque évoluée de type \gls{rop}.
 
 Le papier présentant CPI/CPS/SafeStack \cite{CPIPaper} et son prototype appelé \gls{levee} promettent un mécanisme permettant de contrer ce type d'attaque et à moindre coût. Afin d'y parvenir, l'équipe de chercheurs à mis en place différents concepts se raprochant de ce qui se fait au sein des languages de programmation de type \og memory-safe \fg. En effet, les implémentations actuelles permettant de garantire à 100\% le flot de contrôle --- SoftBound+CETS --- sont une application directe des concepts présent au sein des languages de type \og memory-safe \fg aux languages \texttt{C/C++}. Cependant cette application directe n'est pas viable en terme de performances. Les chercheurs du projet \gls{levee} ont alors proposé d'appliquer ces méthodes sur une partie spécifique du programme.
-
-% \newpage
-
-% % -------------------------------------------------------------------------
-% This chapter shows example of picture and also serves to populate the different lists: list of figures, list of tables, bibliography, and glossary.
-%
-% \section{Tables}
-%
-% This section contains an examples of table: \autoref{tab:esempio}
-%
-% \begin{table}[H]
-% 	\centering
-% 	\begin{tabular}{ccc}
-% 		\toprule
-% 		name & weight & food \\
-% 		\midrule
-% 		mouse	& 10 g	& cheese \\
-% 		cat	& 1 kg	& mice \\
-% 		dog	& 10 kg	& cats \\
-% 		t-rex	& 10 Mg	& dogs \\
-% 		\bottomrule
-% 	\end{tabular}
-% 	\caption[A floating table]{A floating table.}
-% 	\label{tab:esempio}
-% \end{table}
-%
-% \section{Figures}
-%
-% This section contains examples of figures: \autoref{fig:galleria}, \autoref{fig:lorem}, \autoref{fig:ipsum}, \autoref{fig:dolor}, \autoref{fig:sit}
-%
-% \begin{figure}[H]
-% 	\centering
-% 	\includegraphics[width=0.5\columnwidth]{galleria_stampe}
-% 	\captionsource{A floating figure}{A floating figure: the lithograph \emph{Galleria di stampe}, of M.~Escher}{\url{http://www.mcescher.com/}}
-% 	\label{fig:galleria}
-% \end{figure}
-%
-% \begin{figure}[H]
-% 	\centering
-% 	\begin{subfigure}[b]{0.45\textwidth}
-% 		\includegraphics[width=\textwidth]{lorem}
-% 		\caption{A gull}
-% 		\label{fig:lorem}
-% 	\end{subfigure}
-% 	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
-% 	%(or a blank line to force the subfigure onto a new line)
-% 	\begin{subfigure}[b]{0.45\textwidth}
-% 		\includegraphics[width=\textwidth]{ipsum}
-% 		\caption{A tiger}
-% 		\label{fig:ipsum}
-% 	\end{subfigure}
-% 	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
-% 	%(or a blank line to force the subfigure onto a new line)
-% 	\begin{subfigure}[b]{0.45\textwidth}
-% 		\includegraphics[width=\textwidth]{dolor}
-% 		\caption{A mouse}
-% 		\label{fig:dolor}
-% 	\end{subfigure}
-% 	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
-% 	%(or a blank line to force the subfigure onto a new line)
-% 	\begin{subfigure}[b]{0.45\textwidth}
-% 		\includegraphics[width=\textwidth]{sit}
-% 		\caption{A mouse}
-% 		\label{fig:sit}
-% 	\end{subfigure}
-% 	\caption{Example subcaption}\label{fig:animals}
-% \end{figure}
-%
-%
-% % -----------------------------------------------------------------------------
-% \section{Code}
-%
-% \autoref{lst:listing_example} shows an example of Java code rendered with minted.
-%
-% \begin{listing}
-% 	\javafile{02-main/listings/HelloWorld.java}
-% 	\caption{Example of listing using the minted package}
-% 	\label{lst:listing_example}
-% \end{listing}
-%
-% % -----------------------------------------------------------------------------
-% \section{Other features}
-%
-% Term (glossaries): \gls{nosql}
-%
-% Acronym (glossaries): \gls{sql}
-%
-% Citation (biblatex): \cite{paper_millwheel}
-%
-% % -----------------------------------------------------------------------------
-% \section{Conclusion}
-%
-% \blindtext
+\gls{levee} et son fonctionnement sont décrits dans le prochain chapitre.

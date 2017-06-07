@@ -1,7 +1,7 @@
 \chapter{Configuration du Docker}
 \label{chap:dockerConf}
 
-Le docker-compose s'occupe du démarage d'un ou plusieurs container ainsi que de leur interaction avec l'hôte (volumes, ports, etc). Un seul volume partagé est monté au sein du container, sous l'adresse \mintinline{bash}{/shared}. Afin de pouvoir désactiver certaines protection tel que \gls{aslr}, il est nécessaire d'autorisé des privilèges suppérieurs au container (voir ligne 6).
+Le docker-compose s'occupe du démarrage d'un ou plusieurs container ainsi que de leur interaction avec l'hôte (volumes, ports, etc). Un seul volume partagé est monté au sein du container, sous l'adresse \mintinline{bash}{/shared}. Afin de pouvoir désactiver certaines protection tel que \gls{aslr}, il est nécessaire d'autorisé des privilèges suppérieurs au container (voir ligne 6).
 
 \begin{listing}
 	\yamlfile{02-main/listings/docker-compose.yml}
