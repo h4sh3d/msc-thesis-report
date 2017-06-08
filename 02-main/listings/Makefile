@@ -7,7 +7,7 @@ SS_FLAG= -fsanitize=safe-stack -fno-stack-protector
 # Stack Cookies
 SC_FLAG= -fstack-protector
 
-TARGET = struct.c
+TARGET = rop2.c
 BUILDDIR = build
 
 SAFE = safe-stack
