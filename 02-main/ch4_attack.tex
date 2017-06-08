@@ -28,7 +28,7 @@ L'environnement décrit ci-dessus ainsi que l'installation des outils sont mis e
 
 Il existe plusieurs manières d'installer \gls{llvm}. Il serait tout à fait possible de compiler directement depuis les sources. Plusieurs de ces techniques ont été testées, et la suivante a été retenue: l'installation de Clang 4.0, \gls{lldb} (équivalant de \gls{gdb}) et de LLD (le \og linker \fg de \gls{llvm}) se fait en rajoutant le dépôt APT de \gls{llvm}. Après plusieurs essais, le débogueur \gls{gdb} est préféré à \gls{lldb} et est par la suite utilisé à la place de \gls{lldb}, ce dernier n'étant pas encore assez complet et globalement utilisé.
 
-Tout les autres fichiers de configurations de l'environnement Docker sont disponibles à l'annexe \ref{chap:dockerConf}.
+Tout les autres fichiers de configurations de l'environnement Docker sont disponibles à l'\autoref{chap:dockerConf}.
 
 \subsection{Gestion de la compilation}
 
@@ -42,7 +42,7 @@ L'utilitaire \textit{make} est utilisé pour gérer le processus de compilation.
 	\label{lst:defaultMakefile}
 \end{listing}
 
-Un script permettant d'afficher les mécanismes de protection d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38.
+Un script permettant d'afficher les mécanismes de protection d'un binaire est utilisé, pour cela une règle spécifique aux tests est décrite à la ligne 38 du \autoref{lst:defaultMakefile}.
 
 \vfill
 
@@ -108,11 +108,11 @@ Cette attaque ne peux pas aboutir et est détectée avec les deux mécanismes de
 
 \subsection{Description théorique de l'attaque}
 
-Le but est toujours d'arriver à lancer une attaque de type \gls{rop}. Pour cela il est
-nécessaire d'avoir un point d'entrée afin de démarrer la chaîne. Puisqu'il n'est pas
-possible de de réécrire les informations sensibles sur la pile sans passer par le
-canari, ce second scénario prévoit un moyen de passer outre la protection en
-réécrivant correctement ce dernier.
+Le but est toujours d'effectuer une attaque de type \gls{rop}. Pour cela il est
+nécessaire d'avoir un point d'entrée afin de démarrer la chaîne de gadgets.
+Puisqu'il n'est pas possible de de réécrire les informations sensibles sur la pile
+sans passer par le canari, ce second scénario prévoit un moyen de passer outre la
+protection en réécrivant correctement ce dernier.
 
 Le scénario est composé de deux phases distinctes. La première consiste à exploiter
 une première faille permettant d'aller lire en mémoire la valeur du canari. La
@@ -124,7 +124,7 @@ Pour récupérer la valeur du canari l'argument \texttt{argv[1]} est utilisé co
 format dans une fonction d'affichage. Il est alors possible d'afficher une suite de
 valeurs de pointeurs arbitrairement. Une fois le résultat affiché, l'utilisateur est
 solicité afin de rentrer une valeur, valeur qui est ensuite stockée dans le tampon via
-une méthode vulnérable aux dépassements.
+une méthode vulnérable aux dépassements de tampons.
 
 \begin{figure}[H]
 	\centering
@@ -137,8 +137,8 @@ une méthode vulnérable aux dépassements.
 
 Le programme imaginé a été conçu de manière à faciliter la mise en place de cette
 attaque et ne représente en aucun cas un scénario pertinent au sein d'un environnement
-réél. Cependant, les concepts en découlant sont applicable dans tout les cas, ici les
-erreurs sont volontairement grossière, mais il est fort probable que des cas
+réél. Cependant, les concepts en découlant sont applicables dans tout les cas, ici les
+erreurs sont volontairement grossières, mais il est fort probable que des cas
 d'attaques similaires, plus complexe à mettre en place, se présentes.
 
 Afin de démontrer la réussite de l'attaque, la chaîne de gadgets doit exécuter deux
@@ -157,7 +157,7 @@ fonction vulnérable avec l'argument \texttt{argv[1]}. Celui-ci est utilisé dir
 comme paramètre de la fonction \texttt{printf()}, un \textit{flush} est ensuite
 effectué afin de forcer la sortie dans \textit{stdout}. Le \texttt{buffer} de 20
 caractères est initialisé à la ligne 24 et la fonction \texttt{gets()} permet d'écrire
-une quantité arbitraire d'octets en mémoire --- jusqu'au caractère
+une quantité arbitraire d'octets en mémoire --- ne s'arrête qu'au caractère
 \texttt{\textbackslash n} ou \gls{eof} ---, le contenu du tampon est ensuite réaffiché
 de manière à simplifier le débogage. Les deux failles de sécurité se trouve donc aux
 lignes 25 et 28.
@@ -207,7 +207,7 @@ la chaîne de gadgets.
 \end{listing}
 
 Lorsque l'on test la version \og \gls{stackCookies} \fg avec une entrée trop grande,
-le dépassement est bien detecté. La \autoref{lst:stackSmashingDetected} montre le
+le dépassement est bien detecté. Le \autoref{lst:stackSmashingDetected} montre le
 message qui est affiché avec les diverses informations sur
 l'état de la mémoire et de la pile au moment ou l'attaque est détectée.
 
@@ -217,7 +217,7 @@ l'état de la mémoire et de la pile au moment ou l'attaque est détectée.
 	\label{lst:stackSmashingDetected}
 \end{listing}
 
-Lorsque l'on exécute le script python le résultat tout autre. Le canari étant de type
+Lorsque l'on exécute le script python le résultat est tout autre. Le canari étant de type
 \og \textit{random canary} \fg, finissant toujours par \texttt{\textbackslash x00},
 l'éxploitation se déroule sans problème. Le canari est trouvé et réécrit correctement
 puis la chaîne de gadgets s'exécute comme prévu. Le script affiche la valeur du canari
@@ -233,14 +233,14 @@ bien créé.
 C'est au tour de \og \gls{safeStack} \fg de résister à ce scénario d'attaque.
 Pour ce faire, vu qu'il n'y a plus de canari, une adaptation du script
 python est faite. Ce script est une version simplifiée du précédent, plus besoin de se
-soucier du premier résultat revoyé.
+soucier de la première phase.
 
 Lorsqu'on lance l'exécutable compilé avec \og \gls{safeStack} \fg et que l'on rempli
 le tampon avec plus de 20 caractères, on remarque que rien ne se passe. Le mécanisme enlève complétement toutes les possibilités d'éxploitations.
 
 \begin{listing}
 	\textfile{02-main/listings/attackSafeStack.res}
-	\caption{Rien ne se passe lorsque l'on dépasse la capacité initiale du tampon si le binaire est protégé avec \og \gls{safeStack} \fg}
+	\caption{Résultat de l'attaque du second scénario avec \og \gls{safeStack} \fg}
 	\label{lst:attackSafeStack}
 \end{listing}
 
@@ -268,4 +268,6 @@ Les mécansimes de protéction présent au sein des exécutables sont disponible
 \og Safe stack \fg enlève complétement un des biais utilisé afin de dérouté le flot de
 contrôle d'une application. Du moment ou tous les tampons sont déplacés hors de portée
 des données sensibles de la pile --- adresses de retour, pointeur de fonctions, etc.
---- il est théoriquement impossible de dérouter le flot de contrôle.
+--- il est théoriquement impossible de dérouter le flot de contrôle. L'approche
+différente de \og \gls{safeStack} \fg par rapport aux \gls{stackCookies} \fg
+lui permet de couvrir plus de scénario.
