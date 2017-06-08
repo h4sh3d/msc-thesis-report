@@ -65,6 +65,11 @@
 % \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
 
+\newpage\phantom{blank}
+\thispagestyle{empty}
+\newpage\phantom{blank}
+\thispagestyle{empty}
+
 % Restore paragraphs
 \setlength{\parskip}{1em}
 
@@ -90,6 +95,11 @@
 \include{02-main/ch4_attack}
 \include{02-main/ch5_conclusion}
 
+
+\newpage\phantom{blank}
+\thispagestyle{empty}
+\cleardoublepage
+
 % Appendices
 \appendix
 \include{03-tail/01_docker}
@@ -98,11 +108,15 @@
 
 
 % Include CC
+\newpage\phantom{blank}
+\thispagestyle{empty}
 \cleardoublepage
 \includepdf[pages=-]{03-tail/appendix/20170327_ca-pa-levee-jgr-v4.pdf}
 
 
 % List of figures
+\newpage\phantom{blank}
+\thispagestyle{empty}
 \cleardoublepage
 \phantomsection
 \addcontentsline{toc}{chapter}{Table des figures}
