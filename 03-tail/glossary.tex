@@ -26,25 +26,25 @@
 \newglossaryentry{cg-cfi}
 {
 	name=coarse-grained CFI,
-	description={Coarse-grained CFI est une implémentation simplifiée du principe de Control-Flow integrity, échangeant sécurité contre plus de performances}
+	description={Coarse-grained CFI est une implémentation simplifiée du principe de Control-Flow integrity, échangeant sécurité contre de meilleures performances}
 }
 
 \newglossaryentry{fg-cfi}
 {
 	name=finest-grained CFI,
-	description={Finest-grained CFI est une implémentation plus complète du principe de Control-Flow integrity. Garantissant une bonne sécurité mais ayant un coût élevé en performances}
+	description={Finest-grained CFI est une implémentation plus complète du principe de Control-Flow integrity garantissant une bonne sécurité mais ayant un coût élevé en performances}
 }
 
 \newglossaryentry{dep}
 {
 	name=DEP,
-	description={Data Execution Prevention, technique permettant de marquer un espace vituel de mémoire non-exécutable}
+	description={Data Execution Prevention est une technique permettant de marquer un espace virtuel de mémoire comme étant non-exécutable grâce au NX bit}
 }
 
 \newglossaryentry{nx}
 {
 	name=NX,
-	description={NX bit pour No-eXecute bit est une technique utilisée dans les processeurs pour dissocier les zones de mémoire contenant des instructions des zones contenant des données}
+	description={NX bit, pour No-eXecute bit, est une technique utilisée dans les processeurs pour dissocier les zones de mémoire contenant des instructions exécutables des zones contenant des données}
 }
 
 \newglossaryentry{stackCookies}
@@ -62,31 +62,31 @@
 \newglossaryentry{levee}
 {
 	name={Levee},
-	description={Levee est une implémentation des concepts de protection CPI, CPS et Safe Stack. Actuellement, mai 2017, une partie du projet a été intégré au sein de LLVM sous le nom de Safe Stack}
+	description={Levee est une implémentation des concepts de protection CPI, CPS et Safe Stack. Actuellement, en mai 2017, une partie du projet a été intégrée au sein de LLVM sous le nom de Safe Stack}
 }
 
 \newglossaryentry{llvm}
 {
 	name={LLVM},
-	description={LLVM, à la base Low Level Virtual Machine et maintenant nom à part entière, est une approche divergente aux compilateur tel que GCC et une collection d'outils de compilation}
+	description={LLVM, à la base Low Level Virtual Machine et maintenant nom à part entière, est une collection d'outils permettant de construire des compilateurs}
 }
 
 \newglossaryentry{clang}
 {
 	name={Clang},
-	description={Clang est un compilateur pour les langages de programmation C, C++, Objective-C et Objective-C++. Son interface de bas niveau utilise les bibliothèques LLVM pour la compilation}
+	description={Clang est un compilateur pour les langages de programmation \texttt{C/C++}, \texttt{Objective-C} et \texttt{Objective-C++}. Il utilise les bibliothèques que met à disposition LLVM}
 }
 
 \newglossaryentry{safeStack}
 {
 	name={safe stack},
-	description={Safe Stack est un composant de de CPI/CPS permettant de traiter particulièrement la gestion des pointeurs présents au sein de la pile d'exécution}
+	description={Safe Stack est un composant de de CPI/CPS permettant de traiter de manière particulière la gestion des pointeurs présents au sein de la pile d'exécution}
 }
 
 \newglossaryentry{lldb}
 {
 	name={LLDB},
-	description={LLDB Debugger est présenté comme étant un débegeur de dernière génération et éfficace. Il fait parti des outils développés au sein du plus large projet qu'est LLVM}
+	description={LLDB Debugger est présenté comme étant un débogueur dernière génération. Il fait parti des outils développés au sein du plus large projet qu'est LLVM}
 }
 
 
