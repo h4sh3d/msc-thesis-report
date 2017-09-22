@@ -23,7 +23,7 @@
 \documentclass[a4paper,11pt,fleqn]{book}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[english,french]{babel}
+% \usepackage[french,english]{babel}
 
 % -----------------------------------------------------------------------------
 % Preamble
@@ -52,8 +52,8 @@
 \input{01-head/acknowledgments}
 
 % % Preface (to be written by someone else)
-% \cleardoublepage
-% \input{01-head/preface}
+\cleardoublepage
+\input{01-head/preface}
 
 % French + English abstracts
 \cleardoublepage
@@ -88,7 +88,7 @@
 \setlength{\parskip}{0.0pt plus 1.0pt}
 
 % Chapters
-\setcounter{mtc}{2} % Help minitoc skip the front matter chapters
+\setcounter{mtc}{3} % Help minitoc skip the front matter chapters
 \include{02-main/ch1_introduction}
 \include{02-main/ch2_historical}
 \include{02-main/ch3_analysis}
@@ -103,15 +103,13 @@
 % Appendices
 \appendix
 \include{03-tail/01_docker}
-\include{03-tail/02_safestack}
-\include{03-tail/03_protections}
 
 
-% Include CC
-\newpage\phantom{blank}
-\thispagestyle{empty}
-\cleardoublepage
-\includepdf[pages=-]{03-tail/appendix/20170327_ca-pa-levee-jgr-v4.pdf}
+% % Include CC
+% \newpage\phantom{blank}
+% \thispagestyle{empty}
+% \cleardoublepage
+% \includepdf[pages=-]{03-tail/appendix/somefile.pdf}
 
 
 % List of figures
@@ -119,19 +117,19 @@
 \thispagestyle{empty}
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{chapter}{Table des figures}
+\addcontentsline{toc}{chapter}{List of Figures}
 \listoffigures
 
-% % List of tables
-% \cleardoublepage
-% \phantomsection
-% \addcontentsline{toc}{chapter}{Liste des tableaux}
-% \listoftables
+% List of tables
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
 
 % List of listings
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{chapter}{Liste des codes sources}
+\addcontentsline{toc}{chapter}{List of Sources}
 \listoflistings
 
 % -----------------------------------------------------------------------------

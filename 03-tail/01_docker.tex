@@ -1,20 +1,12 @@
-\chapter{Configuration du Docker}
+\chapter{Docker Configuration}
 \label{chap:dockerConf}
 
-Le docker-compose s'occupe du démarrage d'un ou plusieurs containers ainsi que de leur interaction avec l'hôte (volumes, ports, etc). Un seul volume partagé est monté au sein du container, sous l'adresse \mintinline{bash}{/shared}. Afin de pouvoir désactiver certaines protection tel que \gls{aslr}, il est nécessaire d'autoriser des privilèges suppérieurs au container (voir ligne 6).
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 \begin{listing}
 	\yamlfile{02-main/listings/docker-compose.yml}
-	\caption{Fichier de configuration général utilisé par docker-compose}
+	\caption{caption}
 	\label{lst:dockerCompose}
 \end{listing}
 
-Le contenu d'un fichier \mintinline{bash}{.bash_profile} est copié lors de la phase de contruction du container dans le dossier de l'utilisateur et est rajouté au fichier \mintinline{bash}{.bashrc}, cela permet de rajouter facilement des commandes ou des raccourcis. Actuellement le fichier ne contient pas grand chose mais le méchanisme est en place.
-
-\begin{listing}
-	\bashfile{02-main/listings/bashProfile}
-	\caption{Fichier bash copier dans le .bashrc de l'utilisateur Debian}
-	\label{lst:bashProfile}
-\end{listing}
-
-Le fichier principal contenant les instructions de construction de l'image est dispnible en \autoref{lst:dockerfile}.
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
