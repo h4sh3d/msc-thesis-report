@@ -9,7 +9,182 @@
 \newpage
 
 % -----------------------------------------------------------------------------
-\section{Concepts}
+\section{Elliptic Curve}
+Bitcoin use elliptic curve cryptography for securing Bitcoin transaction. The curve
+secp256k1, proposed by the Standards for Efficient Cryptography (SEC), is used.
 
-% -- Your text goes here --
-\lipsum[1-2]
+\subsection{Secp256k1 curve}
+The curve $E$ is define in $\mathbb{F}_p$ with a Koblitz curve
+
+\begin{equation*}
+\begin{split}
+  y^2 &= x^3 + ax + b\\
+  y^2 &= x^3 + 7\\
+\end{split}
+\end{equation*}
+
+\subsection{Point addition}
+With two distinct point $P$ and $Q$ on the curve $E$, the resulting point of the
+addition is the inverse point, $(x, -y)$, of the intersection point with a straight
+line between $P$ and $Q$.
+
+\begin{equation*}
+\begin{split}
+  P + Q &= R \\
+  (x_p, y_p) + (x_q, y_q) &= (x_r, y_r) \\
+  x_r &\equiv \lambda^2 - x_p - x_q \pmod p \\
+  y_r &\equiv \lambda(x_p - x_r) - y_p \pmod p  \\
+  \lambda &= \cfrac{y_q - y_p}{x_q - x_p} \\
+          &\equiv (y_q - y_p)(x_q - x_p)^{-1} \pmod p
+\end{split}
+\end{equation*}
+
+\subsection{Point doubling}
+For $P$ and $Q$ equal, the formula is similar, the tangent to the curve $E$ at
+point $P$ is used to determine $R$.
+
+\begin{equation*}
+\begin{split}
+  P + P &= R \\
+  (x_p, y_p) + (x_p, y_p) &= (x_r, y_r) \\
+  x_r &\equiv \lambda^2 - 2x_p \pmod p \\
+  y_r &\equiv \lambda(x_p - x_r) - y_p \pmod p  \\
+  \lambda &= \cfrac{3x_p^2 + a}{2y_p} \\
+          &\equiv (3x_p^2 + a)(2y_p)^{-1} \pmod p
+\end{split}
+\end{equation*}
+
+\subsection{Point multiplication}
+A point $P$ can be multiply by a scalar $d$. The straightforward way of computing
+a point multiplication is through repeated addition. However, this is a fully
+exponential approach to computing the multiplication.
+The simplest method is the double-and-add method. To compute $dP$, start with the
+binary representation for $d : d = d_0 + 2d_1 + 2^2d_2 + \dots + 2^md_m$,
+where $[ d_0 \dots d_m] \in {0,1}$
+
+\begin{equation*}
+\begin{split}
+  dP &= P_1 + P_2 + \dots + P_d
+\end{split}
+\end{equation*}
+
+% -----------------------------------------------------------------------------
+\section{Threshold Hierarchical Determinitic Wallets}
+
+Hierarchical deterministic wallets are sophisticated wallets in wich fresh keys
+can be generated from a previous key. Adapting hierarchical deterministic wallets
+with a threshold scheme can be achieve by sharing the private key additively:
+
+\begin{equation*}
+\begin{split}
+  pk_i     &= sk_i \cdot G \\
+  sk_{mas} &= \sum_{i=1}^{s} sk_i \bmod n \\
+  pk_{mas} &= \Bigg[ \sum_{i=1}^{s} sk_i \bmod n \Bigg] \cdot G \\
+           &= \sum_{i=1}^{s} (sk_i \cdot G) = \sum_{i=1}^{s} pk_i
+\end{split}
+\end{equation*}
+
+or multiplicatively:
+
+\begin{equation*}
+\begin{split}
+  sk_{mas} &= \prod_{i=1}^{s} sk_i \bmod n \\
+  pk_{mas} &= \Bigg[ \prod_{i=1}^{s} sk_i \bmod n \Bigg] \cdot G \\
+           &= (((G \cdot sk_1) \cdot sk_2) \dots )\cdot sk_i
+\end{split}
+\end{equation*}
+
+In the additive case, the master public key $pk_{mas}$ is also the sum of all the
+public points $pk_i$, which means that if each one publish his own public share
+point, every one can compute the master public key.
+
+\subsection{Private parent key to private child key}
+The function CKDpriv compute a child extended private key from the parent extended
+private key. The derivatioin can be \textit{hardened}. This proposal differ from
+the BIP32 standard in the chain derivation proccess. The threshold scheme require
+the same chain on all participants, so the proccess cannot rely on the private key
+share of any participant.
+
+\begin{equation*}
+\begin{split}
+  f(l) &=
+  \begin{cases}
+    \text{HMAC-SHA256}(c_{par}, \text{0x00}\mid\mid \text{ser}_{256}(k_{par})
+    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i \geq 2^{31}\\
+    \text{HMAC-SHA256}(c_{par}, \text{ser}_{p}(\text{point}(k_{par}))
+    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i < 2^{31}
+  \end{cases} \\
+  k_i &\equiv l \cdot k_{par} \pmod n
+\end{split}
+\end{equation*}
+
+\subsection{Public parent key to public child key}
+The function CKDpub compute a child extend public key from the parent extended
+public key. It is worth noting than it is not possible to compute an
+\textit{hardened} derivation without the parent private key.
+
+\begin{equation*}
+\begin{split}
+  f(l) &=
+  \begin{cases}
+    \text{failure} & \quad \text{if } i \geq 2^{31}\\
+    \text{HMAC-SHA256}(c_{par}, \text{ser}_{p}(K_{par})
+    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i < 2^{31}
+  \end{cases} \\
+  K_i &= l \cdot K_{par}\\
+      &= l \cdot (k_{par} \cdot G)\\
+      &= (l \cdot k_{par} \bmod n) \cdot G
+\end{split}
+\end{equation*}
+
+\subsection{Child key share derivation}
+It is asume that one of the participants $P_j$ is designated as the leader $L$.
+The function CKSD compute a child extended key share from the parent
+extended key share.
+
+\begin{equation*}
+\begin{split}
+  f(T) &=
+  \begin{cases}
+    \text{CKDpriv}(i) & \quad \text{if } L = j\\% \land i < 2^{31}
+    \text{CKDpub}(i) & \quad \text{if } L \neq j
+  \end{cases} \\
+  sk_i &= \Bigg[ \prod_{s=1}^{j} sk_{par}^{s} \Bigg] \cdot T \\
+       &= sk_{par} \cdot T \\
+  pk_i &= pk_{par} \cdot T \\
+       &= sk_{par} \cdot G \cdot T \\
+       &= \Bigg[ \prod_{s=1}^{j} sk_{par}^{s} \Bigg] \cdot G \\
+  c_i &= \text{HMAC-SHA256}(c_{par}, \text{ser}_{32}(i))
+\end{split}
+\end{equation*}
+
+If the index is greather or equal than $2^{31}$
+the public key share of the participants $P_j = L$ need to be
+revealed in order to compute the public child key, a round of communication is
+needed.
+
+% \begin{equation*}
+% \begin{split}
+%   f(T) &= \text{CKDpriv}(i) \\
+%   sk_i &= \prod_{s=1}^{j} (sk_{par}^{s} \cdot T^s) \\
+%   pk_i &= pk_{par} \cdot T \\
+%        &= sk_{par} \cdot G \cdot T \\
+%        &= \Bigg[ \prod_{s=1}^{j} (sk_{par}^{s} \cdot T^s) \Bigg] \cdot G \\
+%   c_i &= \text{HMAC-SHA256}(c_{par}, \text{ser}_{32}(i))
+% \end{split}
+% \end{equation*}
+
+% \begin{equation*}
+% \begin{split}
+%   T &= \text{HMAC-SHA512}(c_{par}, \text{ser}_{p}(pk_{par}^{(L)})
+%   \mid\mid \text{ser}_{32}(i)) \\
+%   pk_i &= pk_{par} + (T \cdot G) \\
+%   c_i &= T_R
+% \end{split}
+% \end{equation*}
+%
+% \begin{equation*}
+% \begin{split}
+%   pk_i &= pk_{par} + T
+% \end{split}
+% \end{equation*}
