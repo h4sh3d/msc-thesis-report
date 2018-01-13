@@ -1,0 +1,416 @@
+\chapter{Threshold optimal ECDSA scheme}
+\label{chap:threshold-scheme}
+
+% -- Your text goes here --
+\lipsum[1-2]
+
+\minitoc
+
+\newpage
+
+% -----------------------------------------------------------------------------
+\section{Elliptic Curve}
+Bitcoin use elliptic curve cryptography for securing Bitcoin transaction. The curve
+secp256k1, proposed by the Standards for Efficient Cryptography (SEC), is used.
+
+\subsection{Secp256k1 curve}
+The curve $E$ is define in $\mathbb{F}_p$ with a Koblitz curve
+
+\begin{equation*}
+\begin{split}
+  y^2 &= x^3 + ax + b\\
+  y^2 &= x^3 + 7\\
+\end{split}
+\end{equation*}
+
+\subsection{Point addition}
+With two distinct point $P$ and $Q$ on the curve $E$, the resulting point of the
+addition is the inverse point, $(x, -y)$, of the intersection point with a straight
+line between $P$ and $Q$.
+
+\begin{equation*}
+\begin{split}
+  P + Q &= R \\
+  (x_p, y_p) + (x_q, y_q) &= (x_r, y_r) \\
+  x_r &\equiv \lambda^2 - x_p - x_q \pmod p \\
+  y_r &\equiv \lambda(x_p - x_r) - y_p \pmod p  \\
+  \lambda &= \cfrac{y_q - y_p}{x_q - x_p} \\
+          &\equiv (y_q - y_p)(x_q - x_p)^{-1} \pmod p
+\end{split}
+\end{equation*}
+
+\subsection{Point doubling}
+For $P$ and $Q$ equal, the formula is similar, the tangent to the curve $E$ at
+point $P$ is used to determine $R$.
+
+\begin{equation*}
+\begin{split}
+  P + P &= R \\
+  (x_p, y_p) + (x_p, y_p) &= (x_r, y_r) \\
+  x_r &\equiv \lambda^2 - 2x_p \pmod p \\
+  y_r &\equiv \lambda(x_p - x_r) - y_p \pmod p  \\
+  \lambda &= \cfrac{3x_p^2 + a}{2y_p} \\
+          &\equiv (3x_p^2 + a)(2y_p)^{-1} \pmod p
+\end{split}
+\end{equation*}
+
+\subsection{Point multiplication}
+A point $P$ can be multiply by a scalar $d$. The straightforward way of computing
+a point multiplication is through repeated addition. However, this is a fully
+exponential approach to computing the multiplication.
+The simplest method is the double-and-add method. To compute $dP$, start with the
+binary representation for $d : d = d_0 + 2d_1 + 2^2d_2 + \dots + 2^md_m$,
+where $[ d_0 \dots d_m] \in {0,1}$
+
+\begin{equation*}
+\begin{split}
+  dP &= P_1 + P_2 + \dots + P_d
+\end{split}
+\end{equation*}
+
+
+% -----------------------------------------------------------------------------
+\section{Threshold scheme}
+
+% -- Your text goes here --
+\lipsum[1-2]
+
+\subsection{Adapting zero-knowledge proofs to ECDSA}
+
+Initialy the proofs have been designed for the DSA architecture, so the values
+tested in the proofs are values in $\mathbb{Z}_{q}$. These values are used to create
+a challenge $e$ with two hash function (one different per proof.) For ECDSA some
+of these values are now points and some equation need to be adapted. Points are
+serialized in long form of 65 bytes, starting with \texttt{0x04} and two 32 bytes
+number for the coordinate x and y.
+
+The first zero-knowledge proof $\Pi$ is created by Alice to prove to Bob that she
+act correctly and have encrypted coherent data with Paillier encryption.
+
+\begin{figure}[H]
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{ | p{5cm} p{5cm} | }
+        \hline
+        $\alpha \xleftarrow[]{R} \mathbb{Z}_{n^3}$ & $\delta \xleftarrow[]{R} \mathbb{Z}_{n^3}$ \\
+        $\beta \xleftarrow[]{R} \mathbb{Z}_{N}^{*}$ & $\mu \xleftarrow[]{R} \mathbb{Z}_{N}^{*}$ \\
+        $\gamma \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ & $\nu \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ \\
+        $\rho_1 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ & $\rho_2 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ \\
+         & $\rho_3 \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+         & $\epsilon \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+         & \\
+        $z_1 \leftarrow (h_1)^{x_1}(h_2)^{\rho_1} \mod \tilde{N}$ & $z_2 \leftarrow (h_1)^{x_2}(h_2)^{\rho_2} \mod \tilde{N}$ \\
+        $u_1 \leftarrow c \cdot \alpha$ & $y \leftarrow d \cdot (x_2 + \rho_3)$ \\
+        $u_2 \leftarrow g^{\alpha} \beta^{N} \mod N^2$ & $v_1 \leftarrow d \cdot (\delta + \epsilon)$ \\
+        $u_3 \leftarrow (h_1)^{\alpha} (h_2)^{\gamma} \mod \tilde{N}$ & $v_2 \leftarrow w_2 \cdot \alpha + d \cdot \epsilon$ \\
+         & $v_3 \leftarrow g^{\delta} \mu^{N} \mod N^2$ \\
+         & $v_4 \leftarrow (h_1)^{\delta} (h_2)^{\nu} \mod \tilde{N}$ \\
+         & \\
+        \multicolumn{2}{ | l | }{$e \leftarrow \texttt{hash}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, y, v_1, v_2, v_3, v_4)$} \\
+         & \\
+        $s_1 \leftarrow ex_1 + \alpha$ & $t_1 \leftarrow ex_2 + \delta$ \\
+        $s_2 \leftarrow (r_1)^e \beta \mod N$ & $t_2 \leftarrow e \rho_3 + \epsilon \mod n$ \\
+        $s_3 \leftarrow e \rho_1 + \gamma$ & $t_3 \leftarrow (r_2)^e \mu \mod N^2$ \\
+         & $t_4 \leftarrow e \rho_2 + \nu$ \\
+         & \\
+        \multicolumn{2}{ | c | }{$\Pi \leftarrow \langle z_1, z_2, y, e, s_1, s_2, s_3, t_1, t_2, t_3, t_4 \rangle$} \\
+        \hline
+      \end{tabular}
+    \end{table}
+
+  \caption{Adaptation of $\Pi$ to ECDSA}
+  \label{fig:adaptationOfPi}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{ | p{6cm} p{6cm} | }
+        \hline
+        \multicolumn{2}{ | c | }{$\langle z_1, z_2, y, e, s_1, s_2, s_3, t_1, t_2, t_3, t_4 \rangle \leftarrow \Pi$} \\
+          & \\
+        $\text{Verify } s_1, t_1 \in \mathbb{Z}_{n^3}$ & $v_1 \leftarrow d \cdot (t_1 + t_2) + y \cdot (-e)$ \\
+        $u_1 \leftarrow c \cdot s_1 + w_1 \cdot (-e)$ & $v_2 \leftarrow w_2 \cdot s_1 + d \cdot t_2 + y \cdot (-e)$ \\
+        $u_2 \leftarrow g^{s_1}(s_2)^N(m_1)^{-e} \mod N^2$ & $v_3 \leftarrow g^{t_1} (t_3)^N (m_2)^{-e} \mod N^2$ \\
+        $u_3 \leftarrow (h_1)^{s_1} (h_2)^{s_3} (z_1)^{-e} \mod \tilde{N}$ & $v_4 \leftarrow (h_1)^{t_1} (h_2)^{t_4} (z_2)^{-e} \mod \tilde{N}$ \\
+         & \\
+        \multicolumn{2}{ | c | }{$\text{Verify } e = \texttt{hash}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, y, v_1, v_2, v_3, v_4)$} \\
+        \hline
+      \end{tabular}
+    \end{table}
+
+  \caption{Adaptation of $\Pi$ verification to ECDSA}
+  \label{fig:adaptationOfPiVerification}
+\end{figure}
+
+Second zero-knowledge proof created by Bob to prove to Alice that he acted correctly
+according the protocol.
+
+\begin{figure}[H]
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{ | p{5.5cm} p{6cm} | }
+        \hline
+        $\alpha \xleftarrow[]{R} \mathbb{Z}_{n^3}$ & $\delta \xleftarrow[]{R} \mathbb{Z}_{n^3}$ \\
+        $\beta \xleftarrow[]{R} \mathbb{Z}_{N'}^{*}$ & $\mu \xleftarrow[]{R} \mathbb{Z}_{N}^{*}$ \\
+        $\gamma \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ & $\nu \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ \\
+        $\rho_1 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ & $\rho_2 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ \\
+         & $\rho_3 \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+         & $\rho_4 \xleftarrow[]{R} \mathbb{Z}_{n^5\tilde{N}}$ \\
+         & $\epsilon \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+         & $\sigma \xleftarrow[]{R} \mathbb{Z}_{n^7}$ \\
+         & $\tau \xleftarrow[]{R} \mathbb{Z}_{n^7\tilde{N}}$ \\
+         & \\
+        $z_1 \leftarrow (h_1)^{x_1}(h_2)^{\rho_1} \mod \tilde{N}$ & $z_2 \leftarrow (h_1)^{x_2}(h_2)^{\rho_2} \mod \tilde{N}$ \\
+        $u_1 \leftarrow c \cdot \alpha$ & $y \leftarrow d \cdot (x_2 + \rho_3)$ \\
+        $u_2 \leftarrow (g')^{\alpha} \beta^{N'} \mod (N')^2$ & $v_1 \leftarrow d \cdot (\delta + \epsilon)$ \\
+        $u_3 \leftarrow (h_1)^{\alpha} (h_2)^{\gamma} \mod \tilde{N}$ & $v_2 \leftarrow w_2 \cdot \alpha + d \cdot \epsilon$ \\
+         & $v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$ \\
+         & $v_4 \leftarrow (h_1)^{\delta} (h_2)^{\nu} \mod \tilde{N}$ \\
+         & $z_3 \leftarrow (h_1)^{x_3} (h_2)^{\rho_4} \mod \tilde{N}$ \\
+         & $v_5 \leftarrow (h_1)^{\sigma} (h_2)^{\tau} \mod \tilde{N}$ \\
+         & \\
+        \multicolumn{2}{ | l | }{$e \leftarrow \texttt{hash'}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, z_3, y, v_1, v_2, v_3, v_4, v_5)$} \\
+         & \\
+        $s_1 \leftarrow ex_1 + \alpha$ & $t_1 \leftarrow ex_2 + \delta$ \\
+        $s_2 \leftarrow (r_1)^e \beta \mod N'$ & $t_2 \leftarrow e \rho_3 + \epsilon \mod n$ \\
+        $s_3 \leftarrow e \rho_1 + \gamma$ & $t_3 \leftarrow (r_2)^e \mu \mod N$ \\
+        $s_4 \leftarrow ex_1 x_4 + \alpha$ & $t_4 \leftarrow e \rho_2 + \nu$ \\
+         & $t_5 \leftarrow e x_3 + \sigma$ \\
+         & $t_6 \leftarrow e \rho_4 + \tau$ \\
+         & $t_7 \leftarrow ex_2 x_5 + \delta$ \\
+         & \\
+        \multicolumn{2}{ | c | }{$\Pi' \leftarrow \langle z_1, z_2, z_3, y, e, s_1, s_2, s_3, s_4, t_1, t_2, t_3, t_4, t_5, t_6, t_7 \rangle$} \\
+        \hline
+      \end{tabular}
+    \end{table}
+
+  \caption{Adaptation of $\Pi'$ to ECDSA}
+  \label{fig:adaptationOfPi2}
+\end{figure}
+
+
+\begin{figure}[H]
+    \begin{table}[H]
+      \centering
+      \begin{tabular}{ | p{6.5cm} p{6.5cm} | }
+        \hline
+        \multicolumn{2}{ | c | }{$\langle z_1, z_2, z_3, y, e, s_1, s_2, s_3, s_4, t_1, t_2, t_3, t_4, t_5, t_6, t_7 \rangle \leftarrow \Pi'$} \\
+          & \\
+        $\text{Verify } s_1, t_1 \in \mathbb{Z}_{n^3}$ & $v_1 \leftarrow d \cdot (t_1 + t_2) + y \cdot (-e)$ \\
+        $\text{Verify } t_5 \in \mathbb{Z}_{n^7}$ & $v_2 \leftarrow w_2 \cdot s_1 + d \cdot t_2 + y \cdot (-e)$ \\
+
+        $u_1 \leftarrow c \cdot s_1 + w_1 \cdot (-e)$ & $v_3 \leftarrow (m_3)^{s_4} (m_4)^{t_7} g^{nt_5} (t_3)^{N} (m_2)^{-e} \mod N^2$ \\
+        $u_2 \leftarrow (g')^{s_1} (s_2)^{N'} (m_1)^{-e} \mod (N')^2$ & $v_4 \leftarrow (h_1)^{t_1} (h_2)^{t_4} (z_2)^{-e} \mod \tilde{N}$ \\
+        $u_3 \leftarrow (h_1)^{s_1} (h_2)^{s_3} (z_1)^{-e} \mod \tilde{N}$ &  $v_5 \leftarrow (h_1)^{t_5} (h_2)^{t_6} (z_3)^{-e} \mod \tilde{N}$\\
+         & \\
+        \multicolumn{2}{ | c | }{$\text{Verify } e = \texttt{hash'}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, z_3, y, v_1, v_2, v_3, v_4, v_5)$} \\
+        \hline
+      \end{tabular}
+    \end{table}
+
+  \caption{Adaptation of $\Pi'$ verification to ECDSA}
+  \label{fig:adaptationOfPi2Verification}
+\end{figure}
+
+If $x_1 = z_2$, $x_2 = x_2 z_2$, $x_3 = c$, and $m_2 = \mu$ with
+$\mu = (\alpha)^{m' x_1} (\zeta)^{r' x_2} g^{nx_3} (r_2)^{N}$, then the
+equation $v_3$ in the original paper doesn't work. The result in the
+verification proccess $\Pi'$ need to match
+$v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$.
+The original equation proposed
+$v_3 \leftarrow (m_3)^{s_1} (m_4)^{t_1} g^{nt_5} (t_3)^{N} (m_2)^{-e} \mod N^2$
+doesn't include $m'$ and $r'$ present in $\mu$, so $m_2$ cannot be used correctly
+as showed next.
+
+\begin{equation*}
+\begin{split}
+   v_3 &\equiv (m_3)^{s_1} (m_4)^{t_1} g^{nt_5} (t_3)^{N} (m_2)^{-e} \pmod{N^2} \\
+       &\equiv (m_3)^{ex_1 + \alpha} (m_4)^{ex_2 + \beta} g^{n(ex_3 + \sigma)}
+       \big((r_2)^e \mu\big)^{N}
+       \big((m_3)^{m' x_1} (m_4)^{r' x_2} g^{nx_3} (r_2)^{N}\big)^{-e} \\
+       &\equiv (m_3)^{ex_1 + \alpha} (m_4)^{ex_2 + \beta} g^{n(ex_3 + \sigma)}
+       (r_2)^{eN} \mu^{N}
+       (m_3)^{-e m' x_1} (m_4)^{-e r' x_2} g^{-e nx_3} (r_2)^{-eN} \\
+       &\equiv (m_3)^{ex_1 + \alpha - e m' x_1} (m_4)^{ex_2 + \beta - e r' x_2}
+       g^{enx_3 + n\sigma - enx_3} (r_2)^{eN - eN} \mu^{N}  \\
+       &\equiv (m_3)^{ex_1 + \alpha - e m' x_1} (m_4)^{ex_2 + \beta - e r' x_2}
+       g^{n\sigma} \mu^{N}  \\
+\end{split}
+\end{equation*}
+
+The equation $v_3$ needs to be adapted to include $x_4 = m'$ and $x_5 = r'$ ($m'$
+and $r'$ cannot be include directly in $x_1$ and $x_2$ without breaking other
+equations.) Two new parameters $s_4 \leftarrow ex_1 x_4 + \alpha$ and
+$t_7 \leftarrow ex_2 x_5 + \delta$ are added into the proof to correct
+the equation.
+
+\begin{equation*}
+\begin{split}
+   v_3 &\equiv (m_3)^{s_4} (m_4)^{t_7} g^{nt_5} (t_3)^{N} (m_2)^{-e} \pmod{N^2} \\
+       &\equiv (m_3)^{ex_1x_4 + \alpha} (m_4)^{ex_2x_5 + \beta} g^{n(ex_3 + \sigma)}
+       \big((r_2)^e \mu\big)^{N}
+       \big((m_3)^{x_1x_4} (m_4)^{x_2x_5} g^{nx_3} (r_2)^{N}\big)^{-e} \\
+       &\equiv (m_3)^{ex_1x_4 + \alpha} (m_4)^{ex_2x_5 + \beta} g^{n(ex_3 + \sigma)}
+       (r_2)^{eN} \mu^{N}
+       (m_3)^{-e x_1x_4} (m_4)^{-e x_2x_5} g^{-e nx_3} (r_2)^{-eN} \\
+       &\equiv (m_3)^{ex_1x_4 + \alpha - e x_1x_4} (m_4)^{ex_2x_5 + \beta - e x_2x_5}
+       g^{enx_3 + n\sigma - enx_3} (r_2)^{eN - eN} \mu^{N}  \\
+       &\equiv (m_3)^{\alpha} (m_4)^{\beta} g^{n\sigma} \mu^{N} \\
+\end{split}
+\end{equation*}
+
+
+% -----------------------------------------------------------------------------
+\section{Serialization and communication format}
+
+% -- Your text goes here --
+
+
+% -----------------------------------------------------------------------------
+\section{Threshold Hierarchical Determinitic Wallets}
+
+Hierarchical deterministic wallets are sophisticated wallets in wich fresh keys
+can be generated from a previous key. Adapting hierarchical deterministic wallets
+with a threshold scheme can be achieve by sharing the private key additively:
+
+\begin{equation*}
+\begin{split}
+  pk_i     &= sk_i \cdot G \\
+  sk_{mas} &= \sum_{i=1}^{s} sk_i \bmod n \\
+  pk_{mas} &= \Bigg[ \sum_{i=1}^{s} sk_i \bmod n \Bigg] \cdot G \\
+           &= \sum_{i=1}^{s} (sk_i \cdot G) = \sum_{i=1}^{s} pk_i
+\end{split}
+\end{equation*}
+
+or multiplicatively:
+
+\begin{equation*}
+\begin{split}
+  sk_{mas} &= \prod_{i=1}^{s} sk_i \bmod n \\
+  pk_{mas} &= \Bigg[ \prod_{i=1}^{s} sk_i \bmod n \Bigg] \cdot G \\
+           &= (((G \cdot sk_1) \cdot sk_2) \dots )\cdot sk_i
+\end{split}
+\end{equation*}
+
+In the additive case, the master public key $pk_{mas}$ is also the sum of all the
+public points $pk_i$, which means that if each one publish his own public share
+point, every one can compute the master public key.
+
+\subsection{Private parent key to private child key}
+The function CKDpriv compute a child extended private key from the parent extended
+private key. The derivatioin can be \textit{hardened}. This proposal differ from
+the BIP32 standard in the chain derivation proccess. The threshold scheme require
+the same chain on all participants, so the proccess cannot rely on the private key
+share of any participant.
+
+\begin{equation*}
+\begin{split}
+  f(l) &=
+  \begin{cases}
+    \text{HMAC-SHA256}(c_{par}, \text{0x00}\mid\mid \text{ser}_{256}(k_{par})
+    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i \geq 2^{31}\\
+    \text{HMAC-SHA256}(c_{par}, \text{ser}_{p}(\text{point}(k_{par}))
+    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i < 2^{31}
+  \end{cases} \\
+  k_i &\equiv l \cdot k_{par} \pmod n
+\end{split}
+\end{equation*}
+
+\subsection{Public parent key to public child key}
+The function CKDpub compute a child extend public key from the parent extended
+public key. It is worth noting than it is not possible to compute an
+\textit{hardened} derivation without the parent private key.
+
+\begin{equation*}
+\begin{split}
+  f(l) &=
+  \begin{cases}
+    \text{failure} & \quad \text{if } i \geq 2^{31}\\
+    \text{HMAC-SHA256}(c_{par}, \text{ser}_{p}(K_{par})
+    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i < 2^{31}
+  \end{cases} \\
+  K_i &= l \cdot K_{par}\\
+      &= l \cdot (k_{par} \cdot G)\\
+      &= (l \cdot k_{par} \bmod n) \cdot G
+\end{split}
+\end{equation*}
+
+\subsection{Child key share derivation}
+It is asume that one of the participants $P_j$ is designated as the leader $L$.
+The function CKSD compute a child extended key share from the parent
+extended key share.
+
+\begin{equation*}
+\begin{split}
+  f(T) &=
+  \begin{cases}
+    \text{CKDpriv}(i) & \quad \text{if } L = j\\% \land i < 2^{31}
+    \text{CKDpub}(i) & \quad \text{if } L \neq j
+  \end{cases} \\
+  sk_i &= \Bigg[ \prod_{s=1}^{j} sk_{par}^{s} \Bigg] \cdot T \\
+       &= sk_{par} \cdot T \\
+  pk_i &= pk_{par} \cdot T \\
+       &= sk_{par} \cdot G \cdot T \\
+       &= \Bigg[ \prod_{s=1}^{j} sk_{par}^{s} \Bigg] \cdot G \\
+  c_i &= \text{HMAC-SHA256}(c_{par}, \text{ser}_{32}(i))
+\end{split}
+\end{equation*}
+
+If the index is greather or equal than $2^{31}$
+the public key share of the participants $P_j = L$ need to be
+revealed in order to compute the public child key, a round of communication is
+needed.
+
+% \begin{equation*}
+% \begin{split}
+%   f(T) &= \text{CKDpriv}(i) \\
+%   sk_i &= \prod_{s=1}^{j} (sk_{par}^{s} \cdot T^s) \\
+%   pk_i &= pk_{par} \cdot T \\
+%        &= sk_{par} \cdot G \cdot T \\
+%        &= \Bigg[ \prod_{s=1}^{j} (sk_{par}^{s} \cdot T^s) \Bigg] \cdot G \\
+%   c_i &= \text{HMAC-SHA256}(c_{par}, \text{ser}_{32}(i))
+% \end{split}
+% \end{equation*}
+
+% \begin{equation*}
+% \begin{split}
+%   T &= \text{HMAC-SHA512}(c_{par}, \text{ser}_{p}(pk_{par}^{(L)})
+%   \mid\mid \text{ser}_{32}(i)) \\
+%   pk_i &= pk_{par} + (T \cdot G) \\
+%   c_i &= T_R
+% \end{split}
+% \end{equation*}
+%
+% \begin{equation*}
+% \begin{split}
+%   pk_i &= pk_{par} + T
+% \end{split}
+% \end{equation*}
+
+
+% -----------------------------------------------------------------------------
+\section{Threshold deterministic signature}
+
+How to use an HMAC function in threshold mode to have deterministic $k$ for signature.
+
+% -----------------------------------------------------------------------------
+\section{Implementation}
+
+% -- Your text goes here --
+\lipsum[1-2]
+
+\subsection{Secp256k1 library}
+\lipsum[1-2]
+
+\subsection{Threshold module}
+\lipsum[1-2]
+
+\subsection{Paillier cryptosystem}
+\lipsum[1-2]
+
+\subsection{Zero-knowledge proofs}
+\lipsum[1-2]
+
+\subsection{DER parser}
+\lipsum[1-2]
