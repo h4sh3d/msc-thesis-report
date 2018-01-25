@@ -215,7 +215,222 @@ copy the content and set the conent lenght, the position index, and the offset.
 
 
 \section{Paillier cryptosystem}
-\lipsum[1-2]
+
+Homomorphic encryption is required in the scheme and Paillier is proposed in the
+white paper. Paillier homomorphic encryption is simple to implement in a textbook
+way, but this implementation is not optimized and need to be reviewed.
+
+\subsection{Data structures}
+
+Encrypted message, public and private keys are transmited. As mentionned before,
+the DER standard format is used to parse and serialize data. DER schema for all
+data structures are defined to ensure portability over different implementations.
+
+\subsubsection{Public keys}
+
+The public key is composed of a public modulus and a generator. The implementation
+data structure add a big modulus corresponding to the square of the modulus. A
+version number is added for futur compatibility purposes.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+    HEPublicKey ::= SEQUENCE {
+        version           INTEGER,
+        modulus           INTEGER,  -- p * q
+        generator         INTEGER   -- n + 1
+    }
+  \end{minted}
+	\caption{DER schema of a Paillier public key}
+	\label{lst:DERSchemaPaillierPub}
+\end{listing}
+
+libgmp is used for all the arithmetic in Paillier implementation, all numbers are
+stored in \texttt{mpz\_t} type. The parser take in input an array of bytes with a
+lenght and the public key to fill.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    typedef struct {
+        mpz_t modulus;
+        mpz_t generator;
+        mpz_t bigModulus;
+    } secp256k1_paillier_pubkey;
+
+    int secp256k1_paillier_pubkey_parse(
+        secp256k1_paillier_pubkey *pubkey,
+        const unsigned char *input,
+        size_t inputlen
+    );
+  \end{minted}
+	\caption{DER parser of a Paillier public key}
+	\label{lst:DERImplPaillierParsePub}
+\end{listing}
+
+
+\subsubsection{Private keys}
+
+The private key is composed of a public modulus, two primes, a generator, a
+private exponant $\lambda = \varphi(n) = (p-1)(q-1)$, and a private coefficient
+$\mu = \varphi(n)^{-1} \mod n$. Again, a version number is added for futur
+compatibility purposes.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+    HEPrivateKey ::= SEQUENCE {
+        version           INTEGER,
+        modulus           INTEGER,  -- p * q
+        prime1            INTEGER,  -- p
+        prime2            INTEGER,  -- q
+        generator         INTEGER,  -- n + 1
+        privateExponent   INTEGER,  -- (p - 1) * (q - 1)
+        coefficient       INTEGER   -- (inverse of privateExponent) mod (p * q)
+    }
+  \end{minted}
+	\caption{DER schema of a Paillier private key}
+	\label{lst:DERSchemaPaillierPriv}
+\end{listing}
+
+The parser take in input an array of bytes with a lenght and the private key to fill.
+The big modulus is computed after the parsing to accelerate encryption and decryption.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    typedef struct {
+        mpz_t modulus;
+        mpz_t prime1;
+        mpz_t prime2;
+        mpz_t generator;
+        mpz_t bigModulus;
+        mpz_t privateExponent;
+        mpz_t coefficient;
+    } secp256k1_paillier_privkey;
+
+    int secp256k1_paillier_privkey_parse(
+        secp256k1_paillier_privkey *privkey,
+        secp256k1_paillier_pubkey *pubkey,
+        const unsigned char *input,
+        size_t inputlen
+    );
+  \end{minted}
+	\caption{DER parser of a Paillier private key}
+	\label{lst:DERImplPaillierParsePriv}
+\end{listing}
+
+\subsubsection{Encrypted messages}
+
+An encrypted message with Paillier cryptosystem is a big number $\in [0, n^2]$.
+No version number is added in this case.
+The implementation structure contain a nonce value that could be set to 0
+to stores the nonce used during encryption.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+    HEEncryptedMessage ::= SEQUENCE {
+        message           INTEGER
+    }
+  \end{minted}
+	\caption{DER schema of an encrypted message with Paillier cryptosystem}
+	\label{lst:DERSchemaPaillierEncMessage}
+\end{listing}
+
+An encrypted message can be serialized and parsed, encrypted messages are used in
+messages exchange during the signing protocol by both actors.
+
+% \begin{listing}
+%   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+%     int secp256k1_paillier_message_parse(
+%         secp256k1_paillier_encrypted_message *message,
+%         const unsigned char *input,
+%         size_t inputlen
+%     );
+%
+%     unsigned char* secp256k1_paillier_message_serialize(
+%         size_t *outputlen,
+%         const secp256k1_paillier_encrypted_message *message
+%     );
+%   \end{minted}
+% 	\caption{DER serializer-parser of encrypted messages with Paillier}
+% 	\label{lst:DERImplPaillierEncMessage}
+% \end{listing}
+
+\subsection{Encrypt and decrypt}
+
+The message $0 \leq m < n$ to encrypt is \texttt{m}, a random value $r$ where
+$0 \leq r < n$ is selected with the fonction pointer \texttt{noncefp} and put into
+the nonce value of the result encrypted message. The cipher
+$c = g^m \cdot r^n \mod n^2$ is put into \texttt{res->message}.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, const mpz_t m, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
+        mpz_t l1, l2, l3;
+        int ret = noncefp(res->nonce, pubkey->modulus);
+        if (ret) {
+            mpz_inits(l1, l2, l3, NULL);
+            mpz_powm(l1, pubkey->generator, m, pubkey->bigModulus);
+            mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
+            mpz_mul(l3, l1, l2);
+            mpz_mod(res->message, l3, pubkey->bigModulus);
+            mpz_clears(l1, l2, l3, NULL);
+        }
+        return ret;
+    }
+  \end{minted}
+	\caption{Implementation of encryption with Paillier cryptosystem}
+	\label{lst:implEncryptPaillier}
+\end{listing}
+
+The cipher $c \in \mathbb{Z}_{n^2}^*$ is decrypted with
+$m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = (x - 1) / n$.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_message *c, const secp256k1_paillier_privkey *privkey) {
+        mpz_t l1, l2;
+        mpz_inits(l1, l2, NULL);
+        mpz_powm(l1, c->message, privkey->privateExponent, privkey->bigModulus);
+        mpz_sub_ui(l2, l1, 1);
+        mpz_cdiv_q(l1, l2, privkey->modulus);
+        mpz_mul(l2, l1, privkey->coefficient);
+        mpz_mod(res, l2, privkey->modulus);
+        mpz_clears(l1, l2, NULL);
+    }
+  \end{minted}
+	\caption{Implementation of decryption with Paillier cryptosystem}
+	\label{lst:implDecryptPaillier}
+\end{listing}
+
+\subsection{Homomorphism}
+
+$D(E(m_1, r_1)^{m_2} \mod n^2) = m_1 m_2 \mod n$
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *c, const mpz_t s, const secp256k1_paillier_pubkey *pubkey) {
+        mpz_powm(res->message, c->message, s, pubkey->bigModulus);
+        mpz_set(res->nonce, c->nonce);
+    }
+  \end{minted}
+	\caption{Implementation of homomorphic multiplication with Paillier cryptosystem}
+	\label{lst:implDecryptPaillier}
+\end{listing}
+
+$D(E(m_1, r_1) \cdot E(m_2, r_2) \mod n^2) = m_1 + m_2 \mod n$ or $D(E(m_1, r_1) \cdot g^{m_2} \mod n^2) = m_1 + m_2 \mod n$
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    void secp256k1_paillier_add(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *op1, const secp256k1_paillier_encrypted_message *op2, const secp256k1_paillier_pubkey *pubkey) {
+        mpz_t l1;
+        mpz_init(l1);
+        mpz_mul(l1, op1->message, op2->message);
+        mpz_mod(res->message, l1, pubkey->bigModulus);
+        mpz_clear(l1);
+    }
+  \end{minted}
+	\caption{Implementation of homomorphic addition with Paillier cryptosystem}
+	\label{lst:implDecryptPaillier}
+\end{listing}
+
 
 \section{Zero-knowledge proofs}
 \lipsum[1-2]
