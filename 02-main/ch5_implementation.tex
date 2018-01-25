@@ -1,0 +1,139 @@
+\chapter{Implementation in Bitcoin-core secp256k1}
+\label{chap:implementation-secp256k1}
+
+As mentionned before, Bitcoin use eliptic curve cryptography (ECC) for signing transactions.
+When the first release of Bitcoin core appeared in the early 2009, the cryptographic
+computations was performed with the OpenSSL library. Some years after a project
+started with the goal of replacing OpenSSL and creating a custom and minimalistic
+library for cryptography over the curve secp256k1. This library is now available
+on GitHub at \texttt{bitcoin-core/secp256k1} project and it is one of the most optimized,
+if not the most optimized, library for the curve secp256k1. It is worth noting that
+this library is also used by other major crypto-currencies like Ethereum, so extending
+the capabilities of this library is a good choice to attract other cryptographer
+to have a look and increase the amount of reviews for this thesis.
+
+The implementation is spread into four main components: (i) a DER serializer-parser,
+(ii) a textbook implementation of Paillier homomorphic cryptosystem, (iii) an
+implementation of the Zero-Knowledge Proofs adaptation, and (iv) the threshold
+public API. It is worth noting that the current implementation is NOT production
+ready and NOT side-channel attack resistant. Paillier and ZKP are not constant
+time computation and use \texttt{libgmp} for all arithmetic computations, even
+when secret values are used. This implementation is a textbook implementation
+of the scheme and need to be reviewed and more tested before been used in production.
+
+\minitoc
+
+\newpage
+
+% -----------------------------------------------------------------------------
+\section{Configuration}
+
+The library use \texttt{autotools} to manage the compilation, installation and
+uninstallation. A system of module is already present in the structure with an
+ECDH experimental module for shared secret computation and a recovery module for
+recover ECDSA public key. A module can be flag as experimental, then, at the
+configuration time, an explicit parameter enabling experimental modules must be
+passed and a warning is showed to warn that the build contains experimental code.
+
+\subsection{Add experimental module}
+
+In this structure, the threshold extension is all indicated to be an experimental
+module also. A new variable \texttt{\$enable\_module\_recovery} is declared
+with a m4 macro defined by autoconf in the
+\texttt{configure.ac} file with the argument \texttt{-{}-enable-module-threshold}.
+The default value is set to \texttt{no}.
+
+\begin{listing}
+  \bashfile[firstline=137,lastline=140]{02-main/listings/configure.ac}
+	\caption{Add argument into \texttt{configure.ac} to enable the module}
+	\label{lst:configureEnableThreshold}
+\end{listing}
+
+If the variable \texttt{\$enable\_module\_recovery} is set to yes into \texttt{configure.ac}
+(lines 443 to 445) a compiler constant is declared, again with a m4 marco defined by
+autoconf, and set to 1 in \texttt{libsecp256k1-config.h}
+(lines 20 and 21.) This header file is generated when \texttt{./configure} script is run and
+is included in the library.
+
+\begin{listing}
+  \bashfile[firstline=443,lastline=445]{02-main/listings/configure.ac}
+  \cfile[firstline=20,lastline=21]{02-main/listings/libsecp256k1-config.h}
+	\caption{Define constant \texttt{ENABLE\_MODULE\_THRESHOLD} if module enable}
+	\label{lst:defineEnableThreshold}
+\end{listing}
+
+The main file \texttt{secp256k1.c} (lines 586 to 590) and the tests file \texttt{tests.c}
+include headers based on the compiler constant definition.
+
+\begin{listing}
+  \cfile[firstline=586,lastline=590]{02-main/listings/secp256k1.c}
+	\caption{Include implementation headers if \texttt{ENABLE\_MODULE\_THRESHOLD} is
+  defined}
+	\label{lst:includeThresholdImplementationHeaders}
+\end{listing}
+
+The module is set to experimental to avoid enabling it without explicitly agree
+to build experimental code. If experimental is set to yes a warning is display
+during the configuration process, if experimental is not set and any experimental
+module is enable an error message is display and the process failed.
+
+\begin{listing}
+  \bashfile[firstline=465,lastline=482]{02-main/listings/configure.ac}
+	\caption{Set threshold module to experimental into \texttt{configure.ac}}
+	\label{lst:setModuleExperimental}
+\end{listing}
+
+\subsection{Configure compilation}
+
+A module is composed of one or many \texttt{include/} headers that
+contain the public API with a small description of each functions, these headers
+are copied in the right folders when \texttt{sudo make install} command is run.
+The file \texttt{Makefile.am} define which headers need to be installed, which
+not and how to compile the project. This file is parsed by autoconf to generate
+the final \texttt{Makefile} with all the fonctionalities expected.
+
+Each module has its own \texttt{Makefile.am.include} which describe what to do
+with all the files present into the module folder. This file is included in the
+main \texttt{Makefile.am} (lines 179 to 181) if the module is enable.
+
+\begin{listing}
+  \makefile[firstline=179,lastline=181]{02-main/listings/Makefile.am}
+	\caption{Include specialized Makefile if threshold module is enable}
+	\label{lst:includeSpecializedMakefile}
+\end{listing}
+
+The specialized \texttt{Makefile.am.include} declare the header requisite to be
+include and declare the list of all the headers that must not be installed on
+the system when \texttt{sudo make install} command is run.
+
+\begin{listing}
+  \makefile{02-main/listings/Makefile.am.include}
+	\caption{Specialized Makefile for threshold module}
+	\label{lst:specializedMakefile}
+\end{listing}
+
+It is possible to build the library and enable the threshold module with the
+command below.
+
+\begin{minted}[breaklines=true,fontsize=\scriptsize]{bash}
+  ./configure --enable-module-threshold --enable-experimental
+\end{minted}
+
+\section{DER parser-serializer}
+\lipsum[1-2]
+
+\section{Paillier cryptosystem}
+\lipsum[1-2]
+
+\section{Zero-knowledge proofs}
+\lipsum[1-2]
+
+\section{Threshold module}
+\lipsum[1-2]
+
+%
+% \begin{listing}
+% 	\yamlfile{02-main/listings/docker-compose.yml}
+% 	\caption{caption}
+% 	\label{lst:dockerCompose}
+% \end{listing}

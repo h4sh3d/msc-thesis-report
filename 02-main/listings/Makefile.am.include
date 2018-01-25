@@ -1,0 +1,10 @@
+include_HEADERS += include/secp256k1_threshold.h
+noinst_HEADERS += src/modules/threshold/der_impl.h
+noinst_HEADERS += src/modules/threshold/paillier.h
+noinst_HEADERS += src/modules/threshold/paillier_impl.h
+noinst_HEADERS += src/modules/threshold/paillier_tests.h
+noinst_HEADERS += src/modules/threshold/eczkp.h
+noinst_HEADERS += src/modules/threshold/eczkp_impl.h
+noinst_HEADERS += src/modules/threshold/eczkp_tests.h
+noinst_HEADERS += src/modules/threshold/threshold_impl.h
+noinst_HEADERS += src/modules/threshold/threshold_tests.h
