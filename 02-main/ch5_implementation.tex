@@ -12,7 +12,7 @@ this library is also used by other major crypto-currencies like Ethereum, so ext
 the capabilities of this library is a good choice to attract other cryptographer
 to have a look and increase the amount of reviews for this thesis.
 
-The implementation is spread into four main components: (i) a DER serializer-parser,
+The implementation is spread into four main components: (i) a DER parser-serializer,
 (ii) a textbook implementation of Paillier homomorphic cryptosystem, (iii) an
 implementation of the Zero-Knowledge Proofs adaptation, and (iv) the threshold
 public API. It is worth noting that the current implementation is NOT production
@@ -119,8 +119,100 @@ command below.
   ./configure --enable-module-threshold --enable-experimental
 \end{minted}
 
+% -----------------------------------------------------------------------------
+
 \section{DER parser-serializer}
-\lipsum[1-2]
+
+Transmit messages and retreive keys are an important part of the scheme. Because
+between all steps a communication on the network is necessary, a way to export and
+import data is required. Bitcoin private key are simple structures because of the
+fixed curve and their intrinsic nature, a single $2^{256}$ bits value. Threshold
+private key are composed of multiple parts like: (i) the private share, (ii) a
+Paillier private key, (iii) a Paillier public key, and (iv) Zero-Knowledge Proof
+parameters. To serialize these complex structures the DER standard has been choosed.
+Three simple data types are implemented in the library: (i) sequence, (ii) integer,
+and (iii) octet string.
+
+\subsection{Sequence}
+
+The sequence data structure holds a sequence of integers and/or octet strings. The
+sequence start with the constant \texttt{0x30} and is followed by the content lenght
+and the content itself.
+A lenght could be in the short form or the long form. If the content number of bytes
+is shorter to \texttt{0x80} the lenght byte indicate the lenght, if the content
+is equal or longer than \texttt{0x80} the seven lower bits 0 to 6 where
+$\texttt{byte} = \{ \texttt{b}_7, \dots, \texttt{b}_1, \texttt{b}_0\}$
+indicate the number of followed bytes which are used for the lenght.
+
+\begin{listing}
+  \cfile[firstline=10,lastline=23]{02-main/listings/der_impl.h}
+	\caption{Implementation of a DER lenght parser}
+	\label{lst:implDERLenghtParser}
+\end{listing}
+
+The sequence parser check the first byte with the constant \texttt{0x30} and
+extract the content lenght. Position in the input array are holds in the \texttt{*pos}
+variable, extracted lenght is stored in \texttt{*lenght}, and the offset holds
+how many bytes in the data are used for the header and the lenght. A coherence
+check is performed to ensure that the current offset and the retreived lenght
+result to the same amount of bytes passed in argument.
+
+When a sequence holds other sequence, retreive their total lenght (including header
+and content lenght bytes) is needed to recursivly parse them. A specific function
+is created to retreive the total lenght of a struct given a pointer to its first
+byte.
+
+\begin{listing}
+  \cfile[firstline=25,lastline=35]{02-main/listings/der_impl.h}
+	\caption{Implementation of a DER sequence parser}
+	\label{lst:implDERSequenceParser}
+\end{listing}
+
+The serialization of a sequence is implemented as a serialization of an octet string
+with the sequence header \texttt{0x30} without integrity check of the content.
+The content lenght is serialized first, then the header is added.
+
+The result of a content lenght serialization can be $\geq 1$ byte-s. If the content
+is shorter than \texttt{0x80}, then one byte is enough to store the lenght. Else
+multiple bytes ($\geq 2$) are used. Because the number of byte is undefined before
+the computation a memory allocation is necessary and a pointer is returned with
+the lenght of the array.
+
+\begin{listing}
+  \cfile[firstline=155,lastline=166]{02-main/listings/der_impl.h}
+	\caption{Implementation of a DER sequence serializer}
+	\label{lst:implDERSequenceSerializer}
+\end{listing}
+
+If the content lenght is longer than \texttt{0x80}, then \texttt{mpz} is used to serialize
+the lenght into a bytes array in big endian most significant byte first. The lenght
+of this serialization is stored into \texttt{longsize} and is used to create the
+first byte with the most significant bit set to 1 (line 93).
+
+\begin{listing}
+  \cfile[firstline=81,lastline=100]{02-main/listings/der_impl.h}
+	\caption{Implementation of a DER lenght serializer}
+	\label{lst:implDERLenghtSerializer}
+\end{listing}
+
+\subsection{Integer}
+
+Integers are used to store the most values in the keys and Zero-Knowledge Proofs.
+An integer can be positive, negative or zero and are represented in the second
+complement form. The header start with \texttt{0x02}, followed by the lenght of the data.
+Parsing and serializing integer are already implemented in libgmp, functions are
+juste wrapper to extract information from the header and start the \texttt{mpz}
+importation at the right offset.
+
+\subsection{Octet string}
+
+Octet strings are used to holds serialized data like points/public keys.
+An octet string is an arbitrary array of bytes. The header start with \texttt{0x04}
+followed by the size of the content. The serialization implementation retreive
+the lenght of the content, copy the header and the octet string into a new memory
+space, and return the pointer with the total lenght. The parser implementation
+copy the content and set the conent lenght, the position index, and the offset.
+
 
 \section{Paillier cryptosystem}
 \lipsum[1-2]
@@ -130,10 +222,3 @@ command below.
 
 \section{Threshold module}
 \lipsum[1-2]
-
-%
-% \begin{listing}
-% 	\yamlfile{02-main/listings/docker-compose.yml}
-% 	\caption{caption}
-% 	\label{lst:dockerCompose}
-% \end{listing}
