@@ -5,14 +5,14 @@ As mentionned before, Bitcoin use eliptic curve cryptography (ECC) for signing t
 When the first release of Bitcoin core appeared in the early 2009, the cryptographic
 computations was performed with the OpenSSL library. Some years after a project
 started with the goal of replacing OpenSSL and creating a custom and minimalistic
-library for cryptography over the curve secp256k1. This library is now available
+\texttt{C} library for cryptography over the curve secp256k1. This library is now available
 on GitHub at \texttt{bitcoin-core/secp256k1} project and it is one of the most optimized,
 if not the most optimized, library for the curve secp256k1. It is worth noting that
 this library is also used by other major crypto-currencies like Ethereum, so extending
 the capabilities of this library is a good choice to attract other cryptographer
 to have a look and increase the amount of reviews for this thesis.
 
-The implementation is spread into four main components: (i) a DER parser-serializer,
+The implementation is spread into four main components: (i) a \texttt{DER} parser-serializer,
 (ii) a textbook implementation of Paillier homomorphic cryptosystem, (iii) an
 implementation of the Zero-Knowledge Proofs adaptation, and (iv) the threshold
 public API. It is worth noting that the current implementation is NOT production
@@ -20,11 +20,14 @@ ready and NOT side-channel attack resistant. Paillier and ZKP are not constant
 time computation and use \texttt{libgmp} for all arithmetic computations, even
 when secret values are used. This implementation is a textbook implementation
 of the scheme and need to be reviewed and more tested before been used in production.
+It is also worth noting that this library doesn't implement the functions needed
+to initialize the setup. Only the functions needed to parse existing keys and compute a
+distributed signature are implemented.
 
 This chapter refers to the implementation available on GitHub at
 \url{https://github.com/GuggerJoel/secp256k1/tree/threshold} at the time when
-this lines are wrote. Note that the implementation can evolve after that this
-report is written.
+this lines are wrote. Note that the sources can evolve after that this report is written,
+to be sure to read the latest version of the code check out the sources directly on GitHub.
 
 \minitoc
 
@@ -38,9 +41,9 @@ uninstallation. A system of module is already present in the structure with an
 ECDH experimental module for shared secret computation and a recovery module for
 recover ECDSA public key. A module can be flag as experimental, then, at the
 configuration time, an explicit parameter enabling experimental modules must be
-passed and a warning is showed to warn that the build contains experimental code.
+passed and a warning is shown to warn that the build contains experimental code.
 
-\subsection{Add experimental module}
+\subsection{Add new experimental module}
 
 In this structure, the threshold extension is all indicated to be an experimental
 module also. A new variable \texttt{\$enable\_module\_recovery} is declared
@@ -121,12 +124,12 @@ It is possible to build the library and enable the threshold module with the
 command below.
 
 \begin{minted}[breaklines=true,fontsize=\scriptsize]{bash}
-  ./configure --enable-module-threshold --enable-experimental
+./configure --enable-module-threshold --enable-experimental
 \end{minted}
 
 % -----------------------------------------------------------------------------
 
-\section{DER parser-serializer}
+\section{\texttt{DER} parser-serializer}
 
 Transmit messages and retreive keys are an important part of the scheme. Because
 between all steps a communication on the network is necessary, a way to export and
@@ -134,7 +137,7 @@ import data is required. Bitcoin private key are simple structures because of th
 fixed curve and their intrinsic nature, a single $2^{256}$ bits value. Threshold
 private key are composed of multiple parts like: (i) the private share, (ii) a
 Paillier private key, (iii) a Paillier public key, and (iv) Zero-Knowledge Proof
-parameters. To serialize these complex structures the DER standard has been choosed.
+parameters. To serialize these complex structures the \texttt{DER} standard has been choosed.
 Three simple data types are implemented in the library: (i) sequence, (ii) integer,
 and (iii) octet string.
 
@@ -151,7 +154,7 @@ indicate the number of followed bytes which are used for the lenght.
 
 \begin{listing}
   \cfile[firstline=10,lastline=23]{02-main/listings/der_impl.h}
-	\caption{Implementation of a DER lenght parser}
+	\caption{Implementation of a \texttt{DER} lenght parser}
 	\label{lst:implDERLenghtParser}
 \end{listing}
 
@@ -169,7 +172,7 @@ byte.
 
 \begin{listing}
   \cfile[firstline=25,lastline=35]{02-main/listings/der_impl.h}
-	\caption{Implementation of a DER sequence parser}
+	\caption{Implementation of a \texttt{DER} sequence parser}
 	\label{lst:implDERSequenceParser}
 \end{listing}
 
@@ -185,7 +188,7 @@ the lenght of the array.
 
 \begin{listing}
   \cfile[firstline=155,lastline=166]{02-main/listings/der_impl.h}
-	\caption{Implementation of a DER sequence serializer}
+	\caption{Implementation of a \texttt{DER} sequence serializer}
 	\label{lst:implDERSequenceSerializer}
 \end{listing}
 
@@ -196,7 +199,7 @@ first byte with the most significant bit set to 1 (line 93).
 
 \begin{listing}
   \cfile[firstline=81,lastline=100]{02-main/listings/der_impl.h}
-	\caption{Implementation of a DER lenght serializer}
+	\caption{Implementation of a \texttt{DER} lenght serializer}
 	\label{lst:implDERLenghtSerializer}
 \end{listing}
 
@@ -205,7 +208,7 @@ first byte with the most significant bit set to 1 (line 93).
 Integers are used to store the most values in the keys and Zero-Knowledge Proofs.
 An integer can be positive, negative or zero and are represented in the second
 complement form. The header start with \texttt{0x02}, followed by the lenght of the data.
-Parsing and serializing integer are already implemented in libgmp, functions are
+Parsing and serializing integer are already implemented in \texttt{libgmp}, functions are
 juste wrapper to extract information from the header and start the \texttt{mpz}
 importation at the right offset.
 
@@ -223,51 +226,51 @@ copy the content and set the conent lenght, the position index, and the offset.
 
 Homomorphic encryption is required in the scheme and Paillier is proposed in the
 white paper. Paillier homomorphic encryption is simple to implement in a textbook
-way, but this implementation is not optimized and need to be reviewed.
+way, this implementation is functional but not optimized and need to be reviewed.
 
 \subsection{Data structures}
 
 Encrypted message, public and private keys are transmited. As mentionned before,
-the DER standard format is used to parse and serialize data. DER schema for all
+the \texttt{DER} standard format is used to parse and serialize data. \texttt{DER} schema for all
 data structures are defined to ensure portability over different implementations.
 
 \subsubsection{Public keys}
 
 The public key is composed of a public modulus and a generator. The implementation
 data structure add a big modulus corresponding to the square of the modulus. A
-version number is added for futur compatibility purposes.
+version number is added for future compatibility purposes.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
-    HEPublicKey ::= SEQUENCE {
-        version           INTEGER,
-        modulus           INTEGER,  -- p * q
-        generator         INTEGER
-    }
+HEPublicKey ::= SEQUENCE {
+    version           INTEGER,
+    modulus           INTEGER,  -- p * q
+    generator         INTEGER
+}
   \end{minted}
-	\caption{DER schema of a Paillier public key}
+	\caption{\texttt{DER} schema of a Paillier public key}
 	\label{lst:DERSchemaPaillierPub}
 \end{listing}
 
-libgmp is used for all the arithmetic in Paillier implementation, all numbers are
+\texttt{libgmp} is used for all the arithmetic in Paillier implementation, all numbers are
 stored in \texttt{mpz\_t} type. The parser take in input an array of bytes with a
 lenght and the public key to fill.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    typedef struct {
-        mpz_t modulus;
-        mpz_t generator;
-        mpz_t bigModulus;
-    } secp256k1_paillier_pubkey;
+typedef struct {
+    mpz_t modulus;
+    mpz_t generator;
+    mpz_t bigModulus;
+} secp256k1_paillier_pubkey;
 
-    int secp256k1_paillier_pubkey_parse(
-        secp256k1_paillier_pubkey *pubkey,
-        const unsigned char *input,
-        size_t inputlen
-    );
+int secp256k1_paillier_pubkey_parse(
+    secp256k1_paillier_pubkey *pubkey,
+    const unsigned char *input,
+    size_t inputlen
+);
   \end{minted}
-	\caption{DER parser of a Paillier public key}
+	\caption{\texttt{DER} parser of a Paillier public key}
 	\label{lst:DERImplPaillierParsePub}
 \end{listing}
 
@@ -276,22 +279,22 @@ lenght and the public key to fill.
 
 The private key is composed of a public modulus, two primes, a generator, a
 private exponant $\lambda = \varphi(n) = (p-1)(q-1)$, and a private coefficient
-$\mu = \varphi(n)^{-1} \mod n$. Again, a version number is added for futur
+$\mu = \varphi(n)^{-1} \mod n$. Again, a version number is added for future
 compatibility purposes.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
-    HEPrivateKey ::= SEQUENCE {
-        version           INTEGER,
-        modulus           INTEGER,  -- p * q
-        prime1            INTEGER,  -- p
-        prime2            INTEGER,  -- q
-        generator         INTEGER,
-        privateExponent   INTEGER,  -- (p - 1) * (q - 1)
-        coefficient       INTEGER   -- (inverse of privateExponent) mod (p * q)
-    }
+HEPrivateKey ::= SEQUENCE {
+    version           INTEGER,
+    modulus           INTEGER,  -- p * q
+    prime1            INTEGER,  -- p
+    prime2            INTEGER,  -- q
+    generator         INTEGER,
+    privateExponent   INTEGER,  -- (p - 1) * (q - 1)
+    coefficient       INTEGER   -- (inverse of privateExponent) mod (p * q)
+}
   \end{minted}
-	\caption{DER schema of a Paillier private key}
+	\caption{\texttt{DER} schema of a Paillier private key}
 	\label{lst:DERSchemaPaillierPriv}
 \end{listing}
 
@@ -300,24 +303,24 @@ The big modulus is computed after the parsing to accelerate encryption and decry
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    typedef struct {
-        mpz_t modulus;
-        mpz_t prime1;
-        mpz_t prime2;
-        mpz_t generator;
-        mpz_t bigModulus;
-        mpz_t privateExponent;
-        mpz_t coefficient;
-    } secp256k1_paillier_privkey;
+typedef struct {
+    mpz_t modulus;
+    mpz_t prime1;
+    mpz_t prime2;
+    mpz_t generator;
+    mpz_t bigModulus;
+    mpz_t privateExponent;
+    mpz_t coefficient;
+} secp256k1_paillier_privkey;
 
-    int secp256k1_paillier_privkey_parse(
-        secp256k1_paillier_privkey *privkey,
-        secp256k1_paillier_pubkey *pubkey,
-        const unsigned char *input,
-        size_t inputlen
-    );
+int secp256k1_paillier_privkey_parse(
+    secp256k1_paillier_privkey *privkey,
+    secp256k1_paillier_pubkey *pubkey,
+    const unsigned char *input,
+    size_t inputlen
+);
   \end{minted}
-	\caption{DER parser of a Paillier private key}
+	\caption{\texttt{DER} parser of a Paillier private key}
 	\label{lst:DERImplPaillierParsePriv}
 \end{listing}
 
@@ -330,39 +333,22 @@ to stores the nonce used during encryption.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
-    HEEncryptedMessage ::= SEQUENCE {
-        message           INTEGER
-    }
+HEEncryptedMessage ::= SEQUENCE {
+    message           INTEGER
+}
   \end{minted}
-	\caption{DER schema of an encrypted message with Paillier cryptosystem}
+	\caption{\texttt{DER} schema of an encrypted message with Paillier cryptosystem}
 	\label{lst:DERSchemaPaillierEncMessage}
 \end{listing}
 
 An encrypted message can be serialized and parsed and they are used in
-messages exchange during the signing protocol by both actors.
-
-% \begin{listing}
-%   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-%     int secp256k1_paillier_message_parse(
-%         secp256k1_paillier_encrypted_message *message,
-%         const unsigned char *input,
-%         size_t inputlen
-%     );
-%
-%     unsigned char* secp256k1_paillier_message_serialize(
-%         size_t *outputlen,
-%         const secp256k1_paillier_encrypted_message *message
-%     );
-%   \end{minted}
-% 	\caption{DER serializer-parser of encrypted messages with Paillier}
-% 	\label{lst:DERImplPaillierEncMessage}
-% \end{listing}
+messages exchange during the signing protocol by both parties.
 
 \subsection{Encrypt and decrypt}
 
 Like all other encryption schemes in public key cryptography, the public key is
 used to encrypt and the private key to decrypt.
-To encrypt the message \texttt{m} where $m < n$, a random value $r$ where
+To encrypt the message \texttt{mpz\_t m} where $m < n$, a random value $r$ where
 $r < n$ is selected with the fonction pointer \texttt{noncefp} and set into
 the nonce value \texttt{res->nonce}. This nonce is stored because his value is
 needed to create Zero-Knowledge Proofs. Then, the cipher $c = g^m \cdot r^n \mod n^2$
@@ -371,19 +357,19 @@ states are wipe out before returning the result.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, const mpz_t m, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
-        mpz_t l1, l2, l3;
-        int ret = noncefp(res->nonce, pubkey->modulus);
-        if (ret) {
-            mpz_inits(l1, l2, l3, NULL);
-            mpz_powm(l1, pubkey->generator, m, pubkey->bigModulus);
-            mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
-            mpz_mul(l3, l1, l2);
-            mpz_mod(res->message, l3, pubkey->bigModulus);
-            mpz_clears(l1, l2, l3, NULL);
-        }
-        return ret;
+int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, const mpz_t m, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
+    mpz_t l1, l2, l3;
+    int ret = noncefp(res->nonce, pubkey->modulus);
+    if (ret) {
+        mpz_inits(l1, l2, l3, NULL);
+        mpz_powm(l1, pubkey->generator, m, pubkey->bigModulus);
+        mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
+        mpz_mul(l3, l1, l2);
+        mpz_mod(res->message, l3, pubkey->bigModulus);
+        mpz_clears(l1, l2, l3, NULL);
     }
+    return ret;
+}
   \end{minted}
 	\caption{Implementation of encryption with Paillier cryptosystem}
 	\label{lst:implEncryptPaillier}
@@ -396,10 +382,10 @@ is not part of the library.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    typedef int (*secp256k1_paillier_nonce_function)(
-        mpz_t nonce,
-        const mpz_t max
-    );
+typedef int (*secp256k1_paillier_nonce_function)(
+    mpz_t nonce,
+    const mpz_t max
+);
   \end{minted}
 	\caption{Function signature for Paillier nonces generation}
 	\label{lst:PaillierNoncesSigFunc}
@@ -415,16 +401,16 @@ that, in line 6, only the quotient of the division is recovered.
 
 \begin{listing}
   \begin{minted}[breaklines=true,linenos,fontsize=\scriptsize]{c}
-    void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_message *c, const secp256k1_paillier_privkey *privkey) {
-        mpz_t l1, l2;
-        mpz_inits(l1, l2, NULL);
-        mpz_powm(l1, c->message, privkey->privateExponent, privkey->bigModulus);
-        mpz_sub_ui(l2, l1, 1);
-        mpz_cdiv_q(l1, l2, privkey->modulus);
-        mpz_mul(l2, l1, privkey->coefficient);
-        mpz_mod(res, l2, privkey->modulus);
-        mpz_clears(l1, l2, NULL);
-    }
+void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_message *c, const secp256k1_paillier_privkey *privkey) {
+    mpz_t l1, l2;
+    mpz_inits(l1, l2, NULL);
+    mpz_powm(l1, c->message, privkey->privateExponent, privkey->bigModulus);
+    mpz_sub_ui(l2, l1, 1);
+    mpz_cdiv_q(l1, l2, privkey->modulus);
+    mpz_mul(l2, l1, privkey->coefficient);
+    mpz_mod(res, l2, privkey->modulus);
+    mpz_clears(l1, l2, NULL);
+}
   \end{minted}
 	\caption{Implementation of decryption with Paillier cryptosystem}
 	\label{lst:implDecryptPaillier}
@@ -448,16 +434,16 @@ added together to result in a third ciphertext.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    void secp256k1_paillier_add(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *op1, const secp256k1_paillier_encrypted_message *op2, const secp256k1_paillier_pubkey *pubkey) {
-        mpz_t l1;
-        mpz_init(l1);
-        mpz_mul(l1, op1->message, op2->message);
-        mpz_mod(res->message, l1, pubkey->bigModulus);
-        mpz_clear(l1);
-    }
+void secp256k1_paillier_add(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *op1, const secp256k1_paillier_encrypted_message *op2, const secp256k1_paillier_pubkey *pubkey) {
+    mpz_t l1;
+    mpz_init(l1);
+    mpz_mul(l1, op1->message, op2->message);
+    mpz_mod(res->message, l1, pubkey->bigModulus);
+    mpz_clear(l1);
+}
   \end{minted}
 	\caption{Implementation of homomorphic addition with Paillier cryptosystem}
-	\label{lst:implDecryptPaillier}
+	\label{lst:implHomomorphAddPaillier}
 \end{listing}
 
 \subsubsection{Multiplication}
@@ -469,17 +455,270 @@ in the resulted encrypted message for not lose information after opperations.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *c, const mpz_t s, const secp256k1_paillier_pubkey *pubkey) {
-        mpz_powm(res->message, c->message, s, pubkey->bigModulus);
-        mpz_set(res->nonce, c->nonce);
-    }
+void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *c, const mpz_t s, const secp256k1_paillier_pubkey *pubkey) {
+    mpz_powm(res->message, c->message, s, pubkey->bigModulus);
+    mpz_set(res->nonce, c->nonce);
+}
   \end{minted}
 	\caption{Implementation of homomorphic multiplication with Paillier cryptosystem}
-	\label{lst:implDecryptPaillier}
+	\label{lst:implHomomorphMulPaillier}
 \end{listing}
 
+% -----------------------------------------------------------------------------
+
 \section{Zero-knowledge proofs}
-\lipsum[1-2]
+
+Two Zero-Knowledge Proofs are used in the scheme, each party generate a proof and
+validates the other one. A proof is generated and verified under some ZKP parameters,
+these parameters are fixed at the initialization time and don't change over the time.
+
+\subsection{Data structures}
+
+Three data structures are created, one for each ZKP and one for storing the parameters.
+Zero-Knowledge Proofs are composed of big numbers and points and need to be serialized
+and parsed to be included in the messages exchange protocol.
+
+\subsubsection{Zero-Knowledge Parameters}
+
+Zero-Knowledge parameter is composed of three numeric values: (i) $\tilde{N}$ a public modulus,
+(ii) $h_2$ a value selected randomly $\in \mathbb{Z}_{\tilde{N}}^*$,
+and (iii) $h_1$ a value where $\exists x, \log_x(h_1) = h_2 \mod \tilde{N}$.
+One function is provided in the module to parse a \texttt{ZKPParameter} \texttt{DER} schema.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+ZKPParameter ::= SEQUENCE {
+    modulus            INTEGER,
+    h1                 INTEGER,
+    h2                 INTEGER
+}
+  \end{minted}
+	\caption{\texttt{DER} schema of a Zero-Knowledge parameters sequence}
+	\label{lst:DERSchemaZKPParams}
+\end{listing}
+
+\subsubsection{Zero-Knowledge Proof $\Pi$}
+
+Zero-Knowledge Proof $\Pi$ is composed of numeric values and one point. The point
+is stored in a public key internal structure inside the implementation and is
+exported with the secp256k1 library as a 65 bytes uncompressed public key. The
+uncompressed public key is then stored as an octet string in the schema. A version
+number is added for future compatibility purposes.
+Two functions are provided in the module to parse and serialize a \texttt{ECZKPPi}
+\texttt{DER} schema.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+ECZKPPi ::= SEQUENCE {
+    version            INTEGER,
+    z1                 INTEGER,
+    z2                 INTEGER,
+    y                  OCTET STRING,
+    e                  INTEGER,
+    s1                 INTEGER,
+    s2                 INTEGER,
+    s3                 INTEGER,
+    t1                 INTEGER,
+    t2                 INTEGER,
+    t3                 INTEGER,
+    t4                 INTEGER
+}
+  \end{minted}
+	\caption{\texttt{DER} schema of a Zero-Knowledge $\Pi$ sequence}
+	\label{lst:DERSchemaZKPPi}
+\end{listing}
+
+\subsubsection{Zero-Knowledge Proof $\Pi'$}
+
+Zero-Knowledge Proof $\Pi'$ is composed of the same named values as ZKP $\Pi$ plus
+five new ones. The construction of the proof is based on $\Pi$ but needs more than
+values to express all the proven statements. Again, the point $y$ is a point
+serialized as an uncompressed public key in an octet string and a version number
+is added for future compatibility purposes.
+Two functions are provided in the module to parse and serialize a \texttt{ECZKPPiPrim}
+\texttt{DER} schema.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+ECZKPPiPrim ::= SEQUENCE {
+    version            INTEGER,
+    z1                 INTEGER,
+    z2                 INTEGER,
+    z3                 INTEGER,
+    y                  OCTET STRING,
+    e                  INTEGER,
+    s1                 INTEGER,
+    s2                 INTEGER,
+    s3                 INTEGER,
+    s4                 INTEGER,
+    t1                 INTEGER,
+    t2                 INTEGER,
+    t3                 INTEGER,
+    t4                 INTEGER,
+    t5                 INTEGER,
+    t6                 INTEGER,
+    t7                 INTEGER
+}
+  \end{minted}
+	\caption{\texttt{DER} schema of a Zero-Knowledge $\Pi'$ sequence}
+	\label{lst:DERSchemaZKPPi2}
+\end{listing}
+
+\subsection{Generate proofs}
+
+Proofs are generated in relation to a specific setup and a specific in progress
+signature. which makes them linked to a large number of values (points, encrypted
+messages, secrets, parameters, etc.) The complexity of these constructions is
+strongly felt in the code. Heavy mathematic computations are needed with two
+\texttt{hash} functions.
+
+A CPRNG function is required to generate both proofs. This function generate
+random number in $\mathbb{Z}_{max}$ and $\mathbb{Z}_{max}^*$. The \texttt{flag}
+argument indicate which case is treated, \texttt{STD} or \texttt{INV}. If the
+function have not access to a good source of randomness or cannot generate a
+good random number a zero is returned, otherwise a one is returned.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+typedef int (*secp256k1_eczkp_rdn_function)(
+    mpz_t res,
+    const mpz_t max,
+    const int flag
+);
+
+#define SECP256K1_THRESHOLD_RND_INV 0x01
+#define SECP256K1_THRESHOLD_RND_STD 0x00
+  \end{minted}
+	\caption{Function signature for ZKP CPRNG}
+	\label{lst:funcSigZKPCPRGN}
+\end{listing}
+
+\subsubsection{Zero-Knowledge Proof $\Pi$}
+
+As shown in FIGURE REF, the proof states that: (i) it exists a known value by
+the proover that link $r \rightarrow r_2$, (ii) it exists a second known value by
+the proover that, related to the first one, link $G \rightarrow y_1$, (iii) the
+result of $D_{sk}(\alpha)$ is this first value, and (iv) the result of
+$D_{sk}(\zeta)$ is this second value.
+
+To do computation on the curve a context object need to be passed in argument,
+then the ZKP object to fill, the ZKP parameters, the two encrypted messages
+$\alpha$ and $\zeta$, scalar values $sx_1$ and $sx_2$ representing
+$z_1 = (k_1)^{-1} \mod n$ and $x_1z_1$, then
+the point $r$, the point $r_2$, the partial public key $y_1$, the proover Paillier
+public key which has been used to encrypt $\alpha$ and $\zeta$, and finally a
+pointer to a CPRNG function used to generate all needed random values.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+int secp256k1_eczkp_pi_generate(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi *pi,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_scalar *sx1,
+    const secp256k1_scalar *sx2,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w1,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_eczkp_rdn_function rdnfp
+);
+  \end{minted}
+	\caption{Function signature to generate ZKP $\Pi$}
+	\label{lst:funcSigGeneratePi}
+\end{listing}
+
+The function implementation can be splited in four main parts: (i) generate all
+the needed random values $v$, (ii) compute the challenge values, (iii) compute the \texttt{hash}
+of these values $v$, and (iv) compute the ZKP values with $e = \texttt{hash}(v)$.
+
+\subsubsection{Zero-Knowledge Proof $\Pi'$}
+
+As shown in FIGURE REF, the proof states that: (i) it exists a known value by
+the proover $x_1$ that link $r_2 \rightarrow G$, (ii) it exists a second known value by
+the proover that, related to the first one, link $G \rightarrow y_2$, (iii) the
+result of $D_{sk'}(\mu')$ is this first value, and (iv) it exists a third known
+value by the proover $x_3$ and the result of $D_{sk}(\mu)$ is the homomorphic operation
+of $(\alpha \times x_1) + (\zeta \times x_2) + x_3$.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+int secp256k1_eczkp_pi2_generate(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi2 *pi2,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_paillier_encrypted_message *m3,
+    const secp256k1_paillier_encrypted_message *m4,
+    const secp256k1_paillier_encrypted_message *r,
+    const mpz_t x1,
+    const mpz_t x2,
+    const mpz_t x3,
+    const mpz_t x4,
+    const mpz_t x5,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pairedkey,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_eczkp_rdn_function rdnfp
+);
+  \end{minted}
+	\caption{Function signature to generate ZKP $\Pi'$}
+	\label{lst:funcSigGeneratePi2}
+\end{listing}
+
+The function implementation can also be splited in four main parts: (i) generate all
+the needed random values $v$, (ii) compute the proof values, (iii) compute the \texttt{hash'}
+of these values $v$, and (iv) compute the ZKP values with $e = \texttt{hash'}(v)$.
+
+It is worth noting that \texttt{hash} and \texttt{hash'} must be different hashing
+function to avoid reusing $\Pi$ proofs, even not satisfying the predicate, to construct
+fraudulent $\Pi'$ proofs.
+
+\subsection{Validate proofs}
+
+Validation of proofs $\Pi$ and $\Pi'$ can be done with: (i) the Paillier public keys,
+(ii) the ZKP parameters, and (iii) the exchanged messages. The process can be splited
+in three steps: compute the proof values, retreive the candidate value $e'$, and
+compare if $e = e'$. If the values match the proof is valid.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+int secp256k1_eczkp_pi_verify(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi *pi,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w1,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pubkey
+);
+
+int secp256k1_eczkp_pi2_verify(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi2 *pi2,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_paillier_encrypted_message *m3,
+    const secp256k1_paillier_encrypted_message *m4,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_paillier_pubkey *pairedkey
+);
+  \end{minted}
+	\caption{Function signature to validate ZKP $\Pi$ and $\Pi'$}
+	\label{lst:funcSigValidatePiPi2}
+\end{listing}
+
+% \subsubsection{Zero-Knowledge Proof $\Pi$}
+% \subsubsection{Zero-Knowledge Proof $\Pi'$}
 
 \section{Threshold module}
 \lipsum[1-2]
