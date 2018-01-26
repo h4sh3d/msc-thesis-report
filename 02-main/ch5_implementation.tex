@@ -717,8 +717,122 @@ int secp256k1_eczkp_pi2_verify(
 	\label{lst:funcSigValidatePiPi2}
 \end{listing}
 
-% \subsubsection{Zero-Knowledge Proof $\Pi$}
-% \subsubsection{Zero-Knowledge Proof $\Pi'$}
+% -----------------------------------------------------------------------------
 
 \section{Threshold module}
-\lipsum[1-2]
+
+The threshold module exposes the public API usefull to create an application that
+wants to use the distributed signature protocol. The public API includes all the
+function needed to parse-serialize keys, messages, and signature parameters.
+Signature parameters holds the values $k$, $z = k^{-1}$, and $r = k \cdot G$, these
+values are---in a normal signature mode---computed, used, and destroy in one time.
+However, a mechanisme to save et restore these values is required in the distributed mode
+because the context can be destroy and re-created between each steps.
+
+The public API also includes the five functions that implement the protocol.
+One function is one step in the protocol and between two functions, the generated
+message is serialized by the caller and parsed by the sender. The signature parameters
+could also be serialized and parsed during the response waiting time.
+
+\subsubsection{Nomenclature}
+
+A proposal for exchanged messages names and actions is done in this report.
+Players $P_1$ and $P_2$ represent the initiator and collaborator. Player $P_1$
+initialize the communication and ask $P_2$ to collaborate on a signature, if
+$P_2$ collaborates and the protocol end successfully $P_1$ retreive the signature.
+
+Four messages are necessary between the five steps. In order, the proposed name are:
+(i) call message, (ii) challenge message, (iii) response challenge, and (iv) terminate
+message. The functions are named after the corresponding action and message name.
+
+\subsection{Create call message}
+
+The \texttt{call\_create} function, as indicated by his name, create the call message.
+Arguments are checked to be non-null, if one of them is the function will fail.
+The secret share is loaded in a 32 bytes array and the nonce ($k$) is retreived
+with the \texttt{noncefp} function pointer. It is worth noting that this function could
+be call multiple times until a nonce that is not zero and which doesn't overflow is found.
+However, this function as a limited number of calls and if the limit is reached the
+function will fail. The signatures parameters are then set and encrypted in the
+call message. The parameters $k$ and $z$ are set for $P_1$. The \texttt{noncefp}
+can point to an implementation of a deterministic signature mode or a random % TODO ref rfc6979
+signature mode. If the deterministic mode is choosed, the counter indicates the
+number of round done by the function.
+
+\begin{listing}
+  \cfile[firstline=247,lastline=282]{02-main/listings/threshold_impl.h}
+	\caption{Implementation of \texttt{call\_create} function}
+	\label{lst:implCallCreateFunc}
+\end{listing}
+
+\subsection{Receive call message}
+
+The \texttt{call\_received} function set the parameter $k$ and $r$ of $P_2$ and
+prepare the challenge message with $r$. Again, the pointer can point to a deterministic
+implementation for generating the nonce.
+
+\begin{listing}
+  \cfile[firstline=284,lastline=315]{02-main/listings/threshold_impl.h}
+	\caption{Implementation of \texttt{call\_received} function}
+	\label{lst:implCallReceivedFunc}
+\end{listing}
+
+\newpage
+
+\subsection{Receive challenge message}
+
+The \texttt{challenge\_received} function is called by $P_1$ to compute the final
+public point $r$ of the signature and create the first Zero-Knowledge Proof.
+
+\begin{listing}
+  \cfile[firstline=317,lastline=352]{02-main/listings/threshold_impl.h}
+	\caption{Implementation of \texttt{challenge\_received} function}
+	\label{lst:implChallengeReceivedFunc}
+\end{listing}
+
+\newpage
+
+\subsection{Receive response challenge message}
+
+The \texttt{response\_challenge\_received} function is called by $P_2$ and
+validates the first Zero-Knowledge Proof, $\Pi$. The final ciphertext
+which contain the $s$ part of the distributed signature is computed and the
+second Zero-Knowledge Proof $\Pi'$ is created.
+
+The point $r$ is normalized and the coordinate $r.x$ is get (modulo $n$). The \texttt{hash}
+is multiplied with $z_2$ and the coordinate $r.x$ is multiplied with $x_2z_2$.
+A value $x_3$ where $n|x_3$ is added to the cipher to hide information about the
+secret share and the secret random. In ECDSA $s = k^{-1}(m + rx) \mod n$, so the
+ciphertext match the requirement as demonstrated below:
+\begin{equation*}
+\begin{split}
+  D_{sk}(\mu) &\equiv (\alpha \times mz_2) + (\zeta \times rx_2z_2) + (x_3) \pmod n \\
+              &\equiv (z_1 \times mz_2) + (x_1z_1 \times rx_2z_2) \pmod n \\
+              &\equiv (z_1z_2m) + (x_1z_1rx_2z_2) \pmod n \\
+              &\equiv z_1z_2(m + rx_1x_2) \pmod n \\
+              &\equiv z(m + rx) \pmod n \\
+              &\equiv k^{-1}(m + rx) \pmod n
+\end{split}
+\end{equation*}
+
+\subsection{Receive terminate message}
+
+The \texttt{terminate\_received} function is called by $P_1$ and validates the
+second Zero-Knowledge Proof, $\Pi'$. After validation of the proof, the ciphertext
+is decrypted and the signature is composed. The signature is then tested and the
+protocol ends. Only $P_1$ can decrypt the ciphertext so the protocol is asymetric.
+If $P_2$ also needs the signature, $P_1$ must share it. There is now way for $P_2$
+to know the signature without a cooperative $P_1$.
+
+\begin{listing}
+  \cfile[firstline=379,lastline=446]{02-main/listings/threshold_impl.h}
+	\caption{Core function of \texttt{response\_challenge\_received}}
+	\label{lst:implRespChallengeReceivedFunc}
+\end{listing}
+
+\begin{listing}
+  \cfile[firstline=460,lastline=526]{02-main/listings/threshold_impl.h}
+	\caption{Core function of \texttt{terminate\_received}}
+	\label{lst:implTerminateReceivedFunc}
+\end{listing}
+\newpage
