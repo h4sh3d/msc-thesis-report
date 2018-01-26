@@ -21,6 +21,11 @@ time computation and use \texttt{libgmp} for all arithmetic computations, even
 when secret values are used. This implementation is a textbook implementation
 of the scheme and need to be reviewed and more tested before been used in production.
 
+This chapter refers to the implementation available on GitHub at
+\url{https://github.com/GuggerJoel/secp256k1/tree/threshold} at the time when
+this lines are wrote. Note that the implementation can evolve after that this
+report is written.
+
 \minitoc
 
 \newpage
@@ -237,7 +242,7 @@ version number is added for futur compatibility purposes.
     HEPublicKey ::= SEQUENCE {
         version           INTEGER,
         modulus           INTEGER,  -- p * q
-        generator         INTEGER   -- n + 1
+        generator         INTEGER
     }
   \end{minted}
 	\caption{DER schema of a Paillier public key}
@@ -281,7 +286,7 @@ compatibility purposes.
         modulus           INTEGER,  -- p * q
         prime1            INTEGER,  -- p
         prime2            INTEGER,  -- q
-        generator         INTEGER,  -- n + 1
+        generator         INTEGER,
         privateExponent   INTEGER,  -- (p - 1) * (q - 1)
         coefficient       INTEGER   -- (inverse of privateExponent) mod (p * q)
     }
@@ -318,7 +323,7 @@ The big modulus is computed after the parsing to accelerate encryption and decry
 
 \subsubsection{Encrypted messages}
 
-An encrypted message with Paillier cryptosystem is a big number $\in [0, n^2]$.
+An encrypted message with Paillier cryptosystem is a big number $c \in \mathbb{Z}_{n^2}^*$.
 No version number is added in this case.
 The implementation structure contain a nonce value that could be set to 0
 to stores the nonce used during encryption.
@@ -333,7 +338,7 @@ to stores the nonce used during encryption.
 	\label{lst:DERSchemaPaillierEncMessage}
 \end{listing}
 
-An encrypted message can be serialized and parsed, encrypted messages are used in
+An encrypted message can be serialized and parsed and they are used in
 messages exchange during the signing protocol by both actors.
 
 % \begin{listing}
@@ -355,10 +360,14 @@ messages exchange during the signing protocol by both actors.
 
 \subsection{Encrypt and decrypt}
 
-The message $0 \leq m < n$ to encrypt is \texttt{m}, a random value $r$ where
-$0 \leq r < n$ is selected with the fonction pointer \texttt{noncefp} and put into
-the nonce value of the result encrypted message. The cipher
-$c = g^m \cdot r^n \mod n^2$ is put into \texttt{res->message}.
+Like all other encryption schemes in public key cryptography, the public key is
+used to encrypt and the private key to decrypt.
+To encrypt the message \texttt{m} where $m < n$, a random value $r$ where
+$r < n$ is selected with the fonction pointer \texttt{noncefp} and set into
+the nonce value \texttt{res->nonce}. This nonce is stored because his value is
+needed to create Zero-Knowledge Proofs. Then, the cipher $c = g^m \cdot r^n \mod n^2$
+is putted into \texttt{res->message} to complete the encryption process. All intermediray
+states are wipe out before returning the result.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
@@ -380,11 +389,32 @@ $c = g^m \cdot r^n \mod n^2$ is put into \texttt{res->message}.
 	\label{lst:implEncryptPaillier}
 \end{listing}
 
-The cipher $c \in \mathbb{Z}_{n^2}^*$ is decrypted with
-$m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = (x - 1) / n$.
+If the random value selection
+process failed the encryption fail also. The random function of type
+\texttt{secp256k1\_paillier\_nonce\_function} must use a good CPRNG and his implementation
+is not part of the library.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    typedef int (*secp256k1_paillier_nonce_function)(
+        mpz_t nonce,
+        const mpz_t max
+    );
+  \end{minted}
+	\caption{Function signature for Paillier nonces generation}
+	\label{lst:PaillierNoncesSigFunc}
+\end{listing}
+
+To decrypt the cipher $c \in \mathbb{Z}_{n^2}^*$ with the private key, the function
+compute $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = (x - 1) / n$.
+The cipher is raised to the lambda $c^{\lambda} \mod n^2$ in line 4 and the result
+is putted to an intermediray state variable. Then the $L(x)$ function is applied
+on the intermediray state in lines 5-6. Finally, the multiplication with $\mu$ and
+the modulo of $n$ are taken (lines 7-8) to lead to the result. It is worth noting
+that, in line 6, only the quotient of the division is recovered.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,linenos,fontsize=\scriptsize]{c}
     void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_message *c, const secp256k1_paillier_privkey *privkey) {
         mpz_t l1, l2;
         mpz_inits(l1, l2, NULL);
@@ -402,20 +432,19 @@ $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = (x - 1) / n$.
 
 \subsection{Homomorphism}
 
-$D(E(m_1, r_1)^{m_2} \mod n^2) = m_1 m_2 \mod n$
+The choice of this scheme is not hazardous, homomorphic addition and multiplication
+are used to construct the signature composant $s = D_{sk}(\mu) \mod q : \mu =
+(\alpha \times_{pk} m'z_2) +_{pk} (\zeta \times_{pk} r'x_2z_2) +_{pk} E_{pk}(cn)$
+where $+_{pk}$ denotes homomorphic addition over the ciphertexts and $\times_{pk}$
+denotes homomorphic multiplication over the ciphertexts.
 
-\begin{listing}
-  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
-    void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *c, const mpz_t s, const secp256k1_paillier_pubkey *pubkey) {
-        mpz_powm(res->message, c->message, s, pubkey->bigModulus);
-        mpz_set(res->nonce, c->nonce);
-    }
-  \end{minted}
-	\caption{Implementation of homomorphic multiplication with Paillier cryptosystem}
-	\label{lst:implDecryptPaillier}
-\end{listing}
-
-$D(E(m_1, r_1) \cdot E(m_2, r_2) \mod n^2) = m_1 + m_2 \mod n$ or $D(E(m_1, r_1) \cdot g^{m_2} \mod n^2) = m_1 + m_2 \mod n$
+\subsubsection{Addition}
+Addition $+_{pk}$ over ciphertexts is computed with
+$D_{sk}(E_{pk}(m_1, r_1) \cdot E_{pk}(m_2, r_2) \mod n^2) = m_1 + m_2 \mod n$ or
+$D_{sk}(E_{pk}(m_1, r_1) \cdot g^{m_2} \mod n^2) = m_1 + m_2 \mod n$ where $D_{sk}$
+denotes descryption with private key $sk$ and $E_{pk}$ denotes encryption with
+public key $pk$. Only the first variant is implemented, where two ciphertexts are
+added together to result in a third ciphertext.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
@@ -431,6 +460,23 @@ $D(E(m_1, r_1) \cdot E(m_2, r_2) \mod n^2) = m_1 + m_2 \mod n$ or $D(E(m_1, r_1)
 	\label{lst:implDecryptPaillier}
 \end{listing}
 
+\subsubsection{Multiplication}
+
+Multiplication $\times_{pk}$ over ciphertexts can be performed with
+$D_{sk}(E_{pk}(m_1, r_1)^{m_2} \mod n^2) = m_1 m_2 \mod n$, the implementation
+is straight forward in this case. The nonce value from the ciphertext is copied
+in the resulted encrypted message for not lose information after opperations.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
+    void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *c, const mpz_t s, const secp256k1_paillier_pubkey *pubkey) {
+        mpz_powm(res->message, c->message, s, pubkey->bigModulus);
+        mpz_set(res->nonce, c->nonce);
+    }
+  \end{minted}
+	\caption{Implementation of homomorphic multiplication with Paillier cryptosystem}
+	\label{lst:implDecryptPaillier}
+\end{listing}
 
 \section{Zero-knowledge proofs}
 \lipsum[1-2]
