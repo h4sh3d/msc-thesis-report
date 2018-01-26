@@ -2,91 +2,25 @@
 % -----
 % format:  \newglossaryentry{<label>}{<settings>}
 % example: \newglossaryentry{computer}
-%{
-%	name=computer,
-%	description={is a programmable machine that receives input,
-%		stores and manipulates data, and provides
-%		output in a useful format}
-%}
-
-% \newglossaryentry{nosql}
 % {
-% 	name=NoSQL,
-% 	description={Database not using the relational model and the \acrshort{sql} language}
+% 	name=computer,
+% 	description={is a programmable machine that receives input,
+% 		stores and manipulates data, and provides
+% 		output in a useful format}
 % }
 
 
-% Display ASLR
-\newglossaryentry{aslr}
+
+\newglossaryentry{secg}
 {
-	name=ASLR,
-	description={Address Space Layout Randomization, technique permettant de rendre aléatoire la position des ségments mémoires}
+	name=Standards for Efficient Cryptography Group (SECG),
+	description={is an international consortium founded by Certicom in 1998. The group exists to develop commercial standards for efficient and interoperable cryptography based on elliptic curve cryptography (ECC)}
 }
 
-\newglossaryentry{cg-cfi}
+\newglossaryentry{nist}
 {
-	name=coarse-grained CFI,
-	description={Coarse-grained CFI est une implémentation simplifiée du principe de Control-Flow integrity, échangeant sécurité contre de meilleures performances}
-}
-
-\newglossaryentry{fg-cfi}
-{
-	name=finest-grained CFI,
-	description={Finest-grained CFI est une implémentation plus complète du principe de Control-Flow integrity garantissant une bonne sécurité mais ayant un coût élevé en performances}
-}
-
-\newglossaryentry{dep}
-{
-	name=DEP,
-	description={Data Execution Prevention est une technique permettant de marquer un espace virtuel de mémoire comme étant non-exécutable grâce au NX bit}
-}
-
-\newglossaryentry{nx}
-{
-	name=NX,
-	description={NX bit, pour No-eXecute bit, est une technique utilisée dans les processeurs pour dissocier les zones de mémoire contenant des instructions exécutables des zones contenant des données}
-}
-
-\newglossaryentry{stackCookies}
-{
-	name={stack cookies},
-	description={Les stack cookies, ou stack canaries, sont des valeurs déposées sur la pile d'exécution après la valeur de retour lors de l'appel d'une fonction et son controlées à l'épilogue de la-dite fonction}
-}
-
-\newglossaryentry{stackCanaries}
-{
-	name={stack canaries},
-	description={Les stack canaries sont un synonyme de stack cookies}
-}
-
-\newglossaryentry{levee}
-{
-	name={Levee},
-	description={Levee est une implémentation des concepts de protection CPI, CPS et Safe Stack. Actuellement, en mai 2017, une partie du projet a été intégrée au sein de LLVM sous le nom de Safe Stack}
-}
-
-\newglossaryentry{llvm}
-{
-	name={LLVM},
-	description={LLVM, à la base Low Level Virtual Machine et maintenant nom à part entière, est une collection d'outils permettant de construire des compilateurs}
-}
-
-\newglossaryentry{clang}
-{
-	name={Clang},
-	description={Clang est un compilateur pour les langages de programmation \texttt{C/C++}, \texttt{Objective-C} et \texttt{Objective-C++}. Il utilise les bibliothèques que met à disposition LLVM}
-}
-
-\newglossaryentry{safeStack}
-{
-	name={safe stack},
-	description={Safe Stack est un composant de de CPI/CPS permettant de traiter de manière particulière la gestion des pointeurs présents au sein de la pile d'exécution}
-}
-
-\newglossaryentry{lldb}
-{
-	name={LLDB},
-	description={LLDB Debugger est présenté comme étant un débogueur dernière génération. Il fait parti des outils développés au sein du plus large projet qu'est LLVM}
+	name=National Institute of Standards and Technology (NIST),
+	description={is a unit of the U.S. Commerce Department. Formerly known as the National Bureau of Standards, NIST promotes and maintains measurement standards.}
 }
 
 
@@ -100,15 +34,6 @@
 % \newacronym{aslr}{ASLR}{Address Space Layout Randomization}
 
 
-\newacronym{epfl}{EPFL}{École polytechnique fédérale de Lausanne}
-\newacronym{nop}{NOP}{no operation}
-\newacronym{cfg}{CFG}{control-flow graph}
-\newacronym{cfi}{CFI}{control-flow integrity}
-\newacronym{eof}{EOF}{end of file}
-\newacronym{rop}{ROP}{return oriented programming}
-\newacronym{cpi}{CPI}{code-pointer integrity}
-\newacronym{cps}{CPS}{code-pointer separation}
-\newacronym{gdb}{GDB}{the GNU project debugger}
-\newacronym{pie}{PIE}{position-independent executable}
-\newacronym{ast}{AST}{abstract syntax tree}
-\newacronym{llvmIR}{LLVM IR}{LLVM intermediate representation}
+\newacronym{ec}{EC}{Elliptic Curves}
+\newacronym{dsa}{DSA}{Digital Signature Algorithm}
+\newacronym{ecdsa}{ECDSA}{Elliptic Curve Digital Signature Algorithm}
