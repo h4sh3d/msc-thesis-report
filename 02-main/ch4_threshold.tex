@@ -1,4 +1,4 @@
-\chapter{(1,2)-threshold optimal ECDSA}
+\chapter{ECDSA asymmetric threshold scheme}
 \label{chap:threshold}
 
 % -- Your text goes here --
@@ -201,6 +201,7 @@ coordinate $x_1$ is used modulo $n$.
 \begin{postulate}
   This statement $a \equiv g^b \pmod p$ is equivalent in term of security to $a = b \cdot G$
   and $a \equiv (g^b \pmod p) \pmod q$ is equivalent to $a \equiv x \pmod n : (x, y) = b \cdot G$.
+  \label{post:adaptEcdsa}
 \end{postulate}
 
 The previous postulate is used to adapt zero-knowledge proofs from \gls{dsa} to
@@ -211,21 +212,208 @@ of time.
 % -----------------------------------------------------------------------------
 \section{Threshold scheme}
 
-% -- Your text goes here --
+The \say{Two-party generation of DSA signatures} scheme presented by MacKenzie
+and Reiter, as mentionned before, is an asymmetric scheme, i.e. at the end of the
+protocol only the initiator can retreive the full signature. The scheme proposed
+is a cryptographic (1,2)-threshold, i.e. one player can be corrupted on the two
+players and the scheme remain safe. It is worth noting that this is qualified as
+an optimal $(t, n)$-threshold scheme, i.e. $t = n - 1$, because if only one
+honest player remain the safety is guarantee.
 
-\subsection{Adapting zero-knowledge proofs to ECDSA}
+As also mentionned before, the scheme correspond to the same requirement of a
+Bitcoin 2-out-of-2 multi-signatures script. This means that it is possible to
+use it to improve the payment channels. However, it is necessary to adapt the
+scheme and particulary the zero-knowledge proofs construction to \gls{ecdsa}.
+The approach is explained in the following.
+
+% Recap the threat model ??!?!
+
+The presented scheme use a multiplicative shared secret and a multiplicative shared
+private random value. The secret $x$ is shared between Alice and Bob, so that Alice
+holds the secret value $x_1 \in \mathbb{Z}_{q}$ and Bob $x_2 \in \mathbb{Z}_{q}$
+such that $x \equiv x_1x_2 \pmod q$. Along with the public key $y$,
+$y_1 \equiv g^{x_1} \pmod p$ and $y_2 \equiv g^{x_2} \pmod p$ are public.
+Alice holds a private key, hereinafter mentionned as $sk$, corresponding to a
+public encryption key $pk$. Alice also knows a public encryption key $pk'$ for
+which she does not know the private key $sk'$. Here the Paillier homomorphic
+cryptosystem is used as the encryption scheme, but it is worth noting that others
+homomorphic encryption systems can be use to implement the scheme. Alice and Bob
+know a set of parameters used for both zero-knowledge proofs.
+
+Hereinafter, the initialisation is not taken into account. The choice was made to
+decrease the amount of work and because the implementation is not part of the
+cryptographic \texttt{C} library. This part can be a further research for an other
+thesis.
+
+\subsection{Adapting the scheme}
+
+Except for the zero-knowledge proofs, the adaptation is trivial and require just
+the same adaptation from \gls{dsa} signature scheme and \gls{ecdsa} signature
+scheme, i.e. compute the $r$ value with the curve. The following figure describe
+the adapted scheme. Messages stay the same and are not repeated.
+The postulate~\ref{post:adaptEcdsa} is used to perform the adaptation.
+
+The secret remain shared multiplicatively so that so that Alice holds the secret
+value $x_1 \in \mathbb{Z}_{n}$ and Bob $x_2 \in \mathbb{Z}_{n}$ such that
+$x \equiv x_1x_2 \pmod n$. Alice holds her public key $Q_1 = x_1 \cdot G$ and Bob
+$Q_2 = x_2 \cdot G$ such that $Q = x_1 \cdot Q_2$ for Alice or $Q = x_2 \cdot Q_1$
+for Bob. The notation $\cdot$ is used to denote the point multiplication over \gls{ec}.
+
+All the random values $k$ are choose in $\mathbb{Z}_{n}$ instead of $\mathbb{Z}_{q}$,
+also in the case of deterministic signature. All the computation modulo $q$ is replaced
+by modulo $n$, as shown in the foregoing digital signature recap.
+Values $R_2$ and $R$ become points. Verifications of values $R_2$ and $R$ become
+point verifications on the curve and $r'$ is calculated by Alice and Bob as shown
+in the foregoing remainder. The value $cq$ added to the homomorphic encrypted signature
+is transformed into $cn$ to hide values $z_2$ and $x_2z_2$.
+
+A error of notation is noticed in the original paper, on the
+second line Alice compute $z_1 \equiv (k_1)^{-1} \pmod n$ and the original paper
+use the random value selection $\xleftarrow[]{R}$ instead of a standard assignation $\leftarrow$,
+this error has been corrected in the following version of the protocol.
+
+\newpage
+
+\begin{figure}[H]
+    \begin{table}[H]
+      \centering
+      \begin{footnotesize}
+      {\renewcommand{\arraystretch}{1.2}%
+      \begin{tabular}{ | l l | }
+        \hline
+        \multicolumn{1}{|c}{alice}  & \multicolumn{1}{c|}{bob} \\
+        $k_1 \xleftarrow[]{R} \mathbb{Z}_{n}$ & \\
+        $z_1 \leftarrow (k_1)^{-1} \mod n$ & \\
+        $\alpha \leftarrow E_{pk}(z_1)$ & \\
+        $\zeta \leftarrow E_{pk}(x_1z_1 \mod n)$ & \\[2ex]
+          & abort if($\alpha \notin C_{pk} \lor \zeta \notin C_{pk}$) \\
+          & $k_2 \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+          & $\mathcal{R}_2 \leftarrow k_2 \cdot \mathcal{G}$ \\[2ex]
+        abort if($\mathcal{R}_2 \notin \mathcal{E}$) & \\
+        $\mathcal{R} \leftarrow k_1 \cdot \mathcal{R}_2$ & \\
+        \multicolumn{2}{|l|}{
+        $\Pi \leftarrow \texttt{zkp} \begin{bmatrix}\begin{array}{lr}
+                                      \exists \eta_1, \eta_2 : & \eta_1, \eta_2 \in [-n^3, n^3] \\
+                                      \land & \eta_1 \cdot \mathcal{R} = \mathcal{R}_2 \\
+                                      \land & (\eta_2/\eta_1) \cdot \mathcal{G} = \mathcal{Q}_1 \\
+                                      \land & D_{sk}(\alpha) \equiv_n \eta_1 \\
+                                      \land & D_{sk}(\zeta) \equiv_n \eta_2
+                                     \end{array}\end{bmatrix}$ } \\ & \\
+          & abort if($\mathcal{R} \notin \mathcal{E}$) \\
+          & abort if(\texttt{Verifier}$(\Pi) = 0$) \\
+          & $m' \leftarrow \texttt{h}(m)$ \\
+          & $r' \leftarrow x \mod n : (x,y) = \mathcal{R}$ \\
+          & $z_2 \leftarrow (k_2)^{-1} \mod n$ \\
+          & $c \xleftarrow[]{R} \mathbb{Z}_{n^5}$ \\
+          & $\begin{aligned}[t]
+              \mu \leftarrow & (\alpha \times_{pk} m'z_2) +_{pk} \\
+                             & (\zeta \times_{pk} r'x_2z_2) +_{pk} E_{pk}(cn)
+            \end{aligned}$ \\
+          & $\mu' \leftarrow E_{pk'}(z_2)$ \\
+          & {$\Pi' \leftarrow \texttt{zkp} \begin{bmatrix}\begin{array}{lr}
+                                            \exists \eta_1, \eta_2, \eta_3 : & \eta_1, \eta_2 \in [-n^3, n^3] \\
+                                            \land & \eta_3 \in [-n^5, n^5] \\
+                                            \land & \eta_1 \cdot \mathcal{R}_2 = \mathcal{G} \\
+                                            \land & (\eta_2/\eta_1) \cdot \mathcal{G} = \mathcal{Q}_2 \\
+                                            \land & D_{sk'}(\mu') \equiv_n \eta_1 \\
+                                            \multicolumn{2}{l}{
+                                              \begin{aligned}[t]
+                                                  \land \quad D_{sk}(\mu) \equiv_n & D_{sk}((\alpha \times_{pk} m'\eta_1) +_{pk} \\
+                                                                                   & (\zeta \times_{pk} r'\eta_2) +_{pk} E_{pk}(n\eta_3))
+                                                \end{aligned}
+                                            }
+                                           \end{array}\end{bmatrix}$} \\ & \\
+        abort if($\mu \notin C_{pk} \lor \mu' \notin C_{pk'}$) & \\
+        abort if(\texttt{Verifier}$(\Pi') = 0$) & \\
+        $s \leftarrow D_{sk}(\mu) \mod n$ & \\
+        $r \leftarrow x \mod n : (x,y) = \mathcal{R}$ & \\
+        publish <$r$, $s$> & \\
+        \hline
+      \end{tabular}}
+      \end{footnotesize}
+    \end{table}
+
+  \caption{Adapted protocol for ECDSA}
+  \label{fig:adaptationSchemeECDSA}
+\end{figure}
+
+\subsection{Adapting zero-knowledge proofs}
 
 Initialy the proofs have been designed for the DSA architecture, so the values
 tested in the proofs are values in $\mathbb{Z}_{q}$. These values are used to create
-a challenge $e$ with two hash function (one different per proof.) For ECDSA some
-of these values are now points and some equation need to be adapted. Points are
-serialized in long form of 65 bytes, starting with \texttt{0x04} and two 32 bytes
-number for the coordinate x and y.
+a challenge $e$ with two hash function (a different one per proof.) For ECDSA some
+of these values become points and some equations need to be adapted. Points are
+serialized in the long form, 65 bytes starting with \texttt{0x04} and two 32 bytes
+number for the coordinates $(x, y)$.
+As mentionned is the original paper, the variables names are not consistent with
+the first part of the paper. Hereinafter the variable names follow the same notation
+as the original paper and are therefore no longer consistent with the previous
+pages.
+
+\subsubsection{Zero-knowledge proof $\Pi$}
 
 The first zero-knowledge proof $\Pi$ is created by Alice to prove to Bob that she
-act correctly and have encrypted coherent data with Paillier encryption.
+act correctly and have encrypted coherent data with Paillier encryption, proving the
+ownership and the validity of the two encrypted values in relation to the public address
+$Q_1$ with $(x_1z_1 / z_1) \cdot G = Q_1$. The proof states that the encrypted value
+$\alpha$ is related to $R$ and $R_2$ such that
+$(k_1)^{-1} \cdot R = ((k_1)^{-1}k_1k_2) \cdot G = k_2 \cdot G = R_2$.
 
-\begin{figure}[H]
+\begin{figure}[h]
+    \begin{table}[H]
+      \centering
+      \begin{footnotesize}
+        \[
+        \Pi \leftarrow \texttt{zkp} \begin{bmatrix}\begin{array}{lr}
+                                      \exists x_1, x_2 : & x_1, x_2 \in [-n^3, n^3] \\
+                                      \land & x_1 \cdot \mathcal{C} = \mathcal{W}_1 \\
+                                      \land & (x_2/x_1) \cdot \mathcal{D} = \mathcal{W}_2 \\
+                                      \land & D_{sk}(m_1) \equiv_n x_1 \\
+                                      \land & D_{sk}(m_2) \equiv_n x_2
+                                     \end{array}\end{bmatrix}
+        \]
+      \end{footnotesize}
+    \end{table}
+
+  \caption{The proof $\Pi$}
+  \label{fig:theProofPi}
+\end{figure}
+
+\begin{table}[h]
+  \begin{tabular}{p{4cm} l}
+    $x_1 = z_1$ & $\mathcal{C} = \mathcal{R}$ \\
+    $x_2 = x_1z_1 \mod n$ & $\mathcal{D} = \mathcal{G}$ \\
+    $m_1 = \alpha$ & $\mathcal{W}_1 = \mathcal{R}_2$ \\
+    $m_2 = \zeta$ & $\mathcal{W}_2 = \mathcal{Q}_1$
+  \end{tabular}
+  \caption{Mapping between the protocol's variable names and the ZKP $\Pi$}
+  \label{fig:mappingOfVarNamesPi}
+\end{table}
+
+\begin{figure}[h]
+    \begin{table}[H]
+      \centering
+      \begin{footnotesize}
+      \begin{tabular}{ | p{6cm} p{6cm} | }
+        \hline
+        \multicolumn{2}{ | c | }{$\langle z_1, z_2, \mathcal{Y}, e, s_1, s_2, s_3, t_1, t_2, t_3, t_4 \rangle \leftarrow \Pi$} \\
+          & \\
+        $\text{Verify } s_1, t_1 \in \mathbb{Z}_{n^3}$ & $\mathcal{V}_1 \leftarrow (t_1 + t_2) \cdot \mathcal{D} + (-e) \cdot \mathcal{Y}$ \\
+        $\mathcal{U}_1 \leftarrow s_1 \cdot \mathcal{C} + (-e) \cdot \mathcal{W}_1$ & $\mathcal{V}_2 \leftarrow s_1 \cdot \mathcal{W}_2 + t_2 \cdot \mathcal{D} + (-e) \cdot \mathcal{Y}$ \\
+        $u_2 \leftarrow g^{s_1}(s_2)^N(m_1)^{-e} \mod N^2$ & $v_3 \leftarrow g^{t_1} (t_3)^N (m_2)^{-e} \mod N^2$ \\
+        $u_3 \leftarrow (h_1)^{s_1} (h_2)^{s_3} (z_1)^{-e} \mod \tilde{N}$ & $v_4 \leftarrow (h_1)^{t_1} (h_2)^{t_4} (z_2)^{-e} \mod \tilde{N}$ \\
+         & \\
+        \multicolumn{2}{|c|}{$\text{Verify } e = \texttt{hash}(\mathcal{C}, \mathcal{W}_1, \mathcal{D}, \mathcal{W}_2, m_1, m_2, z_1, \mathcal{U}_1, u_2, u_3, z_2, \mathcal{Y}, \mathcal{V}_1, \mathcal{V}_2, v_3, v_4)$} \\
+        \hline
+      \end{tabular}
+      \end{footnotesize}
+    \end{table}
+
+  \caption{Adaptation of $\Pi$'s verification in ECDSA}
+  \label{fig:adaptationOfPiVerification}
+\end{figure}
+
+\begin{figure}[h]
     \begin{table}[H]
       \centering
       \begin{footnotesize}
@@ -239,134 +427,86 @@ act correctly and have encrypted coherent data with Paillier encryption.
          & $\epsilon \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
          & \\
         $z_1 \leftarrow (h_1)^{x_1}(h_2)^{\rho_1} \mod \tilde{N}$ & $z_2 \leftarrow (h_1)^{x_2}(h_2)^{\rho_2} \mod \tilde{N}$ \\
-        $u_1 \leftarrow c \cdot \alpha$ & $y \leftarrow d \cdot (x_2 + \rho_3)$ \\
-        $u_2 \leftarrow g^{\alpha} \beta^{N} \mod N^2$ & $v_1 \leftarrow d \cdot (\delta + \epsilon)$ \\
-        $u_3 \leftarrow (h_1)^{\alpha} (h_2)^{\gamma} \mod \tilde{N}$ & $v_2 \leftarrow w_2 \cdot \alpha + d \cdot \epsilon$ \\
+        $\mathcal{U}_1 \leftarrow \alpha \cdot \mathcal{C}$ & $\mathcal{Y} \leftarrow (x_2 + \rho_3) \cdot \mathcal{D}$ \\
+        $u_2 \leftarrow g^{\alpha} \beta^{N} \mod N^2$ & $\mathcal{V}_1 \leftarrow (\delta + \epsilon) \cdot \mathcal{D}$ \\
+        $u_3 \leftarrow (h_1)^{\alpha} (h_2)^{\gamma} \mod \tilde{N}$ & $\mathcal{V}_2 \leftarrow \alpha \cdot \mathcal{W}_2 + \epsilon \cdot \mathcal{D}$ \\
          & $v_3 \leftarrow g^{\delta} \mu^{N} \mod N^2$ \\
          & $v_4 \leftarrow (h_1)^{\delta} (h_2)^{\nu} \mod \tilde{N}$ \\
          & \\
-        \multicolumn{2}{ | l | }{$e \leftarrow \texttt{hash}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, y, v_1, v_2, v_3, v_4)$} \\
+        \multicolumn{2}{|l|}{$e \leftarrow \texttt{hash}(\mathcal{C}, \mathcal{W}_1, \mathcal{D}, \mathcal{W}_2, m_1, m_2, z_1, \mathcal{U}_1, u_2, u_3, z_2, \mathcal{Y}, \mathcal{V}_1, \mathcal{V}_2, v_3, v_4)$} \\
          & \\
         $s_1 \leftarrow ex_1 + \alpha$ & $t_1 \leftarrow ex_2 + \delta$ \\
         $s_2 \leftarrow (r_1)^e \beta \mod N$ & $t_2 \leftarrow e \rho_3 + \epsilon \mod n$ \\
         $s_3 \leftarrow e \rho_1 + \gamma$ & $t_3 \leftarrow (r_2)^e \mu \mod N^2$ \\
          & $t_4 \leftarrow e \rho_2 + \nu$ \\
          & \\
-        \multicolumn{2}{ | c | }{$\Pi \leftarrow \langle z_1, z_2, y, e, s_1, s_2, s_3, t_1, t_2, t_3, t_4 \rangle$} \\
+        \multicolumn{2}{ | c | }{$\Pi \leftarrow \langle z_1, z_2, \mathcal{Y}, e, s_1, s_2, s_3, t_1, t_2, t_3, t_4 \rangle$} \\
         \hline
       \end{tabular}
       \end{footnotesize}
     \end{table}
 
-  \caption{Adaptation of $\Pi$ to ECDSA}
+  \caption{Adaptation of $\Pi$'s construction in ECDSA}
   \label{fig:adaptationOfPi}
 \end{figure}
 
-\begin{figure}[H]
+\subsubsection{Zero-knowledge proof $\Pi'$}
+
+The second zero-knowledge proof is created by Bob to prove to Alice that he acted honestly
+according to the protocol. The proof states that the point $\mathcal{R}_2$ is generated
+accordingly to the value $z_2$ and then to the value $k_2$, the public key $\mathcal{Q}_2$
+is related to the values $z_2$ and $x_2z_2$, and the encrypted values $\mu$ and $\mu'$
+are correctly composed.
+
+\begin{table}[h]
+  \begin{tabular}{p{4cm} l}
+    $x_1 = z_2$ & $\mathcal{C} = \mathcal{R}_2$ \\
+    $x_2 = x_2z_2 \mod n$ & $\mathcal{D} = \mathcal{G}$ \\
+    $x_3 = c \mod n$ & $\mathcal{W}_1 = \mathcal{G}$ \\
+    $m_1 = \mu'$ & $\mathcal{W}_2 = \mathcal{Q}_2$ \\
+    $m_2 = \mu$ & $m_3 = \alpha$ \\
+    $m_4 = \zeta$ &
+  \end{tabular}
+  \caption{Mapping between the protocol's variable names and the ZKP $\Pi'$}
+  \label{fig:mappingOfVarNamesPi2}
+\end{table}
+
+\begin{figure}[h]
     \begin{table}[H]
       \centering
       \begin{footnotesize}
-      \begin{tabular}{ | p{6cm} p{6cm} | }
-        \hline
-        \multicolumn{2}{ | c | }{$\langle z_1, z_2, y, e, s_1, s_2, s_3, t_1, t_2, t_3, t_4 \rangle \leftarrow \Pi$} \\
-          & \\
-        $\text{Verify } s_1, t_1 \in \mathbb{Z}_{n^3}$ & $v_1 \leftarrow d \cdot (t_1 + t_2) + y \cdot (-e)$ \\
-        $u_1 \leftarrow c \cdot s_1 + w_1 \cdot (-e)$ & $v_2 \leftarrow w_2 \cdot s_1 + d \cdot t_2 + y \cdot (-e)$ \\
-        $u_2 \leftarrow g^{s_1}(s_2)^N(m_1)^{-e} \mod N^2$ & $v_3 \leftarrow g^{t_1} (t_3)^N (m_2)^{-e} \mod N^2$ \\
-        $u_3 \leftarrow (h_1)^{s_1} (h_2)^{s_3} (z_1)^{-e} \mod \tilde{N}$ & $v_4 \leftarrow (h_1)^{t_1} (h_2)^{t_4} (z_2)^{-e} \mod \tilde{N}$ \\
-         & \\
-        \multicolumn{2}{ | c | }{$\text{Verify } e = \texttt{hash}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, y, v_1, v_2, v_3, v_4)$} \\
-        \hline
-      \end{tabular}
+        \[
+        \Pi' \leftarrow \texttt{zkp} \begin{bmatrix}\begin{array}{lr}
+                                          \exists x_1, x_2, x_3 : & x_1, x_2 \in [-n^3, n^3] \\
+                                          \land & x_3 \in [-n^5, n^5] \\
+                                          \land & x_1 \cdot \mathcal{C} = \mathcal{W}_1 \\
+                                          \land & (x_2/x_1) \cdot \mathcal{D} = \mathcal{W}_2 \\
+                                          \land & D_{sk'}(m_1) \equiv_n x_1 \\
+                                          \multicolumn{2}{l}{
+                                            \begin{aligned}[t]
+                                                \land \quad D_{sk}(m_2) \equiv_n & D_{sk}((m_3 \times_{pk} m'x_1) +_{pk} \\
+                                                                                 & (m_4 \times_{pk} r'x_2) +_{pk} E_{pk}(nx_3))
+                                              \end{aligned}
+                                          }
+                                         \end{array}\end{bmatrix}
+        \]
       \end{footnotesize}
     \end{table}
 
-  \caption{Adaptation of $\Pi$ verification to ECDSA}
-  \label{fig:adaptationOfPiVerification}
+  \caption{The proof $\Pi'$}
+  \label{fig:theProofPi2}
 \end{figure}
 
-Second zero-knowledge proof created by Bob to prove to Alice that he acted correctly
-according the protocol.
-
-\begin{figure}[H]
-    \begin{table}[H]
-      \centering
-      \begin{footnotesize}
-      \begin{tabular}{ | p{5.5cm} p{6cm} | }
-        \hline
-        $\alpha \xleftarrow[]{R} \mathbb{Z}_{n^3}$ & $\delta \xleftarrow[]{R} \mathbb{Z}_{n^3}$ \\
-        $\beta \xleftarrow[]{R} \mathbb{Z}_{N'}^{*}$ & $\mu \xleftarrow[]{R} \mathbb{Z}_{N}^{*}$ \\
-        $\gamma \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ & $\nu \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ \\
-        $\rho_1 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ & $\rho_2 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ \\
-         & $\rho_3 \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
-         & $\rho_4 \xleftarrow[]{R} \mathbb{Z}_{n^5\tilde{N}}$ \\
-         & $\epsilon \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
-         & $\sigma \xleftarrow[]{R} \mathbb{Z}_{n^7}$ \\
-         & $\tau \xleftarrow[]{R} \mathbb{Z}_{n^7\tilde{N}}$ \\
-         & \\
-        $z_1 \leftarrow (h_1)^{x_1}(h_2)^{\rho_1} \mod \tilde{N}$ & $z_2 \leftarrow (h_1)^{x_2}(h_2)^{\rho_2} \mod \tilde{N}$ \\
-        $u_1 \leftarrow c \cdot \alpha$ & $y \leftarrow d \cdot (x_2 + \rho_3)$ \\
-        $u_2 \leftarrow (g')^{\alpha} \beta^{N'} \mod (N')^2$ & $v_1 \leftarrow d \cdot (\delta + \epsilon)$ \\
-        $u_3 \leftarrow (h_1)^{\alpha} (h_2)^{\gamma} \mod \tilde{N}$ & $v_2 \leftarrow w_2 \cdot \alpha + d \cdot \epsilon$ \\
-         & $v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$ \\
-         & $v_4 \leftarrow (h_1)^{\delta} (h_2)^{\nu} \mod \tilde{N}$ \\
-         & $z_3 \leftarrow (h_1)^{x_3} (h_2)^{\rho_4} \mod \tilde{N}$ \\
-         & $v_5 \leftarrow (h_1)^{\sigma} (h_2)^{\tau} \mod \tilde{N}$ \\
-         & \\
-        \multicolumn{2}{ | l | }{$e \leftarrow \texttt{hash'}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, z_3, y, v_1, v_2, v_3, v_4, v_5)$} \\
-         & \\
-        $s_1 \leftarrow ex_1 + \alpha$ & $t_1 \leftarrow ex_2 + \delta$ \\
-        $s_2 \leftarrow (r_1)^e \beta \mod N'$ & $t_2 \leftarrow e \rho_3 + \epsilon \mod n$ \\
-        $s_3 \leftarrow e \rho_1 + \gamma$ & $t_3 \leftarrow (r_2)^e \mu \mod N$ \\
-        $s_4 \leftarrow ex_1 x_4 + \alpha$ & $t_4 \leftarrow e \rho_2 + \nu$ \\
-         & $t_5 \leftarrow e x_3 + \sigma$ \\
-         & $t_6 \leftarrow e \rho_4 + \tau$ \\
-         & $t_7 \leftarrow ex_2 x_5 + \delta$ \\
-         & \\
-        \multicolumn{2}{ | c | }{$\Pi' \leftarrow \langle z_1, z_2, z_3, y, e, s_1, s_2, s_3, s_4, t_1, t_2, t_3, t_4, t_5, t_6, t_7 \rangle$} \\
-        \hline
-      \end{tabular}
-      \end{footnotesize}
-    \end{table}
-
-  \caption{Adaptation of $\Pi'$ to ECDSA}
-  \label{fig:adaptationOfPi2}
-\end{figure}
-
-
-\begin{figure}[H]
-    \begin{table}[H]
-      \centering
-      \begin{footnotesize}
-      \begin{tabular}{ | p{6.5cm} p{6.5cm} | }
-        \hline
-        \multicolumn{2}{ | c | }{$\langle z_1, z_2, z_3, y, e, s_1, s_2, s_3, s_4, t_1, t_2, t_3, t_4, t_5, t_6, t_7 \rangle \leftarrow \Pi'$} \\
-          & \\
-        $\text{Verify } s_1, t_1 \in \mathbb{Z}_{n^3}$ & $v_1 \leftarrow d \cdot (t_1 + t_2) + y \cdot (-e)$ \\
-        $\text{Verify } t_5 \in \mathbb{Z}_{n^7}$ & $v_2 \leftarrow w_2 \cdot s_1 + d \cdot t_2 + y \cdot (-e)$ \\
-
-        $u_1 \leftarrow c \cdot s_1 + w_1 \cdot (-e)$ & $v_3 \leftarrow (m_3)^{s_4} (m_4)^{t_7} g^{nt_5} (t_3)^{N} (m_2)^{-e} \mod N^2$ \\
-        $u_2 \leftarrow (g')^{s_1} (s_2)^{N'} (m_1)^{-e} \mod (N')^2$ & $v_4 \leftarrow (h_1)^{t_1} (h_2)^{t_4} (z_2)^{-e} \mod \tilde{N}$ \\
-        $u_3 \leftarrow (h_1)^{s_1} (h_2)^{s_3} (z_1)^{-e} \mod \tilde{N}$ &  $v_5 \leftarrow (h_1)^{t_5} (h_2)^{t_6} (z_3)^{-e} \mod \tilde{N}$\\
-         & \\
-        \multicolumn{2}{ | c | }{$\text{Verify } e = \texttt{hash'}(c, w_1, d, w_2, m_1, m_2, z_1, u_1, u_2, u_3, z_2, z_3, y, v_1, v_2, v_3, v_4, v_5)$} \\
-        \hline
-      \end{tabular}
-      \end{footnotesize}
-    \end{table}
-
-  \caption{Adaptation of $\Pi'$ verification to ECDSA}
-  \label{fig:adaptationOfPi2Verification}
-\end{figure}
-
-If $x_1 = z_2$, $x_2 = x_2 z_2$, $x_3 = c$, and $m_2 = \mu$ with
-$\mu = (\alpha)^{m' x_1} (\zeta)^{r' x_2} g^{nx_3} (r_2)^{N}$ then the
-equation $v_3$ in the original paper doesn't work. The result in the
-verification proccess $\Pi'$ need to match
+\paragraph{Correcting the verification of $\Pi'$}
+If $x_1 = z_2$, $x_2 = x_2 z_2$, $x_3 = c$, and $m_2 = \mu$ such that
+$\mu = (\alpha)^{m' x_1} (\zeta)^{r' x_2} g^{nx_3} (r_2)^{N}$, then the
+equation $v_3$ in the validation proccess does not correspond to construction
+of $v_3$ in the original paper.
+The result in the verification proccess $\Pi'$ need to match
 $v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$.
 The original equation proposed
 $v_3 \leftarrow (m_3)^{s_1} (m_4)^{t_1} g^{nt_5} (t_3)^{N} (m_2)^{-e} \mod N^2$
-doesn't include $m'$ and $r'$ present in $\mu$, so $m_2$ cannot be used correctly
+does not include $m'$ and $r'$ present in $\mu$, so $m_2$ cannot be used correctly
 as showed next.
 
 \begin{equation}
@@ -386,8 +526,8 @@ as showed next.
 \end{equation}
 
 The equation $v_3$ needs to be adapted to include $x_4 = m'$ and $x_5 = r'$ ($m'$
-and $r'$ cannot be include directly in $x_1$ and $x_2$ without breaking other
-equations.) Two new parameters $s_4 \leftarrow ex_1 x_4 + \alpha$ and
+and $r'$ cannot be include directly in $x_1$ and $x_2$ without breaking
+equations $u_1, u_2, u_3, v_2$.) Two new parameters $s_4 \leftarrow ex_1 x_4 + \alpha$ and
 $t_7 \leftarrow ex_2 x_5 + \delta$ are added into the proof to correct
 the equation.
 
@@ -405,6 +545,85 @@ the equation.
        &\equiv (m_3)^{\alpha} (m_4)^{\beta} g^{n\sigma} \mu^{N} \\
 \end{split}
 \end{equation}
+
+
+\begin{figure}[ht]
+    \begin{table}[H]
+      \centering
+      \begin{footnotesize}
+      \begin{tabular}{ | p{5.5cm} p{6cm} | }
+        \hline
+        $\alpha \xleftarrow[]{R} \mathbb{Z}_{n^3}$ & $\delta \xleftarrow[]{R} \mathbb{Z}_{n^3}$ \\
+        $\beta \xleftarrow[]{R} \mathbb{Z}_{N'}^{*}$ & $\mu \xleftarrow[]{R} \mathbb{Z}_{N}^{*}$ \\
+        $\gamma \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ & $\nu \xleftarrow[]{R} \mathbb{Z}_{n^{3}\tilde{N}}$ \\
+        $\rho_1 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ & $\rho_2 \xleftarrow[]{R} \mathbb{Z}_{n\tilde{N}}$ \\
+         & $\rho_3 \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+         & $\rho_4 \xleftarrow[]{R} \mathbb{Z}_{n^5\tilde{N}}$ \\
+         & $\epsilon \xleftarrow[]{R} \mathbb{Z}_{n}$ \\
+         & $\sigma \xleftarrow[]{R} \mathbb{Z}_{n^7}$ \\
+         & $\tau \xleftarrow[]{R} \mathbb{Z}_{n^7\tilde{N}}$ \\
+         & \\
+        $z_1 \leftarrow (h_1)^{x_1}(h_2)^{\rho_1} \mod \tilde{N}$ & $z_2 \leftarrow (h_1)^{x_2}(h_2)^{\rho_2} \mod \tilde{N}$ \\
+        $\mathcal{U}_1 \leftarrow \alpha \cdot \mathcal{C}$ & $\mathcal{Y} \leftarrow (x_2 + \rho_3) \cdot \mathcal{D}$ \\
+        $u_2 \leftarrow (g')^{\alpha} \beta^{N'} \mod (N')^2$ & $\mathcal{V}_1 \leftarrow (\delta + \epsilon) \cdot \mathcal{D}$ \\
+        $u_3 \leftarrow (h_1)^{\alpha} (h_2)^{\gamma} \mod \tilde{N}$ & $\mathcal{V}_2 \leftarrow \alpha \cdot \mathcal{W}_2 + \epsilon \cdot \mathcal{D}$ \\
+         & $v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$ \\
+         & $v_4 \leftarrow (h_1)^{\delta} (h_2)^{\nu} \mod \tilde{N}$ \\
+         & $z_3 \leftarrow (h_1)^{x_3} (h_2)^{\rho_4} \mod \tilde{N}$ \\
+         & $v_5 \leftarrow (h_1)^{\sigma} (h_2)^{\tau} \mod \tilde{N}$ \\
+         & \\
+        \multicolumn{2}{ | l | }{$e \leftarrow \texttt{hash'}(\mathcal{C}, \mathcal{W}_1, \mathcal{D}, \mathcal{W}_2, m_1, m_2, z_1, \mathcal{U}_1, u_2, u_3, z_2, z_3, \mathcal{Y}, \mathcal{V}_1, \mathcal{V}_2, v_3, v_4, v_5)$} \\
+         & \\
+        $s_1 \leftarrow ex_1 + \alpha$ & $t_1 \leftarrow ex_2 + \delta$ \\
+        $s_2 \leftarrow (r_1)^e \beta \mod N'$ & $t_2 \leftarrow e \rho_3 + \epsilon \mod n$ \\
+        $s_3 \leftarrow e \rho_1 + \gamma$ & $t_3 \leftarrow (r_2)^e \mu \mod N$ \\
+        $s_4 \leftarrow ex_1 x_4 + \alpha$ & $t_4 \leftarrow e \rho_2 + \nu$ \\
+         & $t_5 \leftarrow e x_3 + \sigma$ \\
+         & $t_6 \leftarrow e \rho_4 + \tau$ \\
+         & $t_7 \leftarrow ex_2 x_5 + \delta$ \\
+         & \\
+        \multicolumn{2}{ | c | }{$\Pi' \leftarrow \langle z_1, z_2, z_3, \mathcal{Y}, e, s_1, s_2, s_3, s_4, t_1, t_2, t_3, t_4, t_5, t_6, t_7 \rangle$} \\
+        \hline
+      \end{tabular}
+      \end{footnotesize}
+    \end{table}
+
+  \caption{Adaptation of $\Pi'$'s construction in ECDSA}
+  \label{fig:adaptationOfPi2}
+\end{figure}
+
+
+\begin{figure}[ht]
+    \begin{table}[H]
+      \centering
+      \begin{footnotesize}
+      \begin{tabular}{ | p{6cm} p{6cm} | }
+        \hline
+        \multicolumn{2}{ | c | }{$\langle z_1, z_2, z_3, \mathcal{Y}, e, s_1, s_2, s_3, s_4, t_1, t_2, t_3, t_4, t_5, t_6, t_7 \rangle \leftarrow \Pi'$} \\
+          & \\
+        $\text{Verify } s_1, t_1 \in \mathbb{Z}_{n^3}$ & $\mathcal{V}_1 \leftarrow (t_1 + t_2) \cdot \mathcal{D} + (-e) \cdot \mathcal{Y}$ \\
+        $\text{Verify } t_5 \in \mathbb{Z}_{n^7}$ & $\mathcal{V}_2 \leftarrow s_1 \cdot \mathcal{W}_2 + t_2 \cdot \mathcal{D} + (-e) \cdot \mathcal{Y}$ \\
+
+        $\mathcal{U}_1 \leftarrow s_1 \cdot \mathcal{C} + (-e) \cdot \mathcal{W}_1$ &
+        $\begin{aligned}[t]
+            v_3 \leftarrow & (m_3)^{s_4} (m_4)^{t_7} g^{nt_5} (t_3)^{N} (m_2)^{-e} \\
+                           &\mod N^2
+          \end{aligned}$ \\
+        $u_2 \leftarrow (g')^{s_1} (s_2)^{N'} (m_1)^{-e} \mod (N')^2$ & $v_4 \leftarrow (h_1)^{t_1} (h_2)^{t_4} (z_2)^{-e} \mod \tilde{N}$ \\
+        $u_3 \leftarrow (h_1)^{s_1} (h_2)^{s_3} (z_1)^{-e} \mod \tilde{N}$ &  $v_5 \leftarrow (h_1)^{t_5} (h_2)^{t_6} (z_3)^{-e} \mod \tilde{N}$\\
+         & \\
+        \multicolumn{2}{ | c | }{$\text{Verify } e = \texttt{hash'}(\mathcal{C}, \mathcal{W}_1, \mathcal{D}, \mathcal{W}_2, m_1, m_2, z_1, \mathcal{U}_1, u_2, u_3, z_2, z_3, \mathcal{Y}, \mathcal{V}_1, \mathcal{V}_2, v_3, v_4, v_5)$} \\
+        \hline
+      \end{tabular}
+      \end{footnotesize}
+    \end{table}
+
+  \caption{Adaptation of $\Pi'$ verification to ECDSA}
+  \label{fig:adaptationOfPi2Verification}
+\end{figure}
+
+\vfill
+\newpage
 
 
 % -----------------------------------------------------------------------------
