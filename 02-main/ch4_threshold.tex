@@ -8,10 +8,10 @@
 \newpage
 
 % -----------------------------------------------------------------------------
-\section{Recap}
+\section{Reminder}
 
-Before introducing the threshold scheme, a recap of basic components used after in
-the scheme is presented. The recap is composed of \gls{ec} basic mathematics,
+Before introducing the threshold scheme, a reminder of basic components used after in
+the scheme is presented. The reminder is composed of \gls{ec} basic mathematics,
 Paillier homomorphic encryption scheme, and digital signature---in particular
 \gls{dsa} and \gls{ecdsa}.
 
@@ -85,10 +85,16 @@ a point multiplication is through repeated addition where $dP = P_1 + P_2 + \dot
 % $[ d_0 \dots d_m] \in {0,1}$, $N = P, Q = \mathcal{O} \and \forall d_x : \text{if } d_x = 1 Q = \text{add}(Q, P), N = \text{double}(N)$.
 
 
-\begin{lemma}
+\begin{lemma}[Elliptic Curve Discrete Logarithm Problem]
   Given a multiple $Q$ of $P$ where $Q = nP$ it is infeasible to find $n$ if $n$ is
   large.
 \end{lemma}
+
+\begin{lemma}[Point Order]
+  A point $P$ has order $2$ if $P + P = \mathcal{O}$, and therefore $P = -P$.
+  A point $Q$ has order $3$ if $Q+Q+Q=\mathcal{O}$, and therefore $Q + Q = -Q$.
+\end{lemma}
+
 
 \subsection{Paillier cryptosystem}
 
@@ -111,7 +117,8 @@ With a private key $(n, g, \lambda, \mu)$ and a ciphertext $c \in \mathbb{Z}_{n^
 compute the plaintext as $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$
 where $L(x) = \frac{x-1}{n}$.
 
-\subsection{Digital Signature Algorithm}
+\subsection{Signature schemes}
+\subsubsection{Digital Signature Algorithm}
 
 \begin{quote}
   The Digital Signature Algorithm (DSA) is a Federal Information Processing Standard
@@ -120,37 +127,38 @@ where $L(x) = \frac{x-1}{n}$.
   and adopted it as FIPS 186 in 1993.
 \end{quote}
 
-\subsubsection{Signing}
+\paragraph{Signing}
 
 With public parameters $(p, q, g)$, \texttt{hash} the hashing function,
 $m$ the message, and $x \in \mathbb{Z}_q$ the private key.
 
 \begin{itemize}
   \item Generate a random $k \in \mathbb{Z}_q$
-  \item Calculate $r = (g^k \mod p) \mod q \land r \neq 0$
-  \item Calculate $s = k^{-1}(\texttt{hash}(m) + xr) \mod q \land s \neq 0$
+  \item Calculate $r \equiv (g^k \pmod p) \pmod q : r \neq 0$
+  \item Calculate $s \equiv k^{-1}(\texttt{hash}(m) + xr) \pmod q : s \neq 0$
   \item The signature is $(r, s)$
 \end{itemize}
 
-\subsubsection{Verifying}
+\paragraph{Verifying}
 
 With public parameters $(p, q, g)$, \texttt{hash} the hashing function,
 $m$ the message, $(r, s)$ the signature, and $y = g^x \mod p$ the public key.
 
 \begin{itemize}
   \item Reject the signature if $r, s \notin \mathbb{Z}_q$
-  \item Calculate $w = s^{-1} \mod q$
-  \item Calculate $u_1 = \texttt{hash}(m) \cdot w \mod q$
-  \item Calculate $u_2 = rw \mod q$
-  \item Calculate $v = (g^{u_1}y^{u_2} \mod p) \mod q$
+  \item Calculate $w \equiv s^{-1} \pmod q$
+  \item Calculate $u_1 \equiv \texttt{hash}(m) \cdot w \pmod q$
+  \item Calculate $u_2 \equiv rw \pmod q$
+  \item Calculate $v \equiv (g^{u_1}y^{u_2} \pmod p) \pmod q$
   \item The signature is valide iff $v = r$
 \end{itemize}
 
-\subsection{Elliptic Curve Digital Signature Algorithm}
+\subsubsection{Elliptic Curve Digital Signature Algorithm}
 
-\gls{ecdsa} is a variant of \gls{dsa} which uses elliptic curve cryptography.
+\gls{ecdsa} is a variant of \gls{dsa} which uses elliptic curve cryptography and
+require a different set of parameters and smaller keys.
 
-\subsubsection{Signing}
+\paragraph{Signing}
 
 With public parameters $(\mathcal{E}, G, n)$, \texttt{hash} the hashing function,
 $m$ the message, and $x \in \mathbb{Z}_n$ the private key.
@@ -158,25 +166,47 @@ $m$ the message, and $x \in \mathbb{Z}_n$ the private key.
 \begin{itemize}
   \item Generate a random $k \in \mathbb{Z}_n$
   \item Calculate $(x_1, y_1) = k \cdot G$
-  \item Calculate $r = x_1 \mod n \land r \neq 0$
-  \item Calculate $s = k^{-1}(\texttt{hash}(m) + xr) \mod n \land s \neq 0$
+  \item Calculate $r \equiv x_1 \pmod n : r \neq 0$
+  \item Calculate $s \equiv k^{-1}(\texttt{hash}(m) + xr) \pmod n : s \neq 0$
   \item The signature is $(r, s)$
 \end{itemize}
 
-\subsubsection{Verifying}
+\paragraph{Verifying}
 
 With public parameters $(\mathcal{E}, G, n)$, \texttt{hash} the hashing function,
 $m$ the message, $(r, s)$ the signature, and $Q = x \cdot G$ the public key.
 
 \begin{itemize}
   \item Reject the signature if $r, s \notin \mathbb{Z}_n$
-  \item Calculate $w = s^{-1} \mod n$
-  \item Calculate $u_1 = \texttt{hash}(m) \cdot w \mod n$
-  \item Calculate $u_2 = rw \mod n$
+  \item Calculate $w \equiv s^{-1} \pmod n$
+  \item Calculate $u_1 \equiv \texttt{hash}(m) \cdot w \pmod n$
+  \item Calculate $u_2 \equiv rw \pmod n$
   \item Calculate the curve point $(x_1, y_1) = u_1 \cdot G + u_2 \cdot Q$ if
   $(x_1, y_1) = \mathcal{O}$ then the signature is invalid
   \item The signature is valide iff $r \equiv x_1 \pmod n$
 \end{itemize}
+
+\subsubsection{Schemes' analysis}
+
+In $(r, s)$ the part $s$ remain the same in each signature scheme, the only difference
+for $s$ is the modulus applied. In \gls{dsa} the modulus $q$, i.e. the order of
+the generator $g$ modulo $p$, is took while in \gls{ecdsa} the modulus $n$, i.e. the
+order of the generator $G$ on the curve $\mathcal{E}$, is took.
+
+The biggest adaptation is on how to calculate the part $r$ from the private random $k$.
+In \gls{dsa} the generator $g$ is used with, at first, modulo $p$ and then
+modulo $q$ while in \gls{ecdsa} the curve is used. A point is calculated and the
+coordinate $x_1$ is used modulo $n$.
+
+\begin{postulate}
+  This statement $a \equiv g^b \pmod p$ is equivalent in term of security to $a = b \cdot G$
+  and $a \equiv (g^b \pmod p) \pmod q$ is equivalent to $a \equiv x \pmod n : (x, y) = b \cdot G$.
+\end{postulate}
+
+The previous postulate is used to adapt zero-knowledge proofs from \gls{dsa} to
+\gls{ecdsa} hereafter. This postulate has not been further researched by lack
+of time.
+
 
 % -----------------------------------------------------------------------------
 \section{Threshold scheme}
