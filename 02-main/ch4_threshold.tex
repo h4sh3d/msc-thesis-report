@@ -1,7 +1,32 @@
 \chapter{ECDSA asymmetric threshold scheme}
 \label{chap:threshold}
 
-% -- Your text goes here --
+Threshold cryptography has been discussed since a long time already, many cryptographic
+scheme like RSA or Paillier
+\cite{10.1007/BFb0052253, 10.1007/978-3-642-27954-6_20}
+exists but sometines it is difficult to use them in real case application.
+Since Bitcoin become popular, people lose funds because they lost keys or their
+keys have been hacked. And since then researches have been done to secure Bitcoin
+wallets \cite{Goldfeder2015SecuringBW, DBLP:conf/acns/GennaroGN16}. But the
+biggest problem today in Bitcoin that slow down the adoption of threshold cryptosystem
+is the complexity of creating an efficient and flexible scheme for \gls{ecdsa}.
+Most recent researches are focused on finding more efficient and more generic
+scheme, but fortunately a scheme fulfilling perfectly the needs described into
+the previous chapter required to improve payment channel in Bitcoin already exists.
+Nevertheless this scheme describe how to perform a \gls{dsa} threshold signature
+and so needs to be adapted.
+
+The scheme analysed, transformed, and implemented in the following has been
+presented by MacKenzie and Reiter in their paper \say{Two-Party Generation of DSA Signatures}
+\cite{crypto-2001-1592}. This scheme is also the basis of several other
+papers cited before. Their construction of a threshold signature scheme with
+\gls{ecdsa} is based on a simple multiplicative shared secret and homomorphic
+encryption to keep the private values unknown by the other player. The homomorphic
+encryption used as exemple in the paper and choosed for the implement is the
+Paillier cryptosystem \cite{Paillier:1999:PCB:1756123.1756146}. The following
+chapter describe how to adapt the scheme form \gls{dsa} to \gls{ecdsa} and
+introduce some fundamental building blocks needed for a real case scenario like
+hierarchical deterministic threshold wallet or deterministic signatures.
 
 \minitoc
 
@@ -842,7 +867,7 @@ a communication process must take place to complete the derivation.
 
 
 % -----------------------------------------------------------------------------
-\section{Threshold deterministic signature}
+\section{Threshold deterministic signatures}
 
 One of the simplest way to compromise the private key in \gls{ecdsa} is to select
 a weak pseudo random number generator for $k$ or even worst, select a static value
