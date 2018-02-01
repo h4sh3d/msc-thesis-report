@@ -1,13 +1,104 @@
 \chapter{Further research}
-\label{chap:further research}
+\label{chap:furtherResearch}
 
+It is possible to list an enormous amount of idea or further research in a field
+like crypto-currencies or blockchain. But some of them more related to the work
+done in this paper are listed in the following. Some of them are improvements
+of the work already done but not yet ready for production, and some of them are
+completely exploratory.
 
-% -- Your text goes here --
-\lipsum[1-2]
+% -----------------------------------------------------------------------------
+\section{Side-channel attack resistant implementation and improvements}
+
+The proposed implementation into the library \texttt{secp256k1} rely on \texttt{libgmp}
+for all complex mathematical calculus and \texttt{libgmp} is not strong against
+side channel attacks, and it is normal, the library has not been developed for
+that particular purpose. Therefore, a other implementation need to take the place
+and handle, in constant time and constant memory if possible, the mathematical
+calculus part. This is a big improvement that can be done, or must be done, before
+hoping to use the module is some real case scenario.
+
+\subsection{Second hash function}
+
+The current implementation use the hash function \texttt{SHA256} implemented
+into the library \texttt{secp256k1} for $\Pi$ and $\Pi'$. This is not complient
+with the orignial paper requirements, a other hash function must be implemented
+and used for $\Pi'$.
+
+\subsection{Paillier cryptosystem}
+
+Two major improvements or modifications could be performed specificaly on the
+Paillier cryptosystem implementation. As shown in the original paper,
+the Chinese Remainder Theorem can be used to optimize the decryption.
+In the standard approach, with a private key
+$(n, g, \lambda, \mu)$ and a ciphertext $c \in \mathbb{Z}_{n^2}^*$ it is possible
+to compute the plaintext $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$
+where $L(x) = \frac{x-1}{n}$. With the CRT two function $L_p$ and $L_q$ are
+define by
+
+\begin{ceqn}
+\begin{align*}
+  L_p(x) = \frac{x-1}{p} \quad \text{and} \quad L_q(x) = \frac{x-1}{q}
+\end{align*}
+\end{ceqn}
+
+Decryption can therefore be perform over mod $p$ and mod $q$ and recombining
+modular residues afterwards:
+
+\begin{ceqn}
+\begin{align*}
+  m_p = L_p(c^{p-1} \mod p^2) \ h_p \mod p \\
+  m_q = L_q(c^{q-1} \mod p^2) \ h_q \mod q \\
+  m = \text{CRT}(m_p, m_q) \mod pq
+\end{align*}
+\end{ceqn}
+
+with precomputations
+
+\begin{ceqn}
+\begin{align*}
+  h_p &= L_p(g^{p-1} \mod p^2)^{-1} \mod p \quad \text{and} \\
+  h_q &= L_q(g^{q-1} \mod p^2)^{-1} \mod q
+\end{align*}
+\end{ceqn}
+
+Paillier cryptosystem can be adapted to \gls{ec} cryptography as shown in the
+paper \say{Trapdooring Discrete Logarithms on Elliptic Curves over Rings} by
+Pascal Paillier \cite{10.1007/3-540-44448-3_44}. It is worth nothing however
+that the curve construction is different than the curve used to sign and so
+the code base cannot can not necessarily be reused.
+
+\subsection{Zero-knowledge proofs}
+
+Non-interactive zero-knowledge proofs are a big research field. The article
+\say{From Extractable Collision Resistance to Succinct Non-interactive Arguments of Knowledge, and Back Again}
+by Bitansky, Nir and Canetti, Ran and Chiesa, Alessandro and Tromer, and Eran
+\cite{Bitansky:2012:ECR:2090236.2090263}
+introduced the acronym zk-SNARK for zero-knowledge Succinct Non-interactive ARgument
+of Knowledge that are the backbone of the Zcash protocol \cite{cryptoeprint:2014:349}.
+In the recent paper \say{Bulletproofs: Efficient Range Proofs for Confidential Transactions}
+\cite{cryptoeprint:2017:1066} a new non-interactive zero-knowledge proof
+protocol with very short proofs and without a trusted setup is proposed.
+Further research could be done to adapt the zero-knowledge proof construction
+and migrate to a more generic approach, to remember that the zero-knowledge proof
+construction proposed in the original paper dates from the early 2000s, progress
+has been made since.
 
 
 % -----------------------------------------------------------------------------
 \section{Hardware wallets}
 
-% -- Your text goes here --
-\lipsum[1-2]
+% Securing bitcoin with two Hardware wallet
+% - how to integrate threshold HDWallet
+% - import/export and visualization of threshold keys
+% - integrate the master share tag in the DER key format or not ?
+
+
+% -----------------------------------------------------------------------------
+\section{More generic threshold scheme}
+
+% Implementing a more generic scheme as describe in paper \cite{10.1007/BFb0052253, 10.1007/978-3-642-27954-6_20}
+
+\section{Schnorr signatures}
+
+% Analyse Schnorr signatures for an application on payment channels
