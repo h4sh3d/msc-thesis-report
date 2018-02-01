@@ -653,99 +653,192 @@ or multiplicatively:
 \end{equation*}
 
 In the additive case, the master public key $pk_{mas}$ is also the sum of all the
-public points $pk_i$, which means that if each one publish his own public share
-point, every one can compute the master public key.
+public points $pk_i$, which means that if each player publish his own public share
+point, every one can compute the master public key. The multiplicative sharing is
+more communication applicant because the computation of the public key is sequential
+instead of parallel.
+
+A extended private key share is a tuple of $(sk_i, c)$ with $sk_i$ the normal private key and
+$c$ the chain code, such that $c$ is the same for each player. In the following
+it is asume that the private key is shared multiplicatively.
 
 \subsection{Private parent key to private child key}
-The function CKDpriv compute a child extended private key from the parent extended
-private key. The derivatioin can be \textit{hardened}. This proposal differ from
-the BIP32 standard in the chain derivation proccess. The threshold scheme require
-the same chain on all participants, so the proccess cannot rely on the private key
-share of any participant.
+The function \texttt{CKDpriv} compute a child extended private key from the parent extended
+private key. The derivation can be \textit{hardened}. This proposal differ from
+the \texttt{BIP32} \cite{HDWallets} standard in the chain derivation proccess.
+The \texttt{ser} function and \texttt{point} function are the same as described in
+\texttt{BIP32}.
 
 \begin{equation*}
 \begin{split}
   f(l) &=
   \begin{cases}
-    \text{HMAC-SHA256}(c_{par}, \text{0x00}\mid\mid \text{ser}_{256}(k_{par})
-    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i \geq 2^{31}\\
-    \text{HMAC-SHA256}(c_{par}, \text{ser}_{p}(\text{point}(k_{par}))
-    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i < 2^{31}
+    \texttt{HMAC-SHA256}(c_{par}, \texttt{0x00}\mid\mid \texttt{ser}_{256}(sk_i^{par}) \mid\mid \texttt{ser}_{32}(k)) & \quad \text{if } k \geq 2^{31}\\
+    \texttt{HMAC-SHA256}(c_{par}, \texttt{ser}_{p}(\texttt{point}(sk_{mas}^{par})) \mid\mid \texttt{ser}_{32}(k)) & \quad \text{if } k < 2^{31}
   \end{cases} \\
-  k_i &\equiv l \cdot k_{par} \pmod n
+  sk_i &\equiv l \cdot sk_i^{par} \pmod n
 \end{split}
 \end{equation*}
 
+The function $f(l)$ compute the partial share $l$ at index $k$, such that multiplied with the parent
+private key share $sk_i^{par}$ for the player $i$ the result is $sk_i$.
+
 \subsection{Public parent key to public child key}
-The function CKDpub compute a child extend public key from the parent extended
+The function \texttt{CKDpub} compute a child extend public key from the parent extended
 public key. It is worth noting than it is not possible to compute an
-\textit{hardened} derivation without the parent private key.
+\textit{hardened} derivation without the parent private key. It is worth noting that
+every player update the master public key for the threshold, not the public key
+share.
 
 \begin{equation*}
 \begin{split}
   f(l) &=
   \begin{cases}
-    \text{failure} & \quad \text{if } i \geq 2^{31}\\
-    \text{HMAC-SHA256}(c_{par}, \text{ser}_{p}(K_{par})
-    \mid\mid \text{ser}_{32}(i)) & \quad \text{if } i < 2^{31}
+    \texttt{failure} & \quad \text{if } k \geq 2^{31}\\
+    \texttt{HMAC-SHA256}(c_{par}, \texttt{ser}_{p}(pk_{mas}^{par}) \mid\mid \texttt{ser}_{32}(k)) & \quad \text{if } k < 2^{31}
   \end{cases} \\
-  K_i &= l \cdot K_{par}\\
-      &= l \cdot (k_{par} \cdot G)\\
-      &= (l \cdot k_{par} \bmod n) \cdot G
+  pk_{mas} &= l \cdot pk_{mas}^{par}\\
+      &= l \cdot (sk_{mas}^{par} \cdot G)\\
+      &= (l \cdot sk_{mas}^{par} \bmod n) \cdot G
 \end{split}
 \end{equation*}
 
 \subsection{Child key share derivation}
-It is asume that one of the participants $P_j$ is designated as the leader $L$.
-The function CKSD compute a child extended key share from the parent
-extended key share.
+It is asume that one of the players $P_i$ is designated as the leader $L$.
+The function \texttt{CKSD} compute a threshold child extended key share from the
+threshold parent extended key share for the derivation index $k$. It is worth
+noting that only the leader $L$ use \texttt{CKDpriv} and if the derivation
+is \textit{hardened}, i.e. if $k \geq 2^{31}$, a special case occured and a
+round of communication is needed. Let's define \texttt{CKSD} for $k < 2^{31}$:
 
-\begin{equation*}
+\begin{equation}
 \begin{split}
-  f(T) &=
+  \forall i \in P_i : f(t) &=
   \begin{cases}
-    \text{CKDpriv}(i) & \quad \text{if } L = j\\% \land i < 2^{31}
-    \text{CKDpub}(i) & \quad \text{if } L \neq j
-  \end{cases} \\
-  sk_i &= \Bigg[ \prod_{s=1}^{j} sk_{par}^{s} \Bigg] \cdot T \\
-       &= sk_{par} \cdot T \\
-  pk_i &= pk_{par} \cdot T \\
-       &= sk_{par} \cdot G \cdot T \\
-       &= \Bigg[ \prod_{s=1}^{j} sk_{par}^{s} \Bigg] \cdot G \\
-  c_i &= \text{HMAC-SHA256}(c_{par}, \text{ser}_{32}(i))
+    \texttt{CKDpriv}(k) & \quad \text{if } i = L\\% \land i < 2^{31}
+    \texttt{CKDpub}(k) & \quad \text{if } i \neq L
+  \end{cases}
 \end{split}
-\end{equation*}
+\end{equation}
 
-If the index is greather or equal than $2^{31}$
-the public key share of the participants $P_j = L$ need to be
-revealed in order to compute the public child key, a round of communication is
-needed.
+such that:
 
-% \begin{equation*}
-% \begin{split}
-%   f(T) &= \text{CKDpriv}(i) \\
-%   sk_i &= \prod_{s=1}^{j} (sk_{par}^{s} \cdot T^s) \\
-%   pk_i &= pk_{par} \cdot T \\
-%        &= sk_{par} \cdot G \cdot T \\
-%        &= \Bigg[ \prod_{s=1}^{j} (sk_{par}^{s} \cdot T^s) \Bigg] \cdot G \\
-%   c_i &= \text{HMAC-SHA256}(c_{par}, \text{ser}_{32}(i))
-% \end{split}
-% \end{equation*}
+\begin{equation}
+\begin{split}
+  sk_{i = L} &= sk_{i}^{par} \cdot t \\
+  sk_{i \neq L} &= sk_{i}^{par} \\
+  sk_{mas} &= \Bigg[ \prod_{j=1}^{i} sk_{j}^{par} \Bigg] \cdot t \\
+       &= sk_{mas}^{par} \cdot t
+\end{split}
+\end{equation}
 
-% \begin{equation*}
-% \begin{split}
-%   T &= \text{HMAC-SHA512}(c_{par}, \text{ser}_{p}(pk_{par}^{(L)})
-%   \mid\mid \text{ser}_{32}(i)) \\
-%   pk_i &= pk_{par} + (T \cdot G) \\
-%   c_i &= T_R
-% \end{split}
-% \end{equation*}
-%
-% \begin{equation*}
-% \begin{split}
-%   pk_i &= pk_{par} + T
-% \end{split}
-% \end{equation*}
+and then $\forall i \in P_i$:
+
+\begin{equation}
+\begin{split}
+  pk_{mas} &= pk_{mas}^{par} \cdot t \\
+       &= (sk_{mas}^{par} \cdot G) \cdot t \\
+       &= \Bigg[ \prod_{j=1}^{i} sk_{j}^{par} \Bigg] \cdot G
+\end{split}
+\end{equation}
+
+The chain code is updated for each player at each derivation index. The derivation
+does not depend on the secret key because the chain code must remain deterministic
+and have same value for each player, without requiring communication round.
+
+\begin{equation}
+\begin{split}
+  c_i &= \texttt{HMAC-SHA256}(c_i^{par}, \texttt{ser}_{32}(k))
+\end{split}
+\end{equation}
+
+If the index $k \geq 2^{31}$ the new master public key, only calculable by the
+master player $L$, must be revealed to other players. A round of communication is
+then needed to continue de derivation.
+
+In this threshold HD scheme only one private share change at each derivation.
+In other workds, the master private share is derived either with public information
+or with private information, i.e. \textit{hardened} derivation. If the derivation
+is private, then a communication round between the players is necessary, more
+specificly we asume that a secure broadcast channel is open from the master player
+to other players.
+
+This scheme is sufficient for the payment channels, a threshold key used for
+the $\texttt{Multisig}_i$ address with a root derivation path \texttt{m/44'/0'/a'/0'}
+is negociated at the opening of the channel (variable \texttt{a} is related to the channel
+account number between the client and the provider as shown in the paper).
+Then the index \texttt{i} in the paper is used to derive each addresses without
+require any communication. It is worth noting that the root derivation path can
+also be simplify at \texttt{m/a'} or even \texttt{m/} because the compatibility with
+a standard wallet is not anymore a requirement. Noted that the version \texttt{m/a'}
+is more flexible and allows multiple channels between a client and a provider with
+only one threshold key.
+
+\subsection{Proof-of-concept implementation}
+
+A proof-of-concept implemented in Python has been made. A share can be tagged as master
+share as described previously. The result of the script is presented thereafter,
+three share are created, and the first one is tagged as the master share.
+The root threshold public key \texttt{m/} is computed and display, then individual
+shares' addresses are displayed.
+The share $s_1$ is derived with and without \textit{hardened} path,
+as expected the resulted address is different.
+The master public key resulting of each share derivations for the path \texttt{m/44/0/1}
+is the same as computing the private key with all individual secret shares and
+getting the associated address, as expected. To note that only the master individual
+address for \texttt{m/} and \texttt{m/44/0/1} has changed.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+=== Threshold addresses ===
+Master root public key m/   : 1BF5ZpQMCg3eGDEm51rkiwcKR12UnFu
+
+*** Individual addresses m/ ***
+s1: 1tRFxbAfKKowtqrSC3bVUi491hTXqg1
+s2: 16uCytSc9oAJyi5FbxmH6NyTJuYkCLj
+s3: 1TcYLZUZYd86AFaT58tzFGBW1BVVw7K
+
+*** Hardened derivation for one share ***
+s1 m/44/0/1  : 128PvDGSbZuNpz1zG1Mh1fjJFN3eNaTb
+s1 m/44/0/1' : 12883vUsA2gyCAcSNogGUMFuCJsrj58
+
+*** Master public key m/44/0/1 ***
+s1: 128PvDGSbZuNpz1zG1Mh1fjJFN3eNaTb
+s2: 128PvDGSbZuNpz1zG1Mh1fjJFN3eNaTb
+s3: 128PvDGSbZuNpz1zG1Mh1fjJFN3eNaTb
+
+Master public key m/44/0/1 : 128PvDGSbZuNpz1zG1Mh1fjJFN3eNaTb
+
+*** Individual addresses m/44/0/1 ***
+s1: 1nNL1gozCk4J1agV667kJFmsyu4RvF5
+s2: 16uCytSc9oAJyi5FbxmH6NyTJuYkCLj
+s3: 1TcYLZUZYd86AFaT58tzFGBW1BVVw7K
+  \end{minted}
+	\caption{Result of using threshold HD wallet}
+	\label{lst:testThresholdHDMainRes}
+\end{listing}
+
+\begin{listing}
+  \pythonfile[firstline=252,lastline=295]{02-main/listings/address.py}
+	\caption{Demonstration of using threshold HD wallet}
+	\label{lst:testThresholdHDMain}
+\end{listing}
+
+A share is composed of four main information: (i) the secret share, (ii) the chain
+code, (iii) the tag for the master share, and (iv) the threshold public key. The
+threshold public key address can be set after computation. The derive function
+\texttt{d} derives with \texttt{CKDpub} or \texttt{CKDpriv} depending on the
+master tag and return a new share for a given index. The path derivation function
+\texttt{derive} take a path and generate the chain of shares. In this Implementation,
+if a share not tagged as master try to derive a path with an \texttt{hardened} index,
+an exception is raised and the proccess stops. But in real world case,
+a communication process must take place to complete the derivation.
+
+\begin{listing}
+  \pythonfile[firstline=163,lastline=230]{02-main/listings/address.py}
+	\caption{Construction of a share for a threshold HD wallet}
+	\label{lst:testThresholdHDShare}
+\end{listing}
 
 
 % -----------------------------------------------------------------------------
