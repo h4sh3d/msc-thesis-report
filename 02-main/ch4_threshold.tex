@@ -844,4 +844,45 @@ a communication process must take place to complete the derivation.
 % -----------------------------------------------------------------------------
 \section{Threshold deterministic signature}
 
-How to use an HMAC function in threshold mode to have deterministic $k$ for signature.
+One of the simplest way to compromise the private key in \gls{ecdsa} is to select
+a weak pseudo random number generator for $k$ or even worst, select a static value
+for $k$. This problem already append to Sony in December 2010 when a group of
+hacker calling itself \textit{fail0verflow} announced recovery of the \gls{ecdsa}
+private key used to sign software for the PlayStation 3.
+
+Given two signatures $(r, s)$ and $(r, s')$ employing the same unknown $k$ for
+different messages $m$ and $m'$. Let's define $x$ as the private key, $z$ as the
+hash of $m$ and $z'$ of $m'$, an attacker can calculate:
+
+\begin{equation*}
+\begin{split}
+  s &\equiv k^{-1} (z + rx) \pmod n \\
+  s' &\equiv k^{-1} (z' + rx) \pmod n \\
+  s - s' &\equiv k^{-1} (z + rx) - k^{-1} (z' + rx) \pmod n \\
+         &\equiv k^{-1} (z - z') \pmod n \\
+  k &\equiv \frac{z - z'}{s - s'} \pmod n \\
+  x &\equiv \frac{sk - z}{r} \pmod n
+\end{split}
+\end{equation*}
+
+But this issue can be prevented by deterministic generation of $k$, as described
+by the RFC 6979 \cite{rfc6979}. The random value $k$ can be generated deterministicly
+by using an \texttt{HMAC} function such that the parameters are the private key and the
+message to sign.
+
+The other positive point is that signatures for the same key paire and the same
+message are deterministic, i.e. if we sign multiple times the same message, the
+signature remain the same. This is aslo a big advantage in Bitcoin to help preventing
+transaction malleability. The deterministic signature construction can also be applied
+to the threshold scheme with the same properties.
+
+\begin{equation*}
+\begin{split}
+  k_1 &= \texttt{HMAC}(m, x_1) \\
+  k_2 &= \texttt{HMAC}(m, x_2) \\
+  k &= k_1k_2 \mod n
+\end{split}
+\end{equation*}
+
+The values $k_1$ and $k_2$ remain secret as well as the value $x_1$ and $x_2$ but
+the signature will always be the same for the given message and the threshold key.
