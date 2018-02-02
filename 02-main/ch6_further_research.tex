@@ -115,8 +115,30 @@ outside, this question can be deepened.
 % -----------------------------------------------------------------------------
 \section{More generic threshold scheme}
 
-% Implementing a more generic scheme as describe in paper \cite{10.1007/BFb0052253, 10.1007/978-3-642-27954-6_20}
+As previously mentionned, research have been done to generalize and find an optimal
+$(t, n)$ threshold in \gls{ecdsa} \cite{10.1007/BFb0052253, 10.1007/978-3-642-27954-6_20}.
+These papers base their work on the scheme chosen by the implementation, so a
+deeper analysis could be performed to assess the needed changes to adapt the current
+implementation to a generic threshold.
 
+% -----------------------------------------------------------------------------
 \section{Schnorr signatures}
 
-% Analyse Schnorr signatures for an application on payment channels
+In the paper \say{Efficient Identification and Signatures for Smart Cards} published
+in CRYPTO 1989, C.P. Schnorr propose the \say{Schnorr signature algorithm}
+\cite{10.1007/0-387-34805-0_22}.
+The Schnorr signature is considered the simplest digital signature scheme to
+be provably secure in a random oracle model \cite{Bellare:1993:ROP:168588.168596,
+10.1007/978-3-642-29011-4_33}. Thus, Bitcoin developers and
+researchers have a strong interest for this specific scheme since some years now.
+Schnorr signatures could greatly reduce the size of the signaure from 65 bytes (\gls{ecdsa}
+in \texttt{DER} format) to 40 bytes.
+
+With the arrival of SegWit, it is now possible to have script version, thus it is
+more easy to indroduce new \texttt{OP\_CODE} and so introduce a new signature validation
+scheme. However, this will not invalidate the present work and researches because
+of the specific nature of its application.
+
+Nevertheless, Schorr signatures are tipped to be the next scheme used in Bitcoin
+and maybe in other crypto-currencies. Further research could be done to find a
+protocol that fulfill the requirements defined for payment channels optimization.
