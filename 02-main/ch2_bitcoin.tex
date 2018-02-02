@@ -124,7 +124,7 @@ the funds will be spend, and an output refers to an address where the funds will
 go. An input points to another transaction output who has not been used already.
 Inputs and outputs are links, to spend funds the user need to control addresses
 where unspend outputs are present. These unspend outputs are called \texttt{UTXOs}
-and represent the total amount owned by a user.
+and represent the total amount own by a user.
 
 \begin{figure}[H]
 	\centering
@@ -148,6 +148,11 @@ available in one \texttt{UTXO}. So, the first output is the user who will receiv
 the funds, with the amount transfered, and the second output is an other address
 owned by the sender to gather the change, i.e. the remaining amount.
 
+As blocks, transactions have identifier. These identifiers are created in the same
+way as blocks, by taking the double hash of the data, i.e. the signed transaction.
+That means that, in the original design, a transaction does not have its final
+transaction identifier (TXID) before she is completely signed (every inputs).
+
 \subsection{Transaction fees}
 
 The sum of all inputs in a transaction must correspond to the sum of all the values
@@ -160,16 +165,76 @@ block---without inputs, where a regulated amount of new coins is created plus th
 total amount of fees collected in all the included transactions. A miner will therefore
 select the transactions that pay the more fees in relation to the amount of work needed
 to validate them. Fees are calculated in relation to the size of the transaction
-in bytes, an raio of fee per byte is then selected to find the fee for a transaction.
+in bytes, an ratio of fee per byte is then selected to find the fee for a transaction.
+
+\subsection{Scripting language}
+
+As described before, \texttt{UTXO}s, so outputs, are related to addresses and a proof
+of ownership is required to spend an \texttt{UTXO}. To achieve this, the Bitcoin
+protocol use digital signatures. To spend an \texttt{UTXO}, a valid signature for
+to the address, and so the public key, is required and to sign a transaction the
+private key is required. Thus, while signing a transaction corresponding to the
+right address it is possible to prove that the user own the address. But the
+protocol does not just require signatures and public keys, conditions to
+\textit{unlock} an \texttt{UTXO} are structured in scripts. Bitcoin has a stack
+based script language called \say{Bitcoin Script}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.73\columnwidth]{stackBased}
+	\captionsource{Example of simple Bitcoin script program execution}
+  {Example of simple Bitcoin script program execution}
+	{\url{https://github.com/bitcoinbook/bitcoinbook/blob/second_edition/ch06.asciidoc}}
+	\label{fig:stackBased}
+\end{figure}
+
+The list of all the \texttt{OP\_CODES} available in the Bitcoin script language is
+in the documentation. Among them, \texttt{OP\_CHECKSIG} to verify a signature given
+a signature and a public key onto the stack, \texttt{OP\_IF, OP\_ELSE, OP\_ENDIF} to
+create execution branch given a boolean onto the stack, \texttt{OP\_DUP} to duplicate
+the value onto the stack, or \texttt{OP\_HASH160, OP\_SHA256} to compute hashes of
+values onto the stack.
+
+Each input and output have a script. For an output the script correspond to the
+requirement to be fulfilled to be allowed to spend it. An address is the result of
+the public key hashed with a \texttt{SHA256} and then hashed with a \texttt{RIPEMD160}
+encoded with a checksum in a more human readable format. When an address is given,
+a user can decode the human readable format to retreive the hash data and create
+an output script called \gls{p2pkh}. With the script, the address can be retreived,
+and given the address and the script, only the user who own the private key
+corresponding will be able to sign the transaction and spend the funds. The user
+owning the address can create a transaction such as an input points to the \texttt{UTXO}.
+To unlock the funds, the user needs to sign the transaction and give the signature
+with the public key in the input's unlocking script. A miner, before including a
+transaction in a candidate block, validate all the inputs. He needs to check if the
+pointed output is realy an \texttt{UTXO} and execute the locking script with the
+unlocking script. To do so, both scripts are concatenated with the unlocking script
+first and executed (as shown if Figure~\ref{fig:lockUnlock}).
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{lockUnlock}
+	\captionsource{Example of pay to public key hash script}
+  {Example of pay to public key hash script}
+	{\url{https://github.com/bitcoinbook/bitcoinbook/blob/second_edition/ch06.asciidoc}}
+	\label{fig:lockUnlock}
+\end{figure}
+
+This script in Figure~\ref{fig:lockUnlock}, when executed, will put the signature
+onto the stack, then the public key, the public key will be duplicate and the
+public key ontop of the stack will be hashed, the public key hash present in the
+locking script is put ontop of the stack and the two first element ontop of the
+stack will be compare. If the comparison failed, the script will failed and the
+transaction will be rejected as invalid. If the test pass, the signature will
+be check with the two remaining parameter onto the stack, the public key and the
+signature. If the signature is valid, the value \texttt{True} is put onto the
+stack, otherwise the value \texttt{False} is put onto the stack. If the value
+\texttt{True} is present onto the stack at the end of the script the transaction
+is valid, otherwise the transaction is invalid.
 
 \subsection{Segregated witness}
 
 % -- Your text goes here --
-
-\subsection{Scripting language}
-
-% -- Your text goes here --
-Locking script, unlocking script
 
 % -----------------------------------------------------------------------------
 \section{Scalability of Bitcoin}
