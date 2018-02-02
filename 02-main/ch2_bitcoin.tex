@@ -4,9 +4,9 @@
 The Bitcoin ecosystem is composed of multiple actors. Users of the network access
 information via wallets in their laptop or mobile phone. These users can see the amount
 present in their addresses. An address is the representation of a public key, herself
-being the representation of a private key. An address is own by a user if this user
+being the representation of a private key. An address is owned by a user if this user
 has in his possession the associated private key. Users can transfer funds from some
-of their addresses to other addresses own by other users or theirself. When funds
+of their addresses to other addresses owned by other users or theirself. When funds
 are transfered a transaction is created and send to the network. The network is
 composed by nodes and these nodes take care of its proper functioning. Some of these
 nodes are called miners, they listen to new transactions and try to include them into
@@ -111,11 +111,56 @@ to the Merkle root registered in the block's header.
 % -----------------------------------------------------------------------------
 \section{Transactions}
 
-% -- Your text goes here --
+Transactions allow users to move Bitcoins from an address to another and they create
+the content of the Bitcoin's blockchain. In Bitcoin, the blockchain does not store a
+balance for each user, the blockchain keeps only the history of all transactions that
+have been made since the begining.
 
 \subsection{A list of inputs \& outputs}
 
-% -- Your text goes here --
+A transaction is composed of a list of inputs and a list of outputs. In other words,
+where the Bitcoins come from and where they go. An input refers to an address where
+the funds will be spend, and an output refers to an address where the funds will
+go. An input points to another transaction output who has not been used already.
+Inputs and outputs are links, to spend funds the user need to control addresses
+where unspend outputs are present. These unspend outputs are called \texttt{UTXOs}
+and represent the total amount owned by a user.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\columnwidth]{utxosChain}
+	\captionsource{A chain of transactions where inputs and outputs are linked}
+  {A chain of transactions where inputs and outputs are linked}
+	{\url{https://github.com/bitcoinbook/bitcoinbook/blob/second_edition/ch02.asciidoc}}
+	\label{fig:utxosChain}
+\end{figure}
+
+Each input is attached to a value (the value specified in the output to which the
+input points). The sum of all inputs in a transaction must correspond to the sum
+of all the values specified in the outputs, as in a dual entry accounting. So an
+input must be spend entirely.
+
+So, the most simple transaction is composed of one input and one output with the same
+amount of money in and out.
+However, the most standard transaction is composed of one input, refering from where the
+funds come from, and two outputs. Indeed, it is very rare to have the right amount
+available in one \texttt{UTXO}. So, the first output is the user who will receive
+the funds, with the amount transfered, and the second output is an other address
+owned by the sender to gather the change, i.e. the remaining amount.
+
+\subsection{Transaction fees}
+
+The sum of all inputs in a transaction must correspond to the sum of all the values
+specified in the outputs, yes but if the sum of all outputs is lower than the sum
+of the inputs, the difference is implicitly considered as a fee (as shown in
+Figure~\ref{fig:utxosChain}.) At the beginning no fee was required, but today a
+transaction will not be included in a block without paying fees. A miner, when he
+find a block, can create a special transaction---the first transaction in the
+block---without inputs, where a regulated amount of new coins is created plus the
+total amount of fees collected in all the included transactions. A miner will therefore
+select the transactions that pay the more fees in relation to the amount of work needed
+to validate them. Fees are calculated in relation to the size of the transaction
+in bytes, an raio of fee per byte is then selected to find the fee for a transaction.
 
 \subsection{Segregated witness}
 
@@ -125,10 +170,6 @@ to the Merkle root registered in the block's header.
 
 % -- Your text goes here --
 Locking script, unlocking script
-
-\subsection{Transaction fees}
-
-% -- Your text goes here --
 
 % -----------------------------------------------------------------------------
 \section{Scalability of Bitcoin}
