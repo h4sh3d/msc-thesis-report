@@ -234,7 +234,36 @@ is valid, otherwise the transaction is invalid.
 
 \subsection{Segregated witness}
 
-% -- Your text goes here --
+\gls{segwit} is the \gls{bip} 141 that propose to change the transaction structure
+in order to fix transaction malleability, add script versionning, and improve other
+aspects \cite{SegWit, SegWitBIP}. In fact, \gls{segwit} change the way outputs are
+structured, the malleability is fixed only if all inputs use \gls{segwit}. A
+transaction can have \gls{segwit} inputs and non-\gls{segwit} inputs at the same
+time.
+
+\begin{quote}
+  This BIP defines a new structure called a \say{witness} that is committed to
+  blocks separately from the transaction merkle tree. This structure contains
+  data required to check transaction validity but not required to determine
+  transaction effects. In particular, scripts and signatures are moved into this
+  new structure.
+
+  The witness is committed in a tree that is nested into the block's existing
+  merkle root via the coinbase transaction for the purpose of making this BIP
+  soft fork compatible. A future hard fork can place this tree in its own branch.
+\end{quote}
+
+With a \gls{segwit}, a transaction have two TXID. The first is determine without
+all the witness data, so it is deterministic when the transaction is created,
+before any signature. The second one is related to the witness data. This fix
+the transaction malleability. The second big change is the way the size for the
+fees are calculated. The transaction weight \texttt{Tx Weight} becomes
+$\texttt{Base Tx} * 3 + \texttt{Total Size}$ where \texttt{BaseTx} is the size
+without the witness data and \texttt{Total Size} is the serialized transaction
+with all the data, including the witness data.
+The fees are now calculated with the virtual transaction size such as virtual
+size is equal to $\texttt{Tx Weight} / 4$. Thus, the weight of the witness data
+in the calculus of the fees is reduced.
 
 % -----------------------------------------------------------------------------
 \section{Scalability of Bitcoin}
