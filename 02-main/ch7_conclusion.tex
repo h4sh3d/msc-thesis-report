@@ -1,6 +1,22 @@
 \chapter{Conclusions}
 \label{chap:conclusions}
 
+Basics mechanisms of Bitcoin have been explain to introduce two major issues in
+Bitcoin today, i.e. the scalability problem and the latency problem.
+These issues already have existing drafted solutions like consensus changes or
+payment channel. Payment channels are not new to Bitcoin and multiple implementations
+of the Lightning Network specification already exist. A other scheme, with different
+capabilities, is proposed to handle a specific context explain in the white paper.
+This scheme can be improve with threshold cryptography by reducing the size of
+the transactions. This reduction is done by replacing the multi-signature script
+in Bitcoin by a single signature computed with threshold cryptography. The
+threshold scheme is analysed and adapted to \gls{ecdsa} before been implemented
+inside the existing library used in Bitcoin-core implementation, the library
+\texttt{secp256k1}. Finally, further research about payment channels, Bitcoin,
+and threshold signature scheme are exposed.
 
-% -- Your text goes here --
-\lipsum[1-2]
+The Bitcoin payment channel implementation will be released in open source soon
+and testing will begin in the next months. The threshold implementation will be
+part of a current project comprising the creation of a open BTM machine using
+payment channel to withdraw cash money and threshold signature to buy crypto-coins
+to avoid storing full private keys on the machine.

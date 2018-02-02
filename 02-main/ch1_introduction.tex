@@ -1,41 +1,50 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
-What is Bitcoin? why do we need it? \cite{crypto-2001-1592, DBLP:conf/acns/GennaroGN16, Paillier:1999:PCB:1756123.1756146,
-Goldfeder2015SecuringBW, Bellare:1993:ROP:168588.168596}
+Bitcoin is a decentralized peer-to-peer currency that allow users to to pay for
+things electronically, if both parties are willing. Their exist thousands of other
+crypt-currencies, but only some of them are really interesting in a political,
+economical or technical point of view. We can also mention Ethereum, ZCash, or Monero
+for expemple.
+Bitcoin was created by a pseudonymous software developer going by the name of
+Satoshi Nakamoto in 2008, as an electronic payment system based on mathematical proof.
+The idea was to produce a means of exchange, independent of any central authority,
+that could be transferred electronically in a secure, verifiable and immutable way.
+The blockchain is the output of this secure, verifiable and immutable mathematical proof.
 
-ECDSA is the signature scheme used by Bitcoin to sign transactions. A standard transaction
-is constituted of a single signature corresponding to the address where the Bitcoins come
-from. But sometimes we need more complex management for locking funds. To address the
-limitation of a single signature, Bitcoin introduced a new OP\_CODE named CHECKMULTISIG with
-a new standard script. With this standard script, it is now possible to spend Bitcoin to an
-address that requires a minimum of m signatures in n authorised signatories and extend the
-capability of Bitcoin to lock funds in a more complex way.
-
-However, some issues appear. The way the script works requires exposing all the public keys
-when an output is signed and this increases the transaction size enormously, which implies
-bigger fees. All the signatures are, obviously, present with the public keys in the transaction
-script, which implies that we can know which public keys signed the transaction. And there
-is some limitation, due to the script size limit, the maximum number of authorised signatories
-is 15. All these limitations mean that we cannot imagine a complex organization nor structure
-with the multi-signature script for the moment.
-
-To address this limitation, a group of researchers published a first paper  in 2015 and a
-second one  in 2016 describing the way to achieve a threshold scheme with DSA and ECDSA.
-Today, there is no well-known implementation ready for production purposes even though
-industries need it. The principal purpose of this thesis is to provide a clear, well
-documented C library, based on the internal ECDSA library present in bitcoin-core.
-
-The largest challenge in Bitcoin for the coming years is scalability. Currently, Bitcoin enforces
+Yet, the largest challenge in Bitcoin for the coming years is scalability. Currently, Bitcoin enforces
 a block-size limit which is equivalent to only some transactions per second on the network. This
-is not sufficient in comparison to big payment infrastructures such as VISA, which allows tens of
+is not sufficient in comparison to big payment infrastructures, which allows tens of
 thousands of transactions per second and even more in peak times such as Christmas. To address this,
-some proposals modifying the transaction structure (like SegWit), some proposals modifying the
+some proposals modifying the transaction structure (like SegWit), some proposals also modifying the
 block-size limit (such as SegWit2x) and others creating a second layer based on top of the Bitcoin
-protocol (like Lightning Network) exist. In the same idea of the Lightning Network, Bity is working
-on an implementation of a one-way payment channel. A one-way payment channel allows two parties to
-transact over the blockchain while minimizing the number of transactions needed on the blockchain
-in a secure and trustless way. This kind of channel needs multi-signature addresses which might be
-improved with the threshold scheme. The second part of the thesis is to co-write the channel white
-paper and add a chapter of how to improve it with the threshold scheme (better privacy, cheaper
-transaction, less limitations).
+protocol (like the Lightning Network) exist. In the same idea of the Lightning Network,
+an new implementation of a one-way payment channel is proposed for special contexts.
+A one-way payment channel allows two parties to transact over the blockchain while
+minimizing the number of transactions needed on the blockchain in a secure and trustless way.
+This kind of channel needs multi-signature addresses which might be improved with a threshold scheme.
+Finding a threshold scheme that fulfill the requirements for the payment channel
+is not trivial. A threshold scheme is analyze in this thesis and its implementation
+is intergrated into the standard Bitcoin crypto-library.
+
+% ECDSA is the signature scheme used by Bitcoin to sign transactions. A standard transaction
+% is constituted of a single signature corresponding to the address where the Bitcoins come
+% from. But sometimes we need more complex management for locking funds. To address the
+% limitation of a single signature, Bitcoin introduced a new OP\_CODE named CHECKMULTISIG with
+% a new standard script. With this standard script, it is now possible to spend Bitcoin to an
+% address that requires a minimum of m signatures in n authorised signatories and extend the
+% capability of Bitcoin to lock funds in a more complex way.
+%
+% However, some issues appear. The way the script works requires exposing all the public keys
+% when an output is signed and this increases the transaction size enormously, which implies
+% bigger fees. All the signatures are, obviously, present with the public keys in the transaction
+% script, which implies that we can know which public keys signed the transaction. And there
+% is some limitation, due to the script size limit, the maximum number of authorised signatories
+% is 15. All these limitations mean that we cannot imagine a complex organization nor structure
+% with the multi-signature script for the moment.
+%
+% To address this limitation, a group of researchers published a first paper  in 2015 and a
+% second one  in 2016 describing the way to achieve a threshold scheme with DSA and ECDSA.
+% Today, there is no well-known implementation ready for production purposes even though
+% industries need it. The principal purpose of this thesis is to provide a clear, well
+% documented C library, based on the internal ECDSA library present in bitcoin-core.
