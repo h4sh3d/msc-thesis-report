@@ -268,7 +268,16 @@ in the calculus of the fees is reduced.
 % -----------------------------------------------------------------------------
 \section{Scalability of Bitcoin}
 
-% -- Your text goes here --
+To answer the problem of scalability, improvements on the consensus layer has been
+made and will continue to appear. But modifying the consensus layer is not easy,
+usually soft forks are needed to not induce hard forks and the process can be
+painfull. With the lastest big improvement on-chain \gls{segwit}, all the prerequisites,
+such as fixing malleability, to construct a robust layer-two application are fulfilled.
 
-\subsection{On-chain improvements}
 \subsection{Layer-two applications}
+
+The layer-two is an architectural concept where a blockchain is used as a source
+of truth and only for resolving disagreements. Usually the construction that use
+this architectural concept are called payment channels or mircopayment channels.
+These channels enables scalability because they reduce the amount of transactions
+needed on the blockchain if two users often exchange.
