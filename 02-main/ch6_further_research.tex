@@ -88,11 +88,29 @@ has been made since.
 % -----------------------------------------------------------------------------
 \section{Hardware wallets}
 
-% Securing bitcoin with two Hardware wallet
-% - how to integrate threshold HDWallet
-% - import/export and visualization of threshold keys
-% - integrate the master share tag in the DER key format or not ?
+Hardware wallet devices have become increasingly popular with people and society. They
+promise to keep the keys safe and, at least, expose less the keys thanks to a
+dedicated and controlled environment. Thus, keys can be stored safly and, in an
+organisation for exemple, multiple hardware wallets can be used to create a
+multi-signature and control the funds.
 
+The development of this threshold library, even if it is just a 2-out-of-2
+multi-signature script equivalent, can be used to create real threshold hardware
+wallet devices. Two hardware wallet devices can be setup together to create a
+multi-user setup, or an hardware wallet device can be couple with a phone to secure
+a lightweight wallet.
+
+Usually, when a new Bitcoin wallet is created, a list of words called mnemonic is
+shown to the user as a backup of his wallet key. The mnemonics are between twelve
+and twenty-four and each word represent 11 bits of the primary seed \cite{Mnemonic},
+for a threshold key it is not possible to represent all the data in the same way
+given the size of the key (near 4.5 Kb). A other way to display and transmit these
+information is needed to increase usability. Further research could be done to find
+a better way to represent and display a threshold key.
+
+The master tag is not included in the \texttt{DER} schema. Is the key itself responsible
+to store this information or this information is a part of the setup and can be stored
+outside, this question can be deepened.
 
 % -----------------------------------------------------------------------------
 \section{More generic threshold scheme}
