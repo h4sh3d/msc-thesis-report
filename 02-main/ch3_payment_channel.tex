@@ -1,7 +1,50 @@
-\chapter{Payment channels, a micro-transaction network}
+\chapter{Payment channels, a micropayment network}
 \label{chap:paymentChannels}
 
-% -- Your text goes here --
+Payment channels or micropayment channels, as mentioned previously, are one part
+of the scalability solution. Thus, it exists multiple propositions to construct such
+structures. In order to have a better understanding of differences, strengths, and
+weaknesses of some of them, a classification is done and properties are defined.
+
+\begin{definition}[trustless]
+  A channel is trustless if and only if the funds' safety for every players
+  $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$
+  at each steps $\mathcal{S}$ of the protocol does not depend on
+  players' $\Delta p = \mathcal{P} - p_i$ behavior.
+\end{definition}
+
+\begin{definition}[optimal]
+  A channel is optimal if and only if the number of transaction $\mathcal{T}(\mathcal{C})$
+  needed to claims the funds for a given constraint $\mathcal{C}$ is equal to
+  the number of moves $\mathcal{M}(\mathcal{C})$ needed to satisfy the constraint
+  at any time without breaking the first definition.
+
+  For a containt $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
+  refunding $\mathcal{P}_1$ where the amount $M \geq 0$ of $\mathcal{P}_2$ require
+  $\mathcal{M}(\mathcal{C}) \geq 2$ because of the intermediary revokation's state.
+  An optimal scheme require $\mathcal{T}(\mathcal{C}) = \land\mathcal{M}(\mathcal{C}) = 2$.
+\end{definition}
+
+\begin{definition}[endless]
+  A channel is endless if and only if there is no predetermined lifetime at the setup.
+\end{definition}
+
+\begin{definition}[pulseless]
+  A channel is pulseless if and only if there is no need to refresh or close the
+  channel on-chain while at least one player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
+  \dots, \mathcal{P}_n\}$ where the available amount to send is $A(p_i) > 0$. By
+  definition a pulseless channel must be also endless.
+\end{definition}
+
+\begin{definition}[undelayed]
+  A channel is undelayed if and only if each player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
+  \dots, \mathcal{P}_n\}$ can trigger their settlement at any time.
+\end{definition}
+
+These definitions are used in the following to compare different commonly exposed
+payment channel constructions. It is worth noting that the list does not contain all
+the payment channel propositions and maybe some of them are missing. However, the
+list contain a fairly good representation of the different types existing.
 
 \minitoc
 
@@ -17,7 +60,26 @@ more optimize than two unidirectional channels.
 
 \subsection{Unidirectional}
 
-\subsubsection{Spillman-style payment channels}
+In unidirectional channels there is a payer, hereinafter also player one or client, and
+a payee, hereinafter also player two or provider, and it is not possible to transfer
+money back in the reverse direction into the channel.
+
+\subsubsection{Spilman-style payment channels}
+
+Spilman-style payment channels, proposed by Jeremy Spilman in 2013 \cite{SpilmanStyle},
+are the most simple construction of an unidirectional
+payment channel. They have a finite lifetime predefined at the setup phase and the client,
+i.e. the payer, cannot trigger its own refund before the end of the lifetime (but he can
+receives his funds back if the payee settle the channel before the end of the lifetime).
+The channel is one-time use, when the payer or the payee get his funds the channel is
+closed. Nor the payer or the receiver need to watch the blockchain to react to event
+during the lifetime of the channel because only the payee can broadcast a transaction,
+so the payer does not need to watch the blockchain to be safe.
+
+According to the previous definitions Spilman-style payment channels are trustless,
+assuming that a suitable solution for transaction malleability has been implemented
+\cite{BIP62, DBLP:journals/corr/AndrychowiczDMM13, DBLP:journals/corr/DeckerW14},
+optimal but not endless nor undelayed.
 
 \subsubsection{CLTV-style payment channels}
 
@@ -26,6 +88,34 @@ more optimize than two unidirectional channels.
 \subsubsection{Poon-Dryja payment channels}
 
 \subsubsection{Decker-Wattenhofer duplex payment channels}
+
+Decker-Wattenhofer duplex payment channels \cite{Decker2015fast}, also called
+\gls{dmc}, propose in 2015 bidirectional channels based on pairs of Spilman-style
+unidirectional channels. The construction has a finite lifetime predefined at the setup
+phase but can be refresh on-chain to keep the channel open with an updated state. During the
+refresh process it is possible to refilled the channel and the scheme allows payment routing
+with \gls{htlc}.
+
+Duplex payment channels are trustless and endless, but not optimal (the uncooperative close of the
+channel require $d + 2$ transactions), not pulseless (it requires a refresh transaction
+when the lifetime run over to keep the channel open), and not undelayed (without cooperation
+the funds are recover after $d + 2$ transactions with \texttt{nLockTime} values).
+
+\subsection{Summary}
+
+\begin{table}[h]
+  \begin{tabularx}{\textwidth}{ | X | l | l | l | l | l | l |}
+  \hline
+  Channel & Type & Optimal & Endless & Pulseless & Undelayed \\ \hline
+  Spilman-style & Uni & Yes & No & No & No \\ \hline
+  CLTV-style & Uni & ? & ? & ? & ? \\ \hline
+  Poon-Dryja & Bi & ? & ? & ? & ? \\ \hline
+  Decker-Wattenhofer \gls{dmc} & Bi & No & Yes & No & No \\
+  \hline
+  \end{tabularx}
+  \caption{Summary of different payment channels}
+  \label{fig:summaryPaymentChannel}
+\end{table}
 
 % -----------------------------------------------------------------------------
 \section{Our one-way channel}
