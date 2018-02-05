@@ -74,18 +74,51 @@ receives his funds back if the payee settle the channel before the end of the li
 The channel is one-time use, when the payer or the payee get his funds the channel is
 closed. Nor the payer or the receiver need to watch the blockchain to react to event
 during the lifetime of the channel because only the payee can broadcast a transaction,
-so the payer does not need to watch the blockchain to be safe.
+so both do not need to watch the blockchain to be safe.
+It is worth noting that, without a proper fix to transaction malleability
+\cite{SegWitBIP, BIP62, DBLP:journals/corr/AndrychowiczDMM13, DBLP:journals/corr/DeckerW14},
+this scheme is not secure.
 
-According to the previous definitions Spilman-style payment channels are trustless,
-assuming that a suitable solution for transaction malleability has been implemented
-\cite{BIP62, DBLP:journals/corr/AndrychowiczDMM13, DBLP:journals/corr/DeckerW14},
-optimal but not endless nor undelayed.
+According to the previous definitions, Spilman-style payment channels are trustless
+(assuming that a suitable solution for transaction malleability has been implemented),
+and optimal but not endless nor undelayed.
 
 \subsubsection{CLTV-style payment channels}
 
+Introduced in 2015, CLTV-style payment channels are a solution to malleability problem
+in Spilman-style payment channels. With the new \texttt{OP\_CODE} check locktime verify
+(\texttt{OP\_CHECKLOCKTIMEVERIFY}), redefining the \texttt{OP\_NOP2}, it is possible to
+enforce the non-spending of a transaction output until some time in the future. With
+\texttt{OP\_CHECKLOCKTIMEVERIFY} a transaction output can enforce the spending transaction
+to have a \texttt{nLockTime} latter or equal to the specified value in the script \cite{BIP65}.
+
+Instead of creating a funding transaction and a refund transaction vulnerable to
+transaction malleability attacks, the funding transaction output is created with a
+script that allows the provider and the client to spend the funds with co-operation or,
+after a locktime, the client can spend the funds without the co-operation of the
+provider.
+
+CLTV-style payment channels have the same properties than Spilman-style payment channels
+following the previous definition, but are not subject to transaction malleability attacks.
+
+\begin{listing}
+  \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
+IF
+    <provider pubkey> CHECKSIGVERIFY
+ELSE
+    <expiry time> CHECKLOCKTIMEVERIFY DROP
+ENDIF
+<client pubkey> CHECKSIG
+  \end{minted}
+	\caption{Locking script (scriptPubKey) with \texttt{CHECKLOCKTIMEVERIFY}}
+	\label{lst:scriptPubKeyCLTV}
+\end{listing}
+
 \subsection{Bidirectional}
 
-\subsubsection{Poon-Dryja payment channels}
+In a bidirectional channel $\mathcal{C}$, the player $A$ and the player $B$ can exchange
+funds in direction $\mathcal{C}_{AB}$ and $\mathcal{C}_{BA}$. A bidirectional channel
+can be a specific scheme or a pairing of existing unidirectional channels.
 
 \subsubsection{Decker-Wattenhofer duplex payment channels}
 
@@ -101,16 +134,25 @@ channel require $d + 2$ transactions), not pulseless (it requires a refresh tran
 when the lifetime run over to keep the channel open), and not undelayed (without cooperation
 the funds are recover after $d + 2$ transactions with \texttt{nLockTime} values).
 
+\subsubsection{Poon-Dryja payment channels}
+
+Poon-Dryja payment channels, also called Lightning Network, is a proposed implementation
+of \gls{htlc} with bidirectional payment channels which allows payments to be securely
+routed across multiple peer-to-peer payment channels \cite{poon2016bitcoin}.
+
+Their scheme is trustless (assuming that \gls{segwit} has been implemented), endless,
+pulseless, and undelayed but not optimal if the channel is closed without co-operation.
+
 \subsection{Summary}
 
 \begin{table}[h]
   \begin{tabularx}{\textwidth}{ | X | l | l | l | l | l | l |}
   \hline
-  Channel & Type & Optimal & Endless & Pulseless & Undelayed \\ \hline
+  Channel & Type & Optimal & Endless & Pulseless & Undelayed \\ \hline \hline
   Spilman-style & Uni & Yes & No & No & No \\ \hline
-  CLTV-style & Uni & ? & ? & ? & ? \\ \hline
-  Poon-Dryja & Bi & ? & ? & ? & ? \\ \hline
-  Decker-Wattenhofer \gls{dmc} & Bi & No & Yes & No & No \\
+  CLTV-style & Uni & Yes & No & No & No \\ \hline
+  Decker-Wattenhofer \gls{dmc} & Bi & No & Yes & No & No \\ \hline
+  Poon-Dryja & Bi & No & Yes & Yes & Yes \\
   \hline
   \end{tabularx}
   \caption{Summary of different payment channels}
