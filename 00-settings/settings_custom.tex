@@ -10,6 +10,9 @@
 % \renewcommand{\lstlistingname}{Code}% Listing -> Algorithm
 \def\lstlistingautorefname{Alg.}
 
+% Create a new environment for breaking code listings across pages.
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
+
 \usepackage{pdfpages}
 \usepackage{emptypage}
 \usepackage{amsfonts}
