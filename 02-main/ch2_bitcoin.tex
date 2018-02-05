@@ -239,7 +239,7 @@ in order to fix transaction malleability, add script versionning, and improve ot
 aspects \cite{SegWit, SegWitBIP}. In fact, \gls{segwit} change the way outputs are
 structured, the malleability is fixed only if all inputs use \gls{segwit}. A
 transaction can have \gls{segwit} inputs and non-\gls{segwit} inputs at the same
-time.
+time. The BIP abstract explain the purpose of \gls{segwit}:
 
 \begin{quote}
   This BIP defines a new structure called a \say{witness} that is committed to
@@ -264,6 +264,46 @@ with all the data, including the witness data.
 The fees are now calculated with the virtual transaction size such as virtual
 size is equal to $\texttt{Tx Weight} / 4$. Thus, the weight of the witness data
 in the calculus of the fees is reduced.
+
+\subsection{Transaction malleability}
+
+The fact that transaction identifier depend on the hash of the serialized transaction
+while the signature does not currently cover all the data in a transaction introduce
+what is called transaction malleability. Indeed, a miner can tweak the transaction to
+change is identifier before including it into a block without invalidating it nor
+changing the claiming output conditions. This means that an unconfirmed chain of
+transactions must not be trusted (because the later transactions will depend on
+the hashes of the previous transactions.)
+
+The first way to achieve malleability is to tweak the signatures themselves. For
+every signature $(r, s)$, the signature $(r, -s \pmod n)$ is a valid signature for
+the same message. As mentioned in the Bitcoin wiki about transaction malleability:
+
+\begin{quote}
+	As of block 363724, the BIP66 soft fork has made it mandatory for all new
+	transactions in the block chain to strictly follow the DER-encoded ASN.1 standard.
+	Further efforts are still under way to close other possible malleability within
+	DER signatures.
+\end{quote}
+
+However, even if the format is standardized and enforced, signatures can still be
+changed by anyone who has access to the corresponding private keys. When a transaction
+is signed, the unlocking script (scriptSig) contains, e.g for a standard \gls{p2pkh},
+the signature and the public key. These data are present in the transaction being signed,
+but cannot be present during the signing process because they do not yet exist. This
+means that the content of unlocking scripts are not part of the signing data, but
+part of the hashing data for the TXID. By introducing an additional \texttt{OP\_CODE},
+it is possible to change the TXID without invalidating the signature.
+
+But, with \gls{segwit} activated, now the transaction malleability with signatures
+and scripts is no longer possible. As mentioned in the BIP:
+
+\begin{quote}
+	It allows creation of unconfirmed transaction dependency chains without
+	counterparty risk, an important feature for offchain protocols such as the
+	Lightning Network.
+\end{quote}
+
 
 % -----------------------------------------------------------------------------
 \section{Scalability of Bitcoin}
