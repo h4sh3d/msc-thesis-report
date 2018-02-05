@@ -4,41 +4,43 @@
 Payment channels or micropayment channels, as mentioned previously, are one part
 of the scalability solution. Thus, it exists multiple propositions to construct such
 structures. In order to have a better understanding of differences, strengths, and
-weaknesses of some of them, a classification is done and properties are defined.
+weaknesses of some of them, a classification and definitions are proposed in the
+white paper following appendices. These definitions are repeated hereinafter.
 
-\begin{definition}[trustless]
-  A channel is trustless if and only if the funds' safety for every players
+\begin{definition}[Trustless]
+  A channel is trustless if and only if the funds' safety for every player
   $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$
-  at each steps $\mathcal{S}$ of the protocol does not depend on
+  at each step $\mathcal{S}$ of the protocol does not depend on
   players' $\Delta p = \mathcal{P} - p_i$ behavior.
 \end{definition}
 
-\begin{definition}[optimal]
-  A channel is optimal if and only if the number of transaction $\mathcal{T}(\mathcal{C})$
-  needed to claims the funds for a given constraint $\mathcal{C}$ is equal to
+\begin{definition}[Optimal]
+  A channel is optimal if and only if the number of transactions $\mathcal{T}(\mathcal{C})$
+  needed to claim the funds for a given constraint $\mathcal{C}$ is equal to
   the number of moves $\mathcal{M}(\mathcal{C})$ needed to satisfy the constraint
   at any time without breaking the first definition.
 
-  For a containt $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
-  refunding $\mathcal{P}_1$ where the amount $M \geq 0$ of $\mathcal{P}_2$ require
-  $\mathcal{M}(\mathcal{C}) \geq 2$ because of the intermediary revokation's state.
-  An optimal scheme require $\mathcal{T}(\mathcal{C}) = \land\mathcal{M}(\mathcal{C}) = 2$.
+  For a constraint $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
+  refunding $\mathcal{P}_1$ requires $\mathcal{M}(\mathcal{C}) = 1$, thus
+  an optimal scheme requires $\mathcal{T}(\mathcal{C}) = \mathcal{M}(\mathcal{C}) = 1$.
+  Note: in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$ refund and settlement both
+  require $\mathcal{M}(\mathcal{C}) = 1$.
 \end{definition}
 
-\begin{definition}[endless]
+\begin{definition}[Endless]
   A channel is endless if and only if there is no predetermined lifetime at the setup.
 \end{definition}
 
-\begin{definition}[pulseless]
+\begin{definition}[Pulseless]
   A channel is pulseless if and only if there is no need to refresh or close the
   channel on-chain while at least one player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
   \dots, \mathcal{P}_n\}$ where the available amount to send is $A(p_i) > 0$. By
   definition a pulseless channel must be also endless.
 \end{definition}
 
-\begin{definition}[undelayed]
+\begin{definition}[Undelayed]
   A channel is undelayed if and only if each player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
-  \dots, \mathcal{P}_n\}$ can trigger their settlement at any time.
+  \dots, \mathcal{P}_n\}$ can trigger the process to get their money back at any time.
 \end{definition}
 
 These definitions are used in the following to compare different commonly exposed
@@ -152,19 +154,38 @@ pulseless, and undelayed but not optimal if the channel is closed without co-ope
   Spilman-style & Uni & Yes & No & No & No \\ \hline
   CLTV-style & Uni & Yes & No & No & No \\ \hline
   Decker-Wattenhofer \gls{dmc} & Bi & No & Yes & No & No \\ \hline
-  Poon-Dryja & Bi & No & Yes & Yes & Yes \\
+  Poon-Dryja & Bi & No & Yes & Yes & Yes \\ \hline
+  Shababi-Gugger-Lebrecht & Uni & No & Yes & Yes & Yes \\
   \hline
   \end{tabularx}
   \caption{Summary of different payment channels}
   \label{fig:summaryPaymentChannel}
 \end{table}
 
-% -----------------------------------------------------------------------------
-\section{Our one-way channel}
-
-% -- Your text goes here --
+This table summarize the different properties following the proposed definitions
+of the main channel schemes. The last row refers to the next presented scheme.
 
 % -----------------------------------------------------------------------------
-\section{Optimizing channels}
+\section{Our one-way channel (Shababi-Gugger-Lebrecht)}
+
+Our one-way Payment Channel for Bitcoin is a simplified version between the Lightning
+Network and \say{Yours Lightning Protocol} \cite{poon2016bitcoin, YoursLightningProtocol}.
+The scheme is specially designed for a clients to provider scenario, where the provider
+has multiple clients throught multiple channels. The aim to be cheaper as possible for
+the provider while being flexible for settle funds is core design. The white paper is following the
+appendices.
+
+A part of this thesis was devoted to write the white paper describing our channel scheme
+while working on the scheme itself. During this work, we found a possible attack, describe
+in the white paper, and we fixed it.
+
+The next step has been to analyse how it is possible to optimize the channel with
+threshold cryptography. As it is possible to see, every channel construction repose
+on a funding transaction that locks funds in a 2-out-of-2 multi-signature script.
+This funding transaction is always on-chain, so if it is possible to replace this
+script with a standard \gls{p2pkh} the gains should be interesting.
+
+% -----------------------------------------------------------------------------
+\section{Optimizing payment channels}
 
 % -- Your text goes here --
