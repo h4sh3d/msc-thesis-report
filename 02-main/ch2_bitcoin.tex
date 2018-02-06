@@ -15,17 +15,17 @@ the output, the necessary result, of the Bitcoin protocol and can be compared to
 a distributed public ledger. Nodes are software running all over the world. This
 software is maintained and improved by a group of developers present all over
 the world and for Bitcoin, the original and reference implementation is
-Bitcoin-core. Bitcoin-core allows interacting with the blockchain, and it is
+Bitcoin-core (previously referred to as bitcoind). Bitcoin-core allows interacting with the blockchain, and it is
 possible to retrieve information such as current unconfirmed transactions,
 information present in the blockchain, the amount available for an address, and
 more. Unconfirmed transactions are transactions that have not been yet included
-in the blockchain but have already been broadcasted.
+in the blockchain but have already been broadcast to the network.
 
-In the following some building blocks needed to figure out how payment channels
-works and how we can improve them with some cryptography are traveled. If you
+In the following, some building blocks needed to figure out how payment channels
+work and how we can improve them, with some cryptography, are explored. If you
 are a master of Bitcoin and you already know how blocks are created, how
 transactions are structured, how fees are calculated and how segregated witness
-works, this chapter will be just a reminder. For a further explanation, the best
+works, this chapter will just be a reminder. For further explanation, the best
 resource today is the book \say{Mastering Bitcoin} by Andreas Antonopoulos
 \cite{Antonopoulos:2014:MBU:2695500}.
 
@@ -39,27 +39,25 @@ resource today is the book \say{Mastering Bitcoin} by Andreas Antonopoulos
 % -----------------------------------------------------------------------------
 \section{The blockchain}
 
-The blockchain, as indicated by his name, is a chain of blocks. Blocks are
-created by the miners in a race to find the next valid block called the mining
-process. A block is valid if its identifier, i.e., the double hash of its
-header, is lower to the current difficulty target. It is worth noting that the
-validity of a block is based on multiple other criteria which are not exposed
-here, for further information, please refer to the book \say{Mastering Bitcoin}.
+The blockchain, as indicated by the name, is a chain of blocks. Blocks are
+created by miners in a race to find the next valid block. A block is valid if its identifier, i.e., the double hash of its
+header, is lower than the current difficulty target. It is worth noting that the
+validity of a block is based on several other criteria which are not mentioned
+here.  For further information, please refer to the book \say{Mastering Bitcoin}.
 The header of a block is composed of a version number, a creation timestamp, a
-nonce, or the difficulty target used as the boundary.
+nonce, ??or the difficulty target used as the boundary??.
 
-The difficulty target is adjusted, so a valid block is found in the network
-every ten minutes on average. Poisson process models the mining probability,
+The difficulty target is adjusted every 2016 blocks, so that on average, a valid block is found in the network every ten minutes. The probability of finding a block can be modelled as a Poisson process,
 i.e., the probability of a given number of events occurring in a fixed interval
-of time or space if these events occur with a known constant rate is independent
+of time or space, if these events occur with a known constant rate, is independent
 of the time since the last event. A miner will create a candidate block and
 compute its identifier if this identifier is lower than the current difficulty
-target then the block is valid and the miner notices the network that he found
+target then the block is valid and the miner notifies the network that he found
 the next block. Then the process starts again. If the block identifier is not
 valid, the miner can change the nonce value in the header and check with the new
-identifier. Finding the next valid block is a computation that requires an
-enormous amount of power. All the network, round the clock, keeps searching for
-the next valid block and the power of computation increase day after days.
+identifier. Enumerating these identifies to find the next valid block requires an
+enormous amount of power. All of the miners, round the clock, keep searching for
+the next valid block.
 
 \subsection{A chain of blocks}
 
