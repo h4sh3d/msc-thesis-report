@@ -1,24 +1,25 @@
 \chapter{Bitcoin, a peer-to-peer payment network}
 \label{chap:bitcoin}
 
-The Bitcoin ecosystem is composed of multiple actors. Users of the network access
-information via software on their laptop or mobile phone. These users can see the amounts
-present in their addresses. An address is the digest of a public key, which is derived
-from a private key. An address is owned by a user if this user
-has the associated private key in his possession. Users can transfer funds from some
-of their addresses to other addresses owned by other users or themselves. When funds
-are transfered a transaction is created and sent to the network. The network is
-composed of nodes and these nodes take care of its proper functioning. Some of these
-nodes are called miners, they listen to new transactions and try to include them into
-the blockchain. This blockchain is the output, the intrinsec result, of the Bitcoin
-protocol and can be compared to a distributed public ledger. Nodes are softwares
-running all over the world, these softwares are maintained and improved by a group
-of developers present all over the world and for Bitcoin, the original and reference
-implementation is Bitcoin-core. The software allows to interact with the blockchain.
-It is possible to retreive information such as current unconfirmed transactions,
-information present in the blockchain, amount available for an address, etc.
-An unconfirmed transaction is a transaction that has not been yet included into
-the blockchain.
+The Bitcoin ecosystem is composed of multiple actors. Users of the network
+access information via software on their laptop or mobile phone. These users can
+see the amounts present in their addresses. An address is the digest of a public
+key, herself being the representation of a private key. An address is owned by a
+user if this user has the associated private key in his possession. Users can
+transfer funds from some of their addresses to other addresses owned by other
+users or themselves. When funds are transferred a transaction is created and
+sent to the network. The network is composed of nodes, and these nodes take care
+of its proper functioning. Some of these nodes are called miners, they listen to
+new transactions and try to include them into the blockchain. This blockchain is
+the output, the necessary result, of the Bitcoin protocol and can be compared to
+a distributed public ledger. Nodes are software running all over the world. This
+software is maintained and improved by a group of developers present all over
+the world and for Bitcoin, the original and reference implementation is
+Bitcoin-core. Bitcoin-core allows interacting with the blockchain, and it is
+possible to retrieve information such as current unconfirmed transactions,
+information present in the blockchain, the amount available for an address, and
+more. Unconfirmed transactions are transactions that have not been yet included
+in the blockchain but have already been broadcasted.
 
 In the following some building blocks needed to figure out how payment channels
 works and how we can improve them with some cryptography are traveled. If you
