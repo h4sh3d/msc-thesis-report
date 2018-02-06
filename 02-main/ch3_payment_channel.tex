@@ -2,10 +2,11 @@
 \label{chap:paymentChannels}
 
 Payment channels or micropayment channels, as mentioned previously, are one part
-of the scalability solution. Thus, it exists multiple propositions to construct such
-structures. In order to have a better understanding of differences, strengths, and
-weaknesses of some of them, a classification and definitions are proposed in the
-white paper following appendices. These definitions are repeated hereinafter.
+of the scalability solution. Thus, it exists various propositions to construct
+such structures. To have a better understanding of differences, strengths, and
+weaknesses of some of them the author proposes a classification and definitions
+in the white paper following appendices. Those definitions are repeated starting
+now.
 
 \begin{definition}[Trustless]
   A channel is trustless if and only if the funds' safety for every player
@@ -43,10 +44,11 @@ white paper following appendices. These definitions are repeated hereinafter.
   \dots, \mathcal{P}_n\}$ can trigger the process to get their money back at any time.
 \end{definition}
 
-These definitions are used in the following to compare different commonly exposed
-payment channel constructions. It is worth noting that the list does not contain all
-the payment channel propositions and maybe some of them are missing. However, the
-list contain a fairly good representation of the different types existing.
+These definitions are used in the following to compare different commonly
+exposed payment channel constructions. It is worth noting that the list does not
+contain all the payment channel propositions and maybe some of them are missing.
+However, the list contains a fairly good representation of the different types
+existing.
 
 \minitoc
 
@@ -55,53 +57,57 @@ list contain a fairly good representation of the different types existing.
 % -----------------------------------------------------------------------------
 \section{Types of payment channel}
 
-We can distinguish two major type of channels, the unidirectional channel that allow
-one user to send money to an other user into a channel and the bidirectional channel
-that allow two users to exchange into a channel. Usualy, a bidirectional channel is
-more optimize than two unidirectional channels.
+We can distinguish two type of channels, the unidirectional channel that allows
+one user to send money to another user into a channel and the bidirectional
+channel that allow two users to exchange into a channel. Usually, a
+bidirectional channel is more optimized than two unidirectional channels.
 
 \subsection{Unidirectional}
 
-In unidirectional channels there is a payer, hereinafter also player one or client, and
-a payee, hereinafter also player two or provider, and it is not possible to transfer
-money back in the reverse direction into the channel.
+In unidirectional channels, there is a payer, in the future also player-one or
+client, and a payee, after this also player-two or provider, and it is not
+possible to transfer money back in the reverse direction into the channel.
 
 \subsubsection{Spilman-style payment channels}
 
-Spilman-style payment channels, proposed by Jeremy Spilman in 2013 \cite{SpilmanStyle},
-are the most simple construction of an unidirectional
-payment channel. They have a finite lifetime predefined at the setup phase and the client,
-i.e. the payer, cannot trigger its own refund before the end of the lifetime (but he can
-receives his funds back if the payee settle the channel before the end of the lifetime).
-The channel is one-time use, when the payer or the payee get his funds the channel is
-closed. Nor the payer or the receiver need to watch the blockchain to react to event
-during the lifetime of the channel because only the payee can broadcast a transaction,
-so both do not need to watch the blockchain to be safe.
-It is worth noting that, without a proper fix to transaction malleability
-\cite{SegWitBIP, BIP62, DBLP:journals/corr/AndrychowiczDMM13, DBLP:journals/corr/DeckerW14},
-this scheme is not secure.
+Spilman-style payment channels, proposed by Jeremy Spilman in 2013
+\cite{SpilmanStyle}, are the most simple construction of a unidirectional
+payment channel. They have a finite lifetime predefined at the setup phase and
+the client, i.e., the payer, cannot trigger its refund before the end of the
+channel lifetime (but he can receive his funds back if the payee settles the
+channel before the end of the lifetime). The channel is one-time use. When the
+payer or the payee get his funds, the canal is closing. Nor the payer or the
+receiver need to watch the blockchain to react to events during the lifetime of
+the channel because only the payee can broadcast a transaction, so both do not
+need to watch the blockchain to be safe. It is worth noting that, without a
+proper fix to transaction malleability \cite{SegWitBIP, BIP62,
+DBLP:journals/corr/AndrychowiczDMM13, DBLP:journals/corr/DeckerW14}, this scheme
+is not secure.
 
-According to the previous definitions, Spilman-style payment channels are trustless
-(assuming that a suitable solution for transaction malleability has been implemented),
-and optimal but not endless nor undelayed.
+According to the previous definitions, Spilman-style payment channels are
+trustless (assuming that a suitable solution for transaction malleability has
+been implemented), and optimal but not endless nor undelayed.
 
 \subsubsection{CLTV-style payment channels}
 
-Introduced in 2015, CLTV-style payment channels are a solution to malleability problem
-in Spilman-style payment channels. With the new \texttt{OP\_CODE} check locktime verify
-(\texttt{OP\_CHECKLOCKTIMEVERIFY}), redefining the \texttt{OP\_NOP2}, it is possible to
-enforce the non-spending of a transaction output until some time in the future. With
-\texttt{OP\_CHECKLOCKTIMEVERIFY} a transaction output can enforce the spending transaction
-to have a \texttt{nLockTime} latter or equal to the specified value in the script \cite{BIP65}.
+Introduced in 2015, CLTV-style payment channels are a solution to malleability
+problem in Spilman-style payment channels. With the new \texttt{OP\_CODE} check
+locktime verify (\texttt{OP\_CHECKLOCKTIMEVERIFY}), redefining the
+\texttt{OP\_NOP2}, it is possible to enforce the non-spending of a transaction
+output until some time in the future. With \texttt{OP\_CHECKLOCKTIMEVERIFY} a
+transaction output can enforce the spending transaction to have a
+\texttt{nLockTime} latter or equal to the specified value in the script
+\cite{BIP65}.
 
 Instead of creating a funding transaction and a refund transaction vulnerable to
-transaction malleability attacks, the funding transaction output is created with a
-script that allows the provider and the client to spend the funds with co-operation or,
-after a locktime, the client can spend the funds without the co-operation of the
-provider.
+transaction malleability attacks, the client creates the funding transaction
+output with a script that allows the provider and the client to spend the funds
+with co-operation or, after a lock time, the client can spend the funds without
+the co-operation of the provider.
 
-CLTV-style payment channels have the same properties than Spilman-style payment channels
-following the previous definition, but are not subject to transaction malleability attacks.
+CLTV-style payment channels have the same properties than Spilman-style payment
+channels following the previous definition but are not subject to transaction
+malleability attacks.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
@@ -118,32 +124,36 @@ ENDIF
 
 \subsection{Bidirectional}
 
-In a bidirectional channel $\mathcal{C}$, the player $A$ and the player $B$ can exchange
-funds in direction $\mathcal{C}_{AB}$ and $\mathcal{C}_{BA}$. A bidirectional channel
-can be a specific scheme or a pairing of existing unidirectional channels.
+In a bidirectional channel $\mathcal{C}$, the player $A$ and the player $B$ can
+exchange funds in direction $\mathcal{C}_{AB}$ and $\mathcal{C}_{BA}$. A
+bidirectional channel can be a specific scheme or a pairing of existing
+unidirectional channels.
 
 \subsubsection{Decker-Wattenhofer duplex payment channels}
 
 Decker-Wattenhofer duplex payment channels \cite{Decker2015fast}, also called
-\gls{dmc}, propose in 2015 bidirectional channels based on pairs of Spilman-style
-unidirectional channels. The construction has a finite lifetime predefined at the setup
-phase but can be refresh on-chain to keep the channel open with an updated state. During the
-refresh process it is possible to refilled the channel and the scheme allows payment routing
-with \gls{htlc}.
+\gls{dmc}, propose in 2015 bidirectional channels based on pairs of
+Spilman-style unidirectional channels. The construction has a finite lifetime
+predefined at the setup phase but can be refresh on-chain to keep the channel
+open with an updated state. During the refresh process, it is possible to refill
+the channel, and the scheme allows payment routing with \gls{htlc}.
 
-Duplex payment channels are trustless and endless, but not optimal (the uncooperative close of the
-channel require $d + 2$ transactions), not pulseless (it requires a refresh transaction
-when the lifetime run over to keep the channel open), and not undelayed (without cooperation
-the funds are recover after $d + 2$ transactions with \texttt{nLockTime} values).
+Duplex payment channels are trustless and endless, but not optimal. The
+uncooperative close of the channel requires $d + 2$ transactions. They are not
+pulseless (it requires a refresh transaction when the lifetime run over to keep
+the channel open) and not undelayed (without players cooperation the funds are
+recovered after \texttt{nLockTime} values).
 
 \subsubsection{Poon-Dryja payment channels}
 
-Poon-Dryja payment channels, also called Lightning Network, is a proposed implementation
-of \gls{htlc} with bidirectional payment channels which allows payments to be securely
-routed across multiple peer-to-peer payment channels \cite{poon2016bitcoin}.
+Poon-Dryja payment channels, also called Lightning Network, is a proposed
+implementation of \gls{htlc} with bidirectional payment channels which allow
+payments to be securely routed across multiple peer-to-peer payment channels
+\cite{poon2016bitcoin}.
 
-Their scheme is trustless (assuming that \gls{segwit} has been implemented), endless,
-pulseless, and undelayed but not optimal if the channel is closed without co-operation.
+Their scheme is trustless (assuming that \gls{segwit} has been implemented),
+endless, pulseless, and undelayed but not optimal when the channel closes
+without co-operation.
 
 \subsection{Summary}
 
@@ -162,28 +172,30 @@ pulseless, and undelayed but not optimal if the channel is closed without co-ope
   \label{fig:summaryPaymentChannel}
 \end{table}
 
-This table summarize the different properties following the proposed definitions
-of the main channel schemes. The last row refers to the next presented scheme.
+This table summarizes the different properties following proposed definitions of
+central channel schemes. The last row refers to the next presented scheme.
 
 % -----------------------------------------------------------------------------
 \section{Our one-way channel (Shababi-Gugger-Lebrecht)}
 
-Our one-way Payment Channel for Bitcoin is a simplified version between the Lightning
-Network and \say{Yours Lightning Protocol} \cite{poon2016bitcoin, YoursLightningProtocol}.
-The scheme is specially designed for a clients to provider scenario, where the provider
-has multiple clients throught multiple channels. The aim to be cheaper as possible for
-the provider while being flexible for settle funds is core design. The white paper is following the
-appendices.
+Our one-way Payment Channel for Bitcoin is a simplified version of the Lightning
+Network and \say{Yours Lightning Protocol} \cite{poon2016bitcoin,
+YoursLightningProtocol}. The scheme is specially designed for a scenario clients
+to a provider, where the provider has multiple clients through multiple
+channels. The core design aims to be cheaper as possible for the provider while
+being flexible for settlement funds. The white paper describing more in-depth
+the core design is following the appendices.
 
-A part of this thesis was devoted to write the white paper describing our channel scheme
-while working on the scheme itself. During this work, we found a possible attack, describe
-in the white paper, and we fixed it.
+A part of this thesis was devoted to writing the white paper describing our
+channel scheme while working on the scheme itself. During this work, we found a
+possible attack, described in the white paper, and we fixed it.
 
-The next step has been to analyse how it is possible to optimize the channel with
-threshold cryptography. As it is possible to see, every channel construction repose
-on a funding transaction that locks funds in a 2-out-of-2 multi-signature script.
-This funding transaction is always on-chain, so if it is possible to replace this
-script with a standard \gls{p2pkh} the gains should be interesting.
+The next step has been to analyze how it is possible to optimize the channel
+with threshold cryptography. As it is possible to see, every channel
+construction repose on a funding transaction that locks funds in a 2-out-of-2
+multi-signature script. This funding transaction is always on-chain, so if it is
+possible to replace this script with a standard \gls{p2pkh} the gains should be
+attractive.
 
 % -----------------------------------------------------------------------------
 \section{Optimizing payment channels}
