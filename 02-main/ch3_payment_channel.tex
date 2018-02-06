@@ -188,4 +188,28 @@ script with a standard \gls{p2pkh} the gains should be interesting.
 % -----------------------------------------------------------------------------
 \section{Optimizing payment channels}
 
-% -- Your text goes here --
+\newcolumntype{S}{>{\hsize=.5\hsize}C}
+
+\begin{table}[h]
+  \begin{tabularx}{\textwidth}{| X | S | S | S | S | S | S |}
+  \cline{3-7}
+  \multicolumn{2}{l|}{ } & \multicolumn{2}{c|}{Non-\gls{segwit}} & \multicolumn{3}{c|}{\gls{segwit}} \\ \cline{3-7}
+  \multicolumn{2}{l|}{ } & R-Size & O & R-Size & V-Size & O \\ \hhline{--=====}
+  \multirow{2}{*}{Refund transaction} & SH & 100 & 0\% & 110 & 80 & 0\% \\ \hhline{~------}
+                                      & PKH & 100 & 0\% & 110 & 80 & 0\% \\ \hhline{-------}
+  \end{tabularx}
+  \caption{Summary of transaction size optimization}
+  \label{fig:summaryTransactionSizeOpti}
+\end{table}
+
+% \begin{table}[h]
+%   \begin{tabularx}{\textwidth}{| X | S | S | S | S | S |}
+%   \cline{2-6}
+%   \multicolumn{1}{l|}{ } & \multicolumn{2}{c|}{Non-\gls{segwit}} & \multicolumn{3}{c|}{\gls{segwit}} \\ \cline{2-6}
+%   \multicolumn{1}{l|}{ } & Raw Size & O & Raw Size & V-Size & O \\ \hhline{-=====}
+%   Refund transaction & 100 & 0\% & 110 & 80 & 0\% \\
+%   \hhline{------}
+%   \end{tabularx}
+%   \caption{Summary of transaction size optimization}
+%   \label{fig:summaryTransactionSizeOpti}
+% \end{table}
