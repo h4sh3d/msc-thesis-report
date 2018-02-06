@@ -1,32 +1,33 @@
 \chapter{ECDSA asymmetric threshold scheme}
 \label{chap:threshold}
 
-Threshold cryptography has been discussed since a long time already, many cryptographic
-scheme like RSA or Paillier
-\cite{10.1007/BFb0052253, 10.1007/978-3-642-27954-6_20}
-exists but sometines it is difficult to use them in real case application.
-Since Bitcoin become popular, people lose funds because they lost keys or their
-keys have been hacked. And since then researches have been done to secure Bitcoin
-wallets \cite{Goldfeder2015SecuringBW, DBLP:conf/acns/GennaroGN16}. But the
-biggest problem today in Bitcoin that slow down the adoption of threshold cryptosystem
-is the complexity of creating an efficient and flexible scheme for \gls{ecdsa}.
-Most recent researches are focused on finding more efficient and more generic
-scheme, but fortunately a scheme fulfilling perfectly the needs described into
-the previous chapter required to improve payment channel in Bitcoin already exists.
-Nevertheless this scheme describe how to perform a \gls{dsa} threshold signature
-and so needs to be adapted.
+Threshold cryptography has been discussed for a long time already, many
+cryptographic schemes like RSA or Paillier \cite{10.1007/BFb0052253,
+10.1007/978-3-642-27954-6_20} exists, but the difficulty is to use them in real
+case application. Since Bitcoin become famous, people lose funds because they
+lost keys or get hacked. Since then research has been done to secure Bitcoin
+wallets \cite{Goldfeder2015SecuringBW, DBLP:conf/acns/GennaroGN16}. However, the
+most significant problem today in Bitcoin that slow down the adoption of
+threshold cryptosystem is the complexity of creating an efficient and flexible
+scheme for \gls{ecdsa}. Recently, researchers focused on finding more efficient
+and more generic system, but fortunately, a protocol fulfilling perfectly the
+needs described in the previous chapter required to improve payment channel in
+Bitcoin already exists. Nevertheless, this scheme explains how to perform a
+\gls{dsa} threshold signature and not \gls{ecdsa}. So the protocol needs to be
+adapted.
 
-The scheme analysed, transformed, and implemented in the following has been
-presented by MacKenzie and Reiter in their paper \say{Two-Party Generation of DSA Signatures}
-\cite{crypto-2001-1592}. This scheme is also the basis of several other
-papers cited before. Their construction of a threshold signature scheme with
-\gls{ecdsa} is based on a simple multiplicative shared secret and homomorphic
-encryption to keep the private values unknown by the other player. The homomorphic
-encryption used as exemple in the paper and choosed for the implement is the
-Paillier cryptosystem \cite{Paillier:1999:PCB:1756123.1756146}. The following
-chapter describe how to adapt the scheme form \gls{dsa} to \gls{ecdsa} and
-introduce some fundamental building blocks needed for a real case scenario like
-hierarchical deterministic threshold wallet or deterministic signatures.
+The scheme analyzed, transformed, and implemented in the following has been
+proposed by MacKenzie and Reiter in their paper \say{Two-Party Generation of DSA
+Signatures} \cite{crypto-2001-1592}. This scheme is also the basis of several
+other papers cited before. They base their construction of a threshold signature
+scheme with \gls{dsa} based on a simple multiplicative shared secret and
+homomorphic encryption to keep the individual values unknown by the other
+player. The homomorphic encryption used as an example in the paper and chose for
+the implementation is the Paillier cryptosystem
+\cite{Paillier:1999:PCB:1756123.1756146}. The following chapter describes how to
+adapt the scheme form \gls{dsa} to \gls{ecdsa} and introduce some fundamental
+building blocks needed for a real case scenario like hierarchical deterministic
+threshold wallet or deterministic signatures.
 
 \minitoc
 
@@ -35,20 +36,21 @@ hierarchical deterministic threshold wallet or deterministic signatures.
 % -----------------------------------------------------------------------------
 \section{Reminder}
 
-Before introducing the threshold scheme, a reminder of basic components used after in
-the scheme is presented. The reminder is composed of \gls{ec} basic mathematics,
-Paillier homomorphic encryption scheme, and digital signature---in particular
-\gls{dsa} and \gls{ecdsa}.
+Before introducing the threshold scheme, reminders of basic components used in
+the scheme are presented. This reminders are composed of \gls{ec} basic
+mathematics, Paillier homomorphic encryption scheme, and digital signature
+protocols, in particular \gls{dsa} and \gls{ecdsa}.
 
 \subsection{Elliptic curves}
 
-Bitcoin use \gls{ec} cryptography for securing his transaction.
-\gls{ecdsa}---based on the \gls{dsa} proposal by the \gls{nist}---over
-the curve secp256k1---proposed by the \gls{secg}---is used. % TODO ref sec v2 paper
+Bitcoin use \gls{ec} cryptography for securing his transaction. \gls{ecdsa},
+based on the \gls{dsa} proposal by the \gls{nist}, over the curve secp256k1,
+proposed by the \gls{secg}, is used \cite{sec2}.
 
 \subsubsection{Secp256k1 curve}
-The curve secp256k1 is define over the finite field $\mathbb{F}_p$ of $2^{256}$ bits
-with a Koblitz curve $y^2 = x^3 + ax + b$ where $a = 0$ and $b = 7$.
+
+The curve secp256k1 is define over the finite field $\mathbb{F}_p$ of $2^{256}$
+bits with a Koblitz curve $y^2 = x^3 + ax + b$ where $a = 0$ and $b = 7$.
 \begin{equation*}
 \begin{split}
   y^2 &= x^3 + 7\\
@@ -63,15 +65,17 @@ with a Koblitz curve $y^2 = x^3 + ax + b$ where $a = 0$ and $b = 7$.
 \end{split}
 \end{equation*}
 
-The curve order $n$ define the number of element (points) generated by the generator
-$G$ on the curve. An exponentiation of the generator $g^a \mod p$ become a point multiplication
-with the generator $a \cdot G$.
+The curve order $n$ define the number of elements (points) generated by the
+generator $G$ on the curve. Exponentiation of the generator $g^a \mod p$ become
+a point multiplication with the generator $a \cdot G$.
 
 \subsubsection{Points addition}
-With two distinct point $P$ and $Q$ on the curve $\mathcal{E}$, geometrically the resulting point of the
-addition is the inverse point, $(x, -y)$ of the intersection point with a straight
-line between $P$ and $Q$. An infinity point $\mathcal{O}$ represent the identity element in the group.
-Algebraically the resulting point is obtained with:
+With two distinct points $P$ and $Q$ on the curve $\mathcal{E}$, geometrically
+the resulting point of the addition is the inverse point, $(x, -y)$ of the
+intersection point with a straight line between $P$ and $Q$. An infinity point
+$\mathcal{O}$ represent the identity element in the group. Algebraically the
+resulting point is obtained with:
+
 \begin{equation}
 \begin{split}
   P + Q &= Q + P = P + Q + \mathcal{O} = R \\
@@ -84,8 +88,10 @@ Algebraically the resulting point is obtained with:
 \end{equation}
 
 \subsubsection{Point doubling}
-For $P$ and $Q$ equal, the formula is similar, the tangent to the curve $\mathcal{E}$ at
-point $P$ determine $R$.
+
+For $P$ and $Q$ equal, the formula is similar, the tangent to the curve
+$\mathcal{E}$ at point $P$ determine $R$.
+
 \begin{equation}
 \begin{split}
   P + P &= 2P = R \\
@@ -98,8 +104,10 @@ point $P$ determine $R$.
 \end{equation}
 
 \subsubsection{Point multiplication}
-A point $P$ can be multiply by a scalar $d$. The straightforward way of computing
-a point multiplication is through repeated addition where $dP = P_1 + P_2 + \dots + P_d$.
+
+A point $P$ can be multiply by a scalar $d$. The straightforward way of
+computing a point multiplication is through repeated addition where $dP = P_1 +
+P_2 + \dots + P_d$.
 
 % However, this is a fully
 % exponential approach to computing the multiplication.
@@ -111,8 +119,7 @@ a point multiplication is through repeated addition where $dP = P_1 + P_2 + \dot
 
 
 \begin{lemma}[Elliptic Curve Discrete Logarithm Problem]
-  Given a multiple $Q$ of $P$ where $Q = nP$ it is infeasible to find $n$ if $n$ is
-  large.
+  Given a multiple $Q$ of $P$ where $Q = nP$ it is infeasible to find $n$ if $n$ is large.
 \end{lemma}
 
 \begin{lemma}[Point Order]
@@ -123,7 +130,7 @@ a point multiplication is through repeated addition where $dP = P_1 + P_2 + \dot
 
 \subsection{Paillier cryptosystem}
 
-\begin{quote}
+\begin{quote}{Wikipedia:}
   The Paillier cryptosystem, invented by and named after Pascal Paillier in 1999,
   is a probabilistic asymmetric algorithm for public key cryptography. The problem
   of computing $n$-th residue classes is believed to be computationally difficult.
@@ -138,14 +145,14 @@ compute the ciphertext $c = g^m \cdot r^n \mod n^2$ to encrypt the plaintext.
 
 \subsubsection{Decryption}
 
-With a private key $(n, g, \lambda, \mu)$ and a ciphertext $c \in \mathbb{Z}_{n^2}^*$
-compute the plaintext as $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$
-where $L(x) = \frac{x-1}{n}$.
+With a private key $(n, g, \lambda, \mu)$ and a ciphertext $c \in
+\mathbb{Z}_{n^2}^*$ compute the plaintext as $m = L(c^{\lambda} \mod n^2) \cdot
+\mu \mod n$ where $L(x) = \frac{x-1}{n}$.
 
 \subsection{Signature schemes}
 \subsubsection{Digital Signature Algorithm}
 
-\begin{quote}
+\begin{quote}{Wikipedia:}
   The Digital Signature Algorithm (DSA) is a Federal Information Processing Standard
   for digital signatures. In August 1991 the National Institute of Standards and
   Technology (NIST) proposed DSA for use in their Digital Signature Standard (DSS)
@@ -213,15 +220,16 @@ $m$ the message, $(r, s)$ the signature, and $Q = x \cdot G$ the public key.
 
 \subsubsection{Schemes' analysis}
 
-In $(r, s)$ the part $s$ remain the same in each signature scheme, the only difference
-for $s$ is the modulus applied. In \gls{dsa} the modulus $q$, i.e. the order of
-the generator $g$ modulo $p$, is took while in \gls{ecdsa} the modulus $n$, i.e. the
-order of the generator $G$ on the curve $\mathcal{E}$, is took.
+In $(r, s)$ the computation of the part $s$ remain the same in each signature
+scheme, the only difference for $s$ is the modulus applied. In \gls{dsa} the
+modulus $q$ is took, i.e. the order of the generator $g$ modulo $p$,  while in
+\gls{ecdsa} the modulus $n$ is took, i.e. the order of the generator $G$ on the
+curve $\mathcal{E}$.
 
-The biggest adaptation is on how to calculate the part $r$ from the private random $k$.
-In \gls{dsa} the generator $g$ is used with, at first, modulo $p$ and then
-modulo $q$ while in \gls{ecdsa} the curve is used. A point is calculated and the
-coordinate $x_1$ is used modulo $n$.
+The biggest adaptation is on how to calculate the part $r$ from the private
+random $k$. In \gls{dsa} the generator $g$ is used with, at first, modulo $p$
+and then modulo $q$ while in \gls{ecdsa} the curve is used. The signer generates
+a  point and uses the coordinate $x_1$ modulo $n$.
 
 \begin{postulate}
   This statement $a \equiv g^b \pmod p$ is equivalent in term of security to $a = b \cdot G$
@@ -230,72 +238,76 @@ coordinate $x_1$ is used modulo $n$.
 \end{postulate}
 
 The previous postulate is used to adapt zero-knowledge proofs from \gls{dsa} to
-\gls{ecdsa} hereafter. This postulate has not been further researched by lack
-of time.
+\gls{ecdsa} hereafter. Lack of time has not permitted further researched this
+postulate.
 
 
 % -----------------------------------------------------------------------------
 \section{Threshold scheme}
 
 The \say{Two-party generation of DSA signatures} scheme presented by MacKenzie
-and Reiter, as mentionned before, is an asymmetric scheme, i.e. at the end of the
-protocol only the initiator can retreive the full signature. The scheme proposed
-is a cryptographic (1,2)-threshold, i.e. one player can be corrupted on the two
-players and the scheme remain safe. It is worth noting that this is qualified as
-an optimal $(t, n)$-threshold scheme, i.e. $t = n - 1$, because if only one
-honest player remain the safety is guarantee.
+and Reiter, as mentioned before, is an asymmetric scheme, i.e., at the end of
+the protocol, only the initiator can retrieve the full signature. The scheme
+proposed is a cryptographic (1,2)-threshold, i.e., one corrupted player can
+occur on the two players, and the scheme remains safe. It is worth noting that
+this is qualified as an optimal $(t, n)$-threshold scheme, i.e., $t = n - 1$
+because if only one honest player remains the safety is guaranteed.
 
-As also mentionned before, the scheme correspond to the same requirement of a
-Bitcoin 2-out-of-2 multi-signatures script. This means that it is possible to
+As also mentioned before, the scheme corresponds to the same requirement of a
+Bitcoin 2-out-of-2 multi-signatures script. That means that it is possible to
 use it to improve the payment channels. However, it is necessary to adapt the
-scheme and particulary the zero-knowledge proofs construction to \gls{ecdsa}.
-The approach is explained in the following.
+scheme and particularly the zero-knowledge proofs construction. The following
+explains the chosen adaptation.
 
-% Recap the threat model ??!?!
+The presented scheme in the original paper uses a multiplicative shared secret
+and a multiplicative shared private random value. The secret $x$ is shared
+between Alice and Bob, so that Alice holds the secret value $x_1 \in
+\mathbb{Z}_{q}$ and Bob $x_2 \in \mathbb{Z}_{q}$ such that $x \equiv x_1x_2
+\pmod q$. Along with the public key $y$, $y_1 \equiv g^{x_1} \pmod p$ and $y_2
+\equiv g^{x_2} \pmod p$ are public. Alice holds a private key, from now on
+mentioned as $sk$, corresponding to a public encryption key $pk$. Alice also
+knows a public encryption key $pk'$ for which she does not know the private key
+$sk'$. Here the Paillier homomorphic cryptosystem is used as the encryption
+scheme, but it is worth noting that others homomorphic encryption systems can be
+used to implement the scheme. Alice and Bob know a set of parameters used for
+both zero-knowledge proofs.
 
-The presented scheme use a multiplicative shared secret and a multiplicative shared
-private random value. The secret $x$ is shared between Alice and Bob, so that Alice
-holds the secret value $x_1 \in \mathbb{Z}_{q}$ and Bob $x_2 \in \mathbb{Z}_{q}$
-such that $x \equiv x_1x_2 \pmod q$. Along with the public key $y$,
-$y_1 \equiv g^{x_1} \pmod p$ and $y_2 \equiv g^{x_2} \pmod p$ are public.
-Alice holds a private key, hereinafter mentionned as $sk$, corresponding to a
-public encryption key $pk$. Alice also knows a public encryption key $pk'$ for
-which she does not know the private key $sk'$. Here the Paillier homomorphic
-cryptosystem is used as the encryption scheme, but it is worth noting that others
-homomorphic encryption systems can be use to implement the scheme. Alice and Bob
-know a set of parameters used for both zero-knowledge proofs.
-
-Hereinafter, the initialisation is not taken into account. The choice was made to
-decrease the amount of work and because the implementation is not part of the
-cryptographic \texttt{C} library. This part can be a further research for an other
-thesis.
+Starting now the initialization is not taken into account, and the author
+assumes that reader has a good understanding of the original scheme
+\cite{crypto-2001-1592}. The choice was made to focus the amount of work on the
+signing protocol and because the implementation is not directly part of the
+cryptographic \texttt{C} library. This initialization can be further research
+for another thesis.
 
 \subsection{Adapting the scheme}
 
 Except for the zero-knowledge proofs, the adaptation is trivial and require just
-the same adaptation from \gls{dsa} signature scheme and \gls{ecdsa} signature
-scheme, i.e. compute the $r$ value with the curve. The following figure describe
-the adapted scheme. Messages stay the same and are not repeated.
-The postulate~\ref{post:adaptEcdsa} is used to perform the adaptation.
+the same adaptation of the \gls{dsa} signature scheme and \gls{ecdsa} signature
+scheme, i.e., compute the $r$ value with the curve. The following figures
+describe the adapted scheme. The adapted protocol keeps the same messages, so
+they are not repeated. The postulate~\ref{post:adaptEcdsa} is used to perform
+the adaptation.
 
 The secret remain shared multiplicatively so that so that Alice holds the secret
-value $x_1 \in \mathbb{Z}_{n}$ and Bob $x_2 \in \mathbb{Z}_{n}$ such that
-$x \equiv x_1x_2 \pmod n$. Alice holds her public key $Q_1 = x_1 \cdot G$ and Bob
-$Q_2 = x_2 \cdot G$ such that $Q = x_1 \cdot Q_2$ for Alice or $Q = x_2 \cdot Q_1$
-for Bob. The notation $\cdot$ is used to denote the point multiplication over \gls{ec}.
+value $x_1 \in \mathbb{Z}_{n}$ and Bob $x_2 \in \mathbb{Z}_{n}$ such that $x
+\equiv x_1x_2 \pmod n$. Alice holds her public key $Q_1 = x_1 \cdot G$ and Bob
+$Q_2 = x_2 \cdot G$ such that $Q = x_1 \cdot Q_2$ for Alice or $Q = x_2 \cdot
+Q_1$ for Bob. The notation $\cdot$ is used to denote the point multiplication
+over \gls{ec}.
 
-All the random values $k$ are choose in $\mathbb{Z}_{n}$ instead of $\mathbb{Z}_{q}$,
-also in the case of deterministic signature. All the computation modulo $q$ is replaced
-by modulo $n$, as shown in the foregoing digital signature recap.
-Values $R_2$ and $R$ become points. Verifications of values $R_2$ and $R$ become
-point verifications on the curve and $r'$ is calculated by Alice and Bob as shown
-in the foregoing remainder. The value $cq$ added to the homomorphic encrypted signature
-is transformed into $cn$ to hide values $z_2$ and $x_2z_2$.
+All the random values $k$ are chosen in $\mathbb{Z}_{n}$ instead of
+$\mathbb{Z}_{q}$, also in the case of deterministic signature. All the
+computation modulo $q$ is replaced by modulo $n$, as shown in the previous
+digital signature recap. Values $R_2$ and $R$ become points. Verifications of
+values $R_2$ and $R$ become point verifications on the curve and $r'$ is
+calculated by Alice and Bob as shown in the other reminder. The value $cq$ added
+to the homomorphic encrypted signature is transformed into $cn$ to hide values
+$z_2$ and $x_2z_2$.
 
-A error of notation is noticed in the original paper, on the
-second line Alice compute $z_1 \equiv (k_1)^{-1} \pmod n$ and the original paper
-use the random value selection $\xleftarrow[]{R}$ instead of a standard assignation $\leftarrow$,
-this error has been corrected in the following version of the protocol.
+The author noticed an error of notation in the original paper. On the second
+line Alice compute $z_1 \equiv (k_1)^{-1} \pmod n$ and the original paper use
+the random value selection $\xleftarrow[]{R}$ instead of a standard assignation
+$\leftarrow$. This error is corrected in the following version of the protocol.
 
 \newpage
 
@@ -364,24 +376,23 @@ this error has been corrected in the following version of the protocol.
 
 \subsection{Adapting zero-knowledge proofs}
 
-Initialy the proofs have been designed for the DSA architecture, so the values
-tested in the proofs are values in $\mathbb{Z}_{q}$. These values are used to create
-a challenge $e$ with two hash function (a different one per proof.) For ECDSA some
-of these values become points and some equations need to be adapted. Points are
-serialized in the long form, 65 bytes starting with \texttt{0x04} and two 32 bytes
-number for the coordinates $(x, y)$.
-As mentionned is the original paper, the variables names are not consistent with
-the first part of the paper. Hereinafter the variable names follow the same notation
-as the original paper and are therefore no longer consistent with the previous
-pages.
+Initially, the protocol designs proofs for the DSA architecture, so the values
+tested in the proofs are values in $\mathbb{Z}_{q}$. These values are used to
+create a challenge $e$ with two hash functions, a different one per proof. For
+ECDSA some of these values become points, so some equations need to be adapted.
+The adapted protocol serialize points in the long form, 65 bytes starting with
+\texttt{0x04}, and two 32 bytes coordinates for $(x, y)$. As mentioned in the
+original paper, the variables names are not consistent with the first part of
+the paper. Starting now the variable names follow the same notation as the
+original paper and are therefore no longer consistent with the previous pages.
 
 \subsubsection{Zero-knowledge proof $\Pi$}
 
-The first zero-knowledge proof $\Pi$ is created by Alice to prove to Bob that she
-act correctly and have encrypted coherent data with Paillier encryption, proving the
-ownership and the validity of the two encrypted values in relation to the public address
-$Q_1$ with $(x_1z_1 / z_1) \cdot G = Q_1$. The proof states that the encrypted value
-$\alpha$ is related to $R$ and $R_2$ such that
+The first zero-knowledge proof $\Pi$ is created by Alice to prove to Bob that
+she act correctly and have encrypted coherent data with Paillier encryption,
+proving the ownership and the validity of the two encrypted values in relation
+to the public address $Q_1$ with $(x_1z_1 / z_1) \cdot G = Q_1$. The proof
+states that the encrypted value $\alpha$ is related to $R$ and $R_2$ such that
 $(k_1)^{-1} \cdot R = ((k_1)^{-1}k_1k_2) \cdot G = k_2 \cdot G = R_2$.
 
 \begin{figure}[h]
@@ -477,11 +488,11 @@ $(k_1)^{-1} \cdot R = ((k_1)^{-1}k_1k_2) \cdot G = k_2 \cdot G = R_2$.
 
 \subsubsection{Zero-knowledge proof $\Pi'$}
 
-The second zero-knowledge proof is created by Bob to prove to Alice that he acted honestly
-according to the protocol. The proof states that the point $\mathcal{R}_2$ is generated
-accordingly to the value $z_2$ and then to the value $k_2$, the public key $\mathcal{Q}_2$
-is related to the values $z_2$ and $x_2z_2$, and the encrypted values $\mu$ and $\mu'$
-are correctly composed.
+The second zero-knowledge proof is created by Bob to prove to Alice that he
+acted honestly according to the protocol. The proof states that the point
+$\mathcal{R}_2$ is generated accordingly to the value $z_2$ and so to the value
+$k_2$. That the public key $\mathcal{Q}_2$ is related to the values $z_2$ and
+$x_2z_2$, and that the encrypted values $\mu$ and $\mu'$ are correctly composed.
 
 \begin{table}[h]
   \begin{tabular}{p{4cm} l}
@@ -523,16 +534,14 @@ are correctly composed.
 \end{figure}
 
 \paragraph{Correcting the verification of $\Pi'$}
-If $x_1 = z_2$, $x_2 = x_2 z_2$, $x_3 = c$, and $m_2 = \mu$ such that
-$\mu = (\alpha)^{m' x_1} (\zeta)^{r' x_2} g^{nx_3} (r_2)^{N}$, then the
-equation $v_3$ in the validation proccess does not correspond to construction
-of $v_3$ in the original paper.
-The result in the verification proccess $\Pi'$ need to match
+If $x_1 = z_2$, $x_2 = x_2 z_2$, $x_3 = c$, and $m_2 = \mu$ such that $\mu =
+(\alpha)^{m' x_1} (\zeta)^{r' x_2} g^{nx_3} (r_2)^{N}$, then the equation $v_3$
+in the validation proccess does not correspond to construction of $v_3$ in the
+original paper. The result in the verification proccess $\Pi'$ need to match
 $v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$.
-The original equation proposed
-$v_3 \leftarrow (m_3)^{s_1} (m_4)^{t_1} g^{nt_5} (t_3)^{N} (m_2)^{-e} \mod N^2$
-does not include $m'$ and $r'$ present in $\mu$, so $m_2$ cannot be used correctly
-as showed next.
+The original equation proposed $v_3 \leftarrow (m_3)^{s_1} (m_4)^{t_1} g^{nt_5}
+(t_3)^{N} (m_2)^{-e} \mod N^2$ does not include $m'$ and $r'$ present in $\mu$,
+so $m_2$ cannot be used correctly as showed next.
 
 \begin{equation}
 \begin{split}
@@ -550,11 +559,11 @@ as showed next.
 \end{split}
 \end{equation}
 
-The equation $v_3$ needs to be adapted to include $x_4 = m'$ and $x_5 = r'$ ($m'$
-and $r'$ cannot be include directly in $x_1$ and $x_2$ without breaking
-equations $u_1, u_2, u_3, v_2$.) Two new parameters $s_4 \leftarrow ex_1 x_4 + \alpha$ and
-$t_7 \leftarrow ex_2 x_5 + \delta$ are added into the proof to correct
-the equation.
+The equation $v_3$ needs to be adapted to include $x_4 = m'$ and $x_5 = r'$
+($m'$ and $r'$ cannot be include directly in $x_1$ and $x_2$ without breaking
+equations $u_1, u_2, u_3, v_2$.) Two new parameters $s_4 \leftarrow ex_1 x_4 +
+\alpha$ and $t_7 \leftarrow ex_2 x_5 + \delta$ are added into the proof to
+correct the equation.
 
 \begin{equation}
 \begin{split}
@@ -654,9 +663,10 @@ the equation.
 % -----------------------------------------------------------------------------
 \section{Threshold Hierarchical Determinitic Wallets}
 
-Hierarchical deterministic wallets are sophisticated wallets in wich fresh keys
-can be generated from a previous key. Adapting hierarchical deterministic wallets
-with a threshold scheme can be achieve by sharing the private key additively:
+Hierarchical deterministic wallets are sophisticated wallets in which new keys
+can be generated from a previous key. Adapting hierarchical deterministic
+wallets with a threshold scheme can be achieved by sharing the private key
+additively:
 
 \begin{equation*}
 \begin{split}
@@ -677,22 +687,23 @@ or multiplicatively:
 \end{split}
 \end{equation*}
 
-In the additive case, the master public key $pk_{mas}$ is also the sum of all the
-public points $pk_i$, which means that if each player publish his own public share
-point, every one can compute the master public key. The multiplicative sharing is
-more communication applicant because the computation of the public key is sequential
+In the additive case, the master public key $pk_{mas}$ is also the sum of all
+the points $pk_i$, which means that if each player publishes his share point,
+everyone can compute the master public key. The multiplicative sharing is more
+communication applicant because the computation of the public key is sequential
 instead of parallel.
 
-A extended private key share is a tuple of $(sk_i, c)$ with $sk_i$ the normal private key and
-$c$ the chain code, such that $c$ is the same for each player. In the following
-it is asume that the private key is shared multiplicatively.
+An extended private key share is a tuple of $(sk_i, c)$ with $sk_i$ the regular
+private key and $c$ the chain code, such that $c$ is the same for each player.
+In the following, it is assumed that the private key is shared multiplicatively.
 
 \subsection{Private parent key to private child key}
-The function \texttt{CKDpriv} compute a child extended private key from the parent extended
-private key. The derivation can be \textit{hardened}. This proposal differ from
-the \texttt{BIP32} \cite{HDWallets} standard in the chain derivation proccess.
-The \texttt{ser} function and \texttt{point} function are the same as described in
-\texttt{BIP32}.
+
+The function \texttt{CKDpriv} compute a child extended private key from the
+parent extended private key. The derivation can be \textit{hardened}. This
+proposal differ from the \texttt{BIP32} \cite{HDWallets} standard in the chain
+derivation proccess. The \texttt{ser} function and \texttt{point} function are
+the same as described in \gls{bip}.
 
 \begin{equation*}
 \begin{split}
@@ -705,15 +716,17 @@ The \texttt{ser} function and \texttt{point} function are the same as described 
 \end{split}
 \end{equation*}
 
-The function $f(l)$ compute the partial share $l$ at index $k$, such that multiplied with the parent
-private key share $sk_i^{par}$ for the player $i$ the result is $sk_i$.
+The function $f(l)$ compute the partial share $l$ at index $k$, such that
+multiplied with the parent private key share $sk_i^{par}$ for the player $i$ the
+result is $sk_i$.
 
 \subsection{Public parent key to public child key}
-The function \texttt{CKDpub} compute a child extend public key from the parent extended
-public key. It is worth noting than it is not possible to compute an
-\textit{hardened} derivation without the parent private key. It is worth noting that
-every player update the master public key for the threshold, not the public key
-share.
+
+The function \texttt{CKDpub} compute a child extend public key from the parent
+extended public key. It is worth noting that it is not possible to compute a
+\textit{hardened} derivation without the private parent key. It is worth noting
+that every player updates the master public key for the threshold, not the
+public key share.
 
 \begin{equation*}
 \begin{split}
@@ -729,11 +742,12 @@ share.
 \end{equation*}
 
 \subsection{Child key share derivation}
-It is asume that one of the players $P_i$ is designated as the leader $L$.
-The function \texttt{CKSD} compute a threshold child extended key share from the
-threshold parent extended key share for the derivation index $k$. It is worth
-noting that only the leader $L$ use \texttt{CKDpriv} and if the derivation
-is \textit{hardened}, i.e. if $k \geq 2^{31}$, a special case occured and a
+
+The protocol assumes that one of the players $P_i$ is designated as the leader
+$L$. The function \texttt{CKSD} compute a threshold child extended key share
+from the threshold parent extended key share for the derivation index $k$. It is
+worth noting that only the leader $L$ use \texttt{CKDpriv} and if the derivation
+is \textit{hardened}, i.e., if $k \geq 2^{31}$, a special case occurred and a
 round of communication is needed. Let's define \texttt{CKSD} for $k < 2^{31}$:
 
 \begin{equation}
@@ -767,9 +781,10 @@ and then $\forall i \in P_i$:
 \end{split}
 \end{equation}
 
-The chain code is updated for each player at each derivation index. The derivation
-does not depend on the secret key because the chain code must remain deterministic
-and have same value for each player, without requiring communication round.
+At each derivation index, each player updates their chain code. The derivation
+does not depend on the secret key because the chain code must remain
+deterministic and have the same value for each player, without requiring
+communication round.
 
 \begin{equation}
 \begin{split}
@@ -778,40 +793,39 @@ and have same value for each player, without requiring communication round.
 \end{equation}
 
 If the index $k \geq 2^{31}$ the new master public key, only calculable by the
-master player $L$, must be revealed to other players. A round of communication is
-then needed to continue de derivation.
+master player $L$, must be revealed to other players. A round of communication
+is then needed to continue de derivation.
 
-In this threshold HD scheme only one private share change at each derivation.
-In other workds, the master private share is derived either with public information
-or with private information, i.e. \textit{hardened} derivation. If the derivation
-is private, then a communication round between the players is necessary, more
-specificly we asume that a secure broadcast channel is open from the master player
-to other players.
+In this threshold HD scheme only one private share change at each derivation. In
+other words, the master private share is derived either with public information
+or with private information, i.e., \textit{hardened} derivation. If the
+derivation is private, then a communication round between the players is
+necessary, more specifically we assume that a secure broadcast channel is open
+from the master player to other players.
 
-This scheme is sufficient for the payment channels, a threshold key used for
-the $\texttt{Multisig}_i$ address with a root derivation path \texttt{m/44'/0'/a'/0'}
-is negociated at the opening of the channel (variable \texttt{a} is related to the channel
-account number between the client and the provider as shown in the paper).
-Then the index \texttt{i} in the paper is used to derive each addresses without
-require any communication. It is worth noting that the root derivation path can
-also be simplify at \texttt{m/a'} or even \texttt{m/} because the compatibility with
-a standard wallet is not anymore a requirement. Noted that the version \texttt{m/a'}
-is more flexible and allows multiple channels between a client and a provider with
-only one threshold key.
+This scheme is sufficient for the payment channels. Players negotiate a
+threshold key used for the $\texttt{Multisig}_i$ address with a root derivation
+path \texttt{m/44'/0'/a'/0'} at the opening of the channel (variable \texttt{a}
+is related to the channel account number between the client and the provider as
+shown in the paper). Then the index \texttt{i} in the paper is used to derive
+each address without requiring any communication. It is worth noting that the
+root derivation path can also be simplified at \texttt{m/a'} or even \texttt{m/}
+because the compatibility with a standard wallet is not anymore a requirement.
+Noted that the version \texttt{m/a'} is more flexible and allows multiple
+channels between a client and a provider with only one threshold key.
 
 \subsection{Proof-of-concept implementation}
 
-A proof-of-concept implemented in Python has been made. A share can be tagged as master
-share as described previously. The result of the script is presented thereafter,
-three share are created, and the first one is tagged as the master share.
-The root threshold public key \texttt{m/} is computed and display, then individual
-shares' addresses are displayed.
-The share $s_1$ is derived with and without \textit{hardened} path,
-as expected the resulted address is different.
-The master public key resulting of each share derivations for the path \texttt{m/44/0/1}
-is the same as computing the private key with all individual secret shares and
-getting the associated address, as expected. To note that only the master individual
-address for \texttt{m/} and \texttt{m/44/0/1} has changed.
+A proof-of-concept implemented in Python is made. A share can be tagged as
+master share as described previously. The result of the script is presented
+after that, three shares are created, and the first one is tagged as the master
+share. The root threshold public key \texttt{m/} is computed and display, then
+individual shares' addresses are displayed. The share $s_1$ is derived with and
+without \textit{hardened} path, as expected the resulted address is different.
+The master public key resulting of each share derivations for the path
+\texttt{m/44/0/1} is the same as computing the private key with all individual
+secret shares and getting the associated address, as expected. To note that only
+the master individual address for \texttt{m/} and \texttt{m/44/0/1} has changed.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{text}
@@ -843,21 +857,22 @@ s3: 1TcYLZUZYd86AFaT58tzFGBW1BVVw7K
 	\label{lst:testThresholdHDMainRes}
 \end{listing}
 
+A share is composed of four main information: (i) the secret share, (ii) the
+chain code, (iii) the tag for the master share, and (iv) the threshold public
+key. Players can set the threshold public key address after computation. The
+derive function \texttt{d} derives with \texttt{CKDpub} or \texttt{CKDpriv}
+depending on the master tag and return a new share for a given index. The path
+derivation function \texttt{derive} take a path and generate the chain of
+shares. In this Implementation, if a share not tagged as master try to derive a
+path with a \texttt{hardened} index, an exception is raised, and the process
+stops. However, in a real-world case, a communication process must take place to
+complete the derivation.
+
 \begin{listing}
   \pythonfile[firstline=252,lastline=295]{02-main/listings/address.py}
 	\caption{Demonstration of using threshold HD wallet}
 	\label{lst:testThresholdHDMain}
 \end{listing}
-
-A share is composed of four main information: (i) the secret share, (ii) the chain
-code, (iii) the tag for the master share, and (iv) the threshold public key. The
-threshold public key address can be set after computation. The derive function
-\texttt{d} derives with \texttt{CKDpub} or \texttt{CKDpriv} depending on the
-master tag and return a new share for a given index. The path derivation function
-\texttt{derive} take a path and generate the chain of shares. In this Implementation,
-if a share not tagged as master try to derive a path with an \texttt{hardened} index,
-an exception is raised and the proccess stops. But in real world case,
-a communication process must take place to complete the derivation.
 
 \begin{listing}
   \pythonfile[firstline=163,lastline=230]{02-main/listings/address.py}
@@ -869,11 +884,12 @@ a communication process must take place to complete the derivation.
 % -----------------------------------------------------------------------------
 \section{Threshold deterministic signatures}
 
-One of the simplest way to compromise the private key in \gls{ecdsa} is to select
-a weak pseudo random number generator for $k$ or even worst, select a static value
-for $k$. This problem already append to Sony in December 2010 when a group of
-hacker calling itself \textit{fail0verflow} announced recovery of the \gls{ecdsa}
-private key used to sign software for the PlayStation 3.
+One of the simplest ways to compromise the private key in \gls{ecdsa}, or in
+\gls{dsa}, is to select a weak pseudo-random number generator for $k$ or even
+worst, select a static value for $k$. This problem already appends to Sony in
+December 2010 when a group of hackers calling itself \textit{fail0verflow}
+announced the recovery of the \gls{ecdsa} private key used to sign software for
+the PlayStation 3.
 
 Given two signatures $(r, s)$ and $(r, s')$ employing the same unknown $k$ for
 different messages $m$ and $m'$. Let's define $x$ as the private key, $z$ as the
@@ -890,16 +906,17 @@ hash of $m$ and $z'$ of $m'$, an attacker can calculate:
 \end{split}
 \end{equation*}
 
-But this issue can be prevented by deterministic generation of $k$, as described
-by the RFC 6979 \cite{rfc6979}. The random value $k$ can be generated deterministicly
-by using an \texttt{HMAC} function such that the parameters are the private key and the
-message to sign.
+However, this issue can be prevented by a deterministic generation of $k$, as
+described by the RFC 6979 \cite{rfc6979}. The random value $k$ can be generated
+deterministically by using a \texttt{HMAC} function such that the parameters are
+the private key and the message to sign.
 
-The other positive point is that signatures for the same key paire and the same
-message are deterministic, i.e. if we sign multiple times the same message, the
-signature remain the same. This is aslo a big advantage in Bitcoin to help preventing
-transaction malleability. The deterministic signature construction can also be applied
-to the threshold scheme with the same properties.
+The other positive side is that signatures for the same key pair and the same
+message are deterministic, i.e., if we sign multiple times the same message, the
+signature remains the same. This determinism is also a significant advantage in
+Bitcoin to reduce transaction malleability (nevertheless, the signer can still
+choose to sign with non-deterministic nonce). The threshold scheme can also
+enjoy the same properties through a deterministic signature system.
 
 \begin{equation*}
 \begin{split}
@@ -909,5 +926,6 @@ to the threshold scheme with the same properties.
 \end{split}
 \end{equation*}
 
-The values $k_1$ and $k_2$ remain secret as well as the value $x_1$ and $x_2$ but
-the signature will always be the same for the given message and the threshold key.
+The values $k_1$ and $k_2$ remain secret as well as the value $x_1$ and $x_2$
+but the signature will always be the same for the given message and the
+threshold key.
