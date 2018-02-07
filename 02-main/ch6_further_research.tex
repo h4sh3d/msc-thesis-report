@@ -114,15 +114,22 @@ responsible for storing this information or this information is a part of the
 setup and can be stored outside? This question can be developed.
 
 % -----------------------------------------------------------------------------
-\section{More generic threshold scheme}
+\section{General threshold scheme}
+
+The way scripts with multi-signature work in Bitcoin requires exposing all
+public keys related to the signatures. That increases the transaction size,
+which implies more significant fees. Due to scripts size limit near 500 bytes,
+the maximum number of signatories is around fifteen. The signatures are
+naturally present with the public keys in the script, which implies that it is
+possible to know which keys signed the transaction. That implies less anonymity
+on the blockchain. With a general threshold scheme, these limitations should be
+suspended.
 
 As previously mentioned, research have been done to generalize and find an
 optimal $(t, n)$-threshold in \gls{ecdsa} \cite{10.1007/BFb0052253,
 10.1007/978-3-642-27954-6_20}. These papers base their work on the scheme chosen
-by the implementation, so a deeper analysis could be performed to assess the
-needed changes to adapt the current implementation to a generic threshold.
-
-% TODO add more info on what is feasible today in Bitcoin and what not
+in this thesis, so a deeper analysis could be performed to assess the
+needed changes and adapt the current implementation to construct a generic threshold.
 
 % -----------------------------------------------------------------------------
 \section{Schnorr signatures}
