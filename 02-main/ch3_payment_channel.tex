@@ -176,7 +176,7 @@ This table summarizes the different properties of the proposed definitions of
 central channel schemes. The last row refers to the next presented scheme.
 
 % -----------------------------------------------------------------------------
-\section{Our one-way channel (Shababi-Gugger-Lebrecht)}
+\section{One-way channel (Shababi-Gugger-Lebrecht)}
 
 Our one-way Payment Channel for Bitcoin is a simplified version of the Lightning
 Network and \say{Yours Lightning Protocol} \cite{poon2016bitcoin,
@@ -200,19 +200,46 @@ should be attractive.
 % -----------------------------------------------------------------------------
 \section{Optimizing payment channels}
 
-\newcolumntype{S}{>{\hsize=.5\hsize}C}
+% Even if the channel is not completely trustless without \gls{segwit} we can compare the possible gain in non-\gls{segwit} mode.
 
+Three transactions are compared with \gls{segwit}\footnote{ The transaction size is calculated with nested-\gls{segwit} and not with native mode.} and without. Optimization is expressed in percentage of size or virtual-size economized. The Script Hash (SH) consumes a multi-signature script, and the Public Key Hash (PKH) consumes a standard public key. Noted that size can vary few bytes with \gls{segwit}.
+
+% ** P2SH
+% |               | segwit | segwit | non-segwit | non-segwit |
+% |               |   size |  vsize |       size |      vsize |
+% |---------------+--------+--------+------------+------------|
+% | first refund  |    340 |    174 |        302 |        302 |
+% | refund normal |    372 |    207 |        335 |        335 |
+% | settlement    |    372 |    207 |        335 |        335 |
+%
+% ** PKH
+% |               | segwit | segwit | non-segwit | non-segwit | native segwit | native segwit |
+% |               |   size |  vsize |       size |      vsize |          size |         vsize |
+% |---------------+--------+--------+------------+------------+---------------+---------------|
+% | first refund  |    216 |    134 |        191 |        191 |           192 |           110 |
+% | refund normal |    246 |    165 |        226 |        226 |           224 |           142 |
+% | settlement    |    246 |    165 |        226 |        226 |           224 |           142 |
+
+\newcolumntype{S}{>{\hsize=.5\hsize}C}
 \begin{table}[h]
   \begin{tabularx}{\textwidth}{| X | S | S | S | S | S | S |}
   \cline{3-7}
   \multicolumn{2}{l|}{ } & \multicolumn{2}{c|}{Non-\gls{segwit}} & \multicolumn{3}{c|}{\gls{segwit}} \\ \cline{3-7}
   \multicolumn{2}{l|}{ } & R-Size & O & R-Size & V-Size & O \\ \hhline{--=====}
-  \multirow{2}{*}{Refund transaction} & SH & 100 & 0\% & 110 & 80 & 0\% \\ \hhline{~------}
-                                      & PKH & 100 & 0\% & 110 & 80 & 0\% \\ \hhline{-------}
+  \multirow{2}{*}{First Refund}  & SH   & 302  & \multirow{2}{*}{36.75\%} & 340 & 174  & \multirow{2}{*}{22.99\%} \\ \hhline{~--~--~}
+                                 & PKH  & 191  &                          & 216 & 134  &                          \\ \hhline{-------}
+  \multirow{2}{*}{Refund Normal} & SH   & 335  & \multirow{2}{*}{32.54\%} & 372 & 207  & \multirow{2}{*}{20.29\%} \\ \hhline{~--~--~}
+                                 & PKH  & 226  &                          & 246 & 165  &                          \\ \hhline{-------}
+  \multirow{2}{*}{Settlement}    & SH   & 335  & \multirow{2}{*}{32.54\%} & 372 & 207  & \multirow{2}{*}{20.29\%} \\ \hhline{~--~--~}
+                                 & PKH  & 226  &                          & 246 & 165  &                          \\ \hhline{-------}
   \end{tabularx}
   \caption{Summary of transaction size optimization}
   \label{fig:summaryTransactionSizeOpti}
 \end{table}
+
+The average fee per byte in the last three months is around 292 Satoshis. This optimization allows saving until 32,412 Satoshis for the first refund transaction without \gls{segwit}, and 12,264 Satoshis for a refund or a settlement transaction with \gls{segwit}. At the current price, these amounts represent between USD \$1 and USD \$2.65\footnote{ Feb 2018}. If the channel is used for micropayments such as a couple of cents each time, this optimization makes the difference and lower the required threshold for rentability. The first refund transaction being less expensive, this also makes the client commitment easier.
+
+Requirements need to be defined to be able to replace the multi-signature script with a threshold scheme. Analyze the protocol and the signing process for a multi-signature script allows to define these requirements. A multi-signature script can be unlock with two different public keys and theire signature. These signatures can be ordered in both directions, and signers order does not matter. The protocol uses this observation. A transaction is usually held fully signed only by one player. The threshold scheme must follow these requirements (i) 2 players need to co-operate to generate a valid signature, (ii) both must be able to start the signing process, and (iii) only one player must be able to retrieve the signature at the end of the process. If both need the signature a sharing is always feasible, and the current protocol is not better in this case.
 
 % \begin{table}[h]
 %   \begin{tabularx}{\textwidth}{| X | S | S | S | S | S |}
