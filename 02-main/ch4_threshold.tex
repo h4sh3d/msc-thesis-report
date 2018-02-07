@@ -221,9 +221,9 @@ $m$ the message, $(r, s)$ the signature, and $Q = x \cdot G$ the public key.
 \subsubsection{Schemes' analysis}
 
 In $(r, s)$ the computation of the part $s$ remains the same in each signature
-scheme, the only difference for $s$ is the modulus applied. In \gls{dsa} the
-modulus $q$ is took, i.e. the order of the generator $g$ modulo $p$,  while in
-\gls{ecdsa} the modulus $n$ is took, i.e. the order of the generator $G$ on the
+scheme, the only difference for $s$ is the modulus applied. In \gls{dsa}
+modulo $q$ is used, i.e. the order of the generator $g$ modulo $p$,  while in
+\gls{ecdsa} modulo $n$ is used, i.e. the order of the generator $G$ on the
 curve $\mathcal{E}$.
 
 The biggest adaptation is on how to calculate the part $r$ from the private
@@ -690,7 +690,7 @@ or multiplicatively:
 In the additive case, the master public key $pk_{mas}$ is also the sum of all
 the points $pk_i$, which means that if each player publishes his share point,
 everyone can compute the master public key. The multiplicative sharing is more
-communication applicant because the computation of the public key is sequential
+communication intensive because the computation of the public key is sequential
 instead of parallel.
 
 An extended private key share is a tuple of $(sk_i, c)$ with $sk_i$ the regular

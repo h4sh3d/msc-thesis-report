@@ -178,13 +178,16 @@ central channel schemes. The last row refers to the next presented scheme.
 % -----------------------------------------------------------------------------
 \section{One-way channel (Shababi-Gugger-Lebrecht)}
 
-Our one-way Payment Channel for Bitcoin is a simplified version of the Lightning
-Network and \say{Yours Lightning Protocol} \cite{poon2016bitcoin,
-YoursLightningProtocol}. The scheme is specially designed for a client
-to provider scenario, where the provider has multiple clients through multiple
-channels. The core design aims to be as cheap as possible for the provider while
-being flexible for settlement. The white paper describing the core design more
-in-depth is in the following appendices.
+Our one-way payment channel for Bitcoin is a modified version of other layer-two
+applications, such as \say{Yours Lightning Protocol} or Lightning Network
+\cite{poon2016bitcoin, YoursLightningProtocol}. The scheme is specially designed
+for a client to provider scenario, where the provider has multiple clients
+through multiple channels. The core design aims to be as cheap as possible for
+the provider while being flexible for settlement. The white paper describing the
+core design more in-depth is in the following appendices.
+
+Our payment channel requires \gls{segwit}, and is trustless, endless, pulseless,
+and undelayed but not optimal when the channel closes without co-operation.
 
 A part of this thesis was devoted to writing the white paper describing our
 channel scheme while working on the scheme itself. During this work, we found a

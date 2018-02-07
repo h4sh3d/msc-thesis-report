@@ -162,8 +162,10 @@ today a transaction will not be relayed, nor included in a block without paying 
 miner, when he finds a block, can create the first transaction without inputs,
 where a fixed amount of new coins is created plus the total amount of fees
 collected in all the included transactions. A miner will, therefore, select the
-transactions that pay the most fees given the space they consume in the block. Fees are calculated with the size of the transaction in bytes,
-and a ratio of fee per byte then selected to find the fee for a transaction.
+transactions that pay the most fees given the space they consume in the block.
+Fees are calculated with the weight of the transaction, the weight is equal to
+the transaction size in bytes. A ratio of fee per byte/weight is then selected
+to find the fee for a transaction.
 
 \subsection{Scripting language}
 
@@ -267,9 +269,9 @@ the fees.
 
 \subsection{Transaction malleability}
 
-The fact that the transaction identifier depends on the hash of the serialized
-transaction while the signature does not currently cover all the data in a
-transaction introduces what is called transaction malleability. A miner
+The fact that the transaction identifier depends on the hash of the whole
+serialized transaction while the signature does not currently cover all the data
+in a transaction introduces what is called transaction malleability. A miner
 could tweak the transaction to change is identifier before including it into a
 block without invalidating it nor changing the claiming output conditions. This
 malleability means that an unconfirmed chain of transactions must not be trusted
