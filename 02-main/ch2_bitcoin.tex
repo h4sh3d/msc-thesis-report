@@ -58,7 +58,7 @@ the next block. Then the process starts again. If the block identifier is not
 valid, the miner can change the \textit{nonce} value in the header and check with the new
 identifier. Enumerating these identifiers to find the next valid block requires an
 enormous amount of power. All of the miners, round the clock, keep searching for
-the next valid block by brut forcing these identifiers with the \textit{nonce}.
+the next valid block by brute forcing these identifiers with the \textit{nonce}.
 
 \subsection{A chain of blocks}
 
@@ -75,7 +75,7 @@ the block identifiers after the changed block with the same difficulty target. I
 that can be estimated and for which the costs represent a certain safety
 threshold. It is established that a transaction included in a block can be
 considered as safe after six child blocks. The amount of power needed to erase
-this transaction became statistically too high to be probable, but it does not
+this transaction becomes statistically too high to be probable, but it does not
 mean that it will never happen since the mining process is modelled as a Poisson
 process.
 
@@ -227,7 +227,7 @@ Figure~\ref{fig:lockUnlock}.
 	\label{fig:lockUnlock}
 \end{figure}
 
-The script in Figure~\ref{fig:lockUnlock}, when executed, put the signature on
+The script in Figure~\ref{fig:lockUnlock}, when executed, puts the signature on
 top of the stack, then the public key. The public key is duplicated, hashed,
 and the public key hash present in the locking script is put on top of the stack,
 then the two first elements on top of the stack are then compared. If the
@@ -241,9 +241,9 @@ otherwise the transaction is invalid.
 
 \gls{p2sh} are the second standard script mostly used. It provides the ability
 to send outputs to a custom script without knowing the content of the script.
-A user can create a custom script and give the hash of this script, in an address,
+A user can create a custom script and give the hash of this script, encoded in an address,
 to another user. When the output is spent the whole script must be provided in
-the unlocking script. \gls{p2sh} are used, e.g., to create multi-signature scripts.
+the unlocking script. \gls{p2sh} are used, for example, to create multi-signature scripts.
 
 \subsection{Segregated witness}
 
@@ -274,7 +274,7 @@ way the weight is calculated to determine the fees. The transaction weight
 \texttt{Tx Weight} becomes $\texttt{Base Tx} * 3 + \texttt{Total Size}$ where
 \texttt{BaseTx} is the size without the witness data and \texttt{Total Size} is
 the serialized transaction with all the data, including the witness data. This new structure introduces a
-virtual transaction size such as virtual size is equal to $\texttt{Tx Weight} /
+virtual transaction size such that virtual size is equal to $\texttt{Tx Weight} /
 4$. Thus, \gls{segwit} reduces the weight of the witness data in the calculus of
 the fees.
 
@@ -340,7 +340,7 @@ of truth and only for resolving disagreements. Usually, the construction that
 uses this architectural concept is called payment channels or micropayment
 channels. These channels enable scalability because they reduce the number of
 transactions needed on the blockchain if two users exchange often.
-Channels allow more than scalability, with payment channel transactions are
+Channels allow more than scalability, with payment channels, transactions are
 instant and can be accepted as \textit{confirmed} without latency. Latency is a
 consequence of the mechanism that resolves the \textit{double-spending} problem
 when funds are spent twice to different users. Payment channels create a
