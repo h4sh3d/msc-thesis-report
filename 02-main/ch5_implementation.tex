@@ -335,7 +335,7 @@ int secp256k1_paillier_privkey_parse(
 \subsubsection{Encrypted messages}
 
 An encrypted message with Paillier cryptosystem is a big number $c \in
-\mathbb{Z}_{n^2}^*$. No version number is added in this case. The implementation
+\mathbb{Z}_{n^2}^*$. No version number is added in this case. The implementation's
 structure contains a \textit{nonce} value which could be set to 0 to store the \textit{nonce} used
 during encryption.
 
@@ -350,7 +350,7 @@ HEEncryptedMessage ::= SEQUENCE {
 \end{listing}
 
 Encrypted messages can be serialized and parsed and they are used in message
-exchanges during the signing protocol by both signers.
+exchange during the signing protocol by both signers.
 
 \subsection{Encrypt and decrypt}
 
@@ -478,7 +478,7 @@ void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const se
 
 Two Zero-Knowledge Proofs are used in the scheme, each party generates a proof
 and validates the other one. A proof is generated and verified under some ZKP
-parameters, these parameters are fixed at initialization time and do not
+parameters, these parameters are fixed at initialization time and don't
 change over time.
 
 \subsection{Data structures}
