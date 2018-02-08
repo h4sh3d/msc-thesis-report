@@ -19,15 +19,15 @@ transactions per second and even more at peak times such as Christmas.  To
 address this there are some proposals to modify the transaction structure (SegWit \cite{SegWitBIP}),
 some to modify the block-size limit (SegWit2x) and others to
 create a second layer on top of the Bitcoin protocol (Lightning Network \cite{poon2016bitcoin}).
-In the same idea of a second layer, this thesis explores
+In the same idea of a second layer, this thesis explores the
 implementation of a unidirectional payment channel for retail commercial
 transactions that allows two parties to
 transact over the blockchain while minimizing the number of transactions needed
-on the blockchain in a secure and trustless way. Every kind of channel needs
+on the blockchain in a secure and trustless way. Every type of payment channel needs
 multi-signature addresses to secure the funds. A cryptographic threshold scheme
 might improve these schemes significantly. Finding such a threshold scheme that
 fulfills the requirements is not trivial. The threshold scheme selected for this work is
-adapted to the needs of channels. And is implemented into the Bitcoin cryptographic
+adapted to the needs of channels, and is implemented in the Bitcoin cryptographic
 library to compute a particular two-party threshold ECDSA signature.
 
 % ECDSA is the signature scheme used by Bitcoin to sign transactions. A standard transaction
