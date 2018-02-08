@@ -1,40 +1,40 @@
 \chapter{Further research}
 \label{chap:furtherResearch}
 
-It is possible to list an enormous amount of idea or further research in a field
-like crypto-currencies or blockchain. But some of them more related to the work
-done in this paper are listed in the following. Some of them are improvements
-of the work already done but not yet ready for production, and some of them are
-completely exploratory.
+It is possible to list an enormous number of ideas for further research in a field
+like crypto-currencies, blockchain or cryptography. But some of those more related to the work
+done in this paper are listed in the following. Some of them are improvements of
+the work already done, but not yet ready for production, and some of them are
+entirely exploratory.
 
 % -----------------------------------------------------------------------------
 \section{Side-channel attack resistant implementation and improvements}
 
-The proposed implementation into the library \texttt{secp256k1} rely on \texttt{libgmp}
-for all complex mathematical calculus and \texttt{libgmp} is not strong against
-side channel attacks, and it is normal, the library has not been developed for
-that particular purpose. Therefore, a other implementation need to take the place
-and handle, in constant time and constant memory if possible, the mathematical
-calculus part. This is a big improvement that can be done, or must be done, before
-hoping to use the module is some real case scenario.
+The proposed implementation in the library \texttt{secp256k1} relies upon
+\texttt{libgmp} for all mathematical calculus and this library is
+not robust against side-channel attacks. The library has not
+been developed for that particular purpose. Therefore, another implementation
+is needed to handle, in constant time and constant memory if
+possible, the mathematical calculus part. This is a significant improvement that
+can be done, or must be done, before hoping to use the module in some real case
+scenario.
 
 \subsection{Second hash function}
 
-The current implementation use the hash function \texttt{SHA256} implemented
-into the library \texttt{secp256k1} for $\Pi$ and $\Pi'$. This is not complient
-with the orignial paper requirements, a other hash function must be implemented
+The current implementation uses the hash function \texttt{SHA256} implemented
+in the library \texttt{secp256k1} for $\Pi$ and $\Pi'$. This is not compliant
+with the scheme requirements. Another hash function must be implemented
 and used for $\Pi'$.
 
 \subsection{Paillier cryptosystem}
 
-Two major improvements or modifications could be performed specificaly on the
-Paillier cryptosystem implementation. As shown in the original paper,
-the Chinese Remainder Theorem can be used to optimize the decryption.
-In the standard approach, with a private key
-$(n, g, \lambda, \mu)$ and a ciphertext $c \in \mathbb{Z}_{n^2}^*$ it is possible
-to compute the plaintext $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$
-where $L(x) = \frac{x-1}{n}$. With the CRT two function $L_p$ and $L_q$ are
-define by
+Two major improvements or modifications can be made specificaly on the
+Paillier cryptosystem implementation. As shown in the Paillier's paper, the
+Chinese Remainder Theorem can be used to optimize the decryption. In the
+standard approach, with a private key $(n, g, \lambda, \mu)$ and a ciphertext $c
+\in \mathbb{Z}_{n^2}^*$ it is possible to compute the plaintext $m =
+L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = \frac{x-1}{n}$. With the
+CRT two functions $L_p$ and $L_q$ are defined as
 
 \begin{ceqn}
 \begin{align*}
@@ -42,8 +42,8 @@ define by
 \end{align*}
 \end{ceqn}
 
-Decryption can therefore be perform over mod $p$ and mod $q$ and recombining
-modular residues afterwards:
+Decryption can, therefore, be performed with modulo $p$ and modulo $q$ and
+recombining modular residues afterward
 
 \begin{ceqn}
 \begin{align*}
@@ -62,83 +62,95 @@ with precomputations
 \end{align*}
 \end{ceqn}
 
-Paillier cryptosystem can be adapted to \gls{ec} cryptography as shown in the
+Paillier cryptosystem can also be adapted to \gls{ec} cryptography as shown in the
 paper \say{Trapdooring Discrete Logarithms on Elliptic Curves over Rings} by
-Pascal Paillier \cite{10.1007/3-540-44448-3_44}. It is worth nothing however
-that the curve construction is different than the curve used to sign and so
-the code base cannot can not necessarily be reused.
+Pascal Paillier \cite{10.1007/3-540-44448-3_44}. It is worth noting however that
+the curve construction is different from the curve used to sign and so the code
+base cannot necessarily be reused.
 
 \subsection{Zero-knowledge proofs}
 
-Non-interactive zero-knowledge proofs are a big research field. The article
-\say{From Extractable Collision Resistance to Succinct Non-interactive Arguments of Knowledge, and Back Again}
-by Bitansky, Nir and Canetti, Ran and Chiesa, Alessandro and Tromer, and Eran
-\cite{Bitansky:2012:ECR:2090236.2090263}
-introduced the acronym zk-SNARK for zero-knowledge Succinct Non-interactive ARgument
-of Knowledge that are the backbone of the Zcash protocol \cite{cryptoeprint:2014:349}.
-In the recent paper \say{Bulletproofs: Efficient Range Proofs for Confidential Transactions}
-\cite{cryptoeprint:2017:1066} a new non-interactive zero-knowledge proof
-protocol with very short proofs and without a trusted setup is proposed.
-Further research could be done to adapt the zero-knowledge proof construction
-and migrate to a more generic approach, to remember that the zero-knowledge proof
-construction proposed in the original paper dates from the early 2000s, progress
-has been made since.
-
+Non-interactive zero-knowledge proofs are a significant research field. The
+article \say{From Extractable Collision Resistance to Succinct Non-interactive
+Arguments of Knowledge, and Back Again} by Bitansky, Nir and Canetti, Ran and
+Chiesa, Alessandro and Tromer, and Eran \cite{Bitansky:2012:ECR:2090236.2090263}
+introduced the acronym zk-SNARK for zero-knowledge Succinct Non-interactive
+ARgument of Knowledge that is the backbone of the Zcash protocol
+\cite{cryptoeprint:2014:349}. In the recent paper \say{Bulletproofs: Efficient
+Range Proofs for Confidential Transactions} \cite{cryptoeprint:2017:1066} a new
+non-interactive zero-knowledge proof protocol with concise proofs and without a
+trusted setup is proposed. Further research could be done to adapt the
+zero-knowledge proof construction and migrate to a more generic approach. These
+zero-knowledge proofs date from the early 2000s and advancement has been made
+since then.
 
 % -----------------------------------------------------------------------------
 \section{Hardware wallets}
 
-Hardware wallet devices have become increasingly popular with people and society. They
-promise to keep the keys safe and, at least, expose less the keys thanks to a
-dedicated and controlled environment. Thus, keys can be stored safly and, in an
-organisation for exemple, multiple hardware wallets can be used to create a
-multi-signature and control the funds.
+Hardware wallet devices have become increasingly popular. They promise to keep
+the keys safe and, at least, expose the keys less
+thanks to a dedicated and controlled environment. Keys can be stored
+safely and, in an organization, for example, multiple hardware wallets can be
+used to create a multi-signature to control the funds.
 
 The development of this threshold library, even if it is just a 2-out-of-2
-multi-signature script equivalent, can be used to create real threshold hardware
-wallet devices. Two hardware wallet devices can be setup together to create a
-multi-user setup, or an hardware wallet device can be couple with a phone to secure
-a lightweight wallet.
-
-Usually, when a new Bitcoin wallet is created, a list of words called mnemonic is
-shown to the user as a backup of his wallet key. The mnemonics are between twelve
-and twenty-four and each word represent 11 bits of the primary seed \cite{Mnemonic},
-for a threshold key it is not possible to represent all the data in the same way
-given the size of the key (near 4.5 Kb). A other way to display and transmit these
-information is needed to increase usability. Further research could be done to find
-a better way to represent and display a threshold key.
-
-The master tag is not included in the \texttt{DER} schema. Is the key itself responsible
-to store this information or this information is a part of the setup and can be stored
-outside, this question can be deepened.
+multi-signature script equivalent, can be used to create threshold hardware
+wallet devices. Two hardware wallet devices can be set up together to create a
+multi-user setup, or a hardware wallet device can be coupled with a phone to
+secure a web-wallet.
 
 % -----------------------------------------------------------------------------
-\section{More generic threshold scheme}
+\section{Key management}
 
-As previously mentionned, research have been done to generalize and find an optimal
-$(t, n)$ threshold in \gls{ecdsa} \cite{10.1007/BFb0052253, 10.1007/978-3-642-27954-6_20}.
-These papers base their work on the scheme chosen by the implementation, so a
-deeper analysis could be performed to assess the needed changes to adapt the current
-implementation to a generic threshold.
+Usually, when a new Bitcoin wallet is created a list of words, called a \textit{mnemonic} phrase,
+is shown to the user as a backup of his key. The \textit{mnemonics} are between
+twelve and twenty four words, and each word represents 11 bits of the initial seed
+\cite{Mnemonic}. For a threshold key, it is not possible to represent all the
+data in the same way given the size of the key (near 4.5 Kb). Another way to
+display and transmit this information is needed to improve usability. Further
+research could be done to find a better way to represent and display a threshold
+key.
+
+The master tag is not included in the \texttt{DER} schema. Is the key itself
+responsible for storing this information or is this information part of the
+setup and can be stored elsewhere? This question can also be explored.
+
+% -----------------------------------------------------------------------------
+\section{General threshold scheme}
+
+The way multi-signature scripts work in Bitcoin requires exposing all
+public keys related to the signatures. That increases the transaction size,
+which implies significant fees. Due to the script size limit of near to 500 bytes,
+the maximum number of signatories is around fifteen. The signatures are
+naturally present with the public keys in the script, which implies that it is
+possible to know which keys signed the transaction. That implies less anonymity
+on the blockchain. With a general threshold scheme, these limitations would be
+removed.
+
+As previously mentioned, research has been done to generalize and find an
+optimal $(t, n)$-threshold in \gls{ecdsa} \cite{10.1007/BFb0052253,
+10.1007/978-3-642-27954-6_20}. These papers base their work on the scheme chosen
+in this thesis, so a deeper analysis could be performed to assess the
+changes needed and adapt the current implementation to construct a generic threshold scheme.
 
 % -----------------------------------------------------------------------------
 \section{Schnorr signatures}
 
-In the paper \say{Efficient Identification and Signatures for Smart Cards} published
-in CRYPTO 1989, C.P. Schnorr propose the \say{Schnorr signature algorithm}
-\cite{10.1007/0-387-34805-0_22}.
-The Schnorr signature is considered the simplest digital signature scheme to
-be provably secure in a random oracle model \cite{Bellare:1993:ROP:168588.168596,
-10.1007/978-3-642-29011-4_33}. Thus, Bitcoin developers and
-researchers have a strong interest for this specific scheme since some years now.
-Schnorr signatures could greatly reduce the size of the signaure from 65 bytes (\gls{ecdsa}
-in \texttt{DER} format) to 40 bytes.
+In the paper \say{Efficient Identification and Signatures for Smart Cards}
+published in CRYPTO 1989, C.P. Schnorr proposes the \say{Schnorr signature
+algorithm} \cite{10.1007/0-387-34805-0_22}. The Schnorr signature is considered
+the simplest digital signature scheme to be provably secure in a random oracle
+model \cite{Bellare:1993:ROP:168588.168596, 10.1007/978-3-642-29011-4_33}.
+Bitcoin developers and researchers have had a strong interest in this specific
+scheme for some years now. Schnorr signatures could greatly reduce the size of
+the signature from 65 bytes (\gls{ecdsa} in \texttt{DER} format) to around 40 bytes.
 
-With the arrival of SegWit, it is now possible to have script version, thus it is
-more easy to indroduce new \texttt{OP\_CODE} and so introduce a new signature validation
-scheme. However, this will not invalidate the present work and researches because
-of the specific nature of its application.
+With the arrival of SegWit, script versioning was also introduced, making it
+is easier to introduce a new \texttt{OP\_CODE} and so introduce a new signature
+validation scheme. However, this will not invalidate the present work and
+research because of the specific requirements needed to optimize payment channels.
 
 Nevertheless, Schorr signatures are tipped to be the next scheme used in Bitcoin
 and maybe in other crypto-currencies. Further research could be done to find a
-protocol that fulfill the requirements defined for payment channels optimization.
+protocol that fulfills the requirements defined for payment channel
+optimization.

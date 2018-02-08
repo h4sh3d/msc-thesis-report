@@ -1,31 +1,34 @@
 \chapter{Introduction}
 \label{chap:introduction}
 
-Bitcoin is a decentralized peer-to-peer currency that allow users to to pay for
-things electronically, if both parties are willing. Their exist thousands of other
-crypt-currencies, but only some of them are really interesting in a political,
-economical or technical point of view. We can also mention Ethereum, ZCash, or Monero
-for expemple.
-Bitcoin was created by a pseudonymous software developer going by the name of
-Satoshi Nakamoto in 2008, as an electronic payment system based on mathematical proof.
-The idea was to produce a means of exchange, independent of any central authority,
-that could be transferred electronically in a secure, verifiable and immutable way.
-The blockchain is the output of this secure, verifiable and immutable mathematical proof.
+Bitcoin is a decentralized peer-to-peer currency that allows users to pay for
+things electronically. Thousands of other cryptocurrencies exist, but only some
+of them are really interesting from a political, economical or technical point
+of view. Bitcoin was created by a pseudonymous software developer going by the
+name of Satoshi Nakamoto in 2008, as an electronic payment system based on
+mathematical proof. The idea was to produce a means of exchange, independent of
+any central authority and censorship-resistant, which could be transferred
+electronically in a secure, verifiable and immutable way. The blockchain is the
+output of this secure, verifiable and immutable mathematical proof.
 
-Yet, the largest challenge in Bitcoin for the coming years is scalability. Currently, Bitcoin enforces
-a block-size limit which is equivalent to only some transactions per second on the network. This
-is not sufficient in comparison to big payment infrastructures, which allows tens of
-thousands of transactions per second and even more in peak times such as Christmas. To address this,
-some proposals modifying the transaction structure (like SegWit), some proposals also modifying the
-block-size limit (such as SegWit2x) and others creating a second layer based on top of the Bitcoin
-protocol (like the Lightning Network) exist. In the same idea of the Lightning Network,
-an new implementation of a one-way payment channel is proposed for special contexts.
-A one-way payment channel allows two parties to transact over the blockchain while
-minimizing the number of transactions needed on the blockchain in a secure and trustless way.
-This kind of channel needs multi-signature addresses which might be improved with a threshold scheme.
-Finding a threshold scheme that fulfill the requirements for the payment channel
-is not trivial. A threshold scheme is analyze in this thesis and its implementation
-is intergrated into the standard Bitcoin crypto-library.
+The most significant challenge in Bitcoin for the coming years is scalability.
+Currently, Bitcoin enforces a block-size limit which is equivalent to only a few
+transactions per second on the network. This amount is not sufficient in
+comparison to large payment infrastructures, which allow tens of thousands of
+transactions per second and even more at peak times such as Christmas.  To
+address this there are some proposals to modify the transaction structure (SegWit \cite{SegWitBIP}),
+some to modify the block-size limit (SegWit2x) and others to
+create a second layer on top of the Bitcoin protocol (Lightning Network \cite{poon2016bitcoin}).
+In the same idea of a second layer, this thesis explores
+implementation of a unidirectional payment channel for retail commercial
+transactions that allows two parties to
+transact over the blockchain while minimizing the number of transactions needed
+on the blockchain in a secure and trustless way. Every kind of channel needs
+multi-signature addresses to secure the funds. A cryptographic threshold scheme
+might improve these schemes significantly. Finding such a threshold scheme that
+fulfills the requirements is not trivial. The threshold scheme selected for this work is
+adapted to the needs of channels. And is implemented into the Bitcoin cryptographic
+library to compute a particular two-party threshold ECDSA signature.
 
 % ECDSA is the signature scheme used by Bitcoin to sign transactions. A standard transaction
 % is constituted of a single signature corresponding to the address where the Bitcoins come
