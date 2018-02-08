@@ -1,20 +1,23 @@
 \chapter{Conclusions}
 \label{chap:conclusions}
 
-Some mechanisms of Bitcoin have been explained to allow introducing two
-significant facts in Bitcoin today, i.e., the scalability problem and the
-latency due to the security model. The problem of scalability already has
-existing drafted solutions like consensus changes or layer-two applications such
-as payment channels. Payment channels are not new to Bitcoin. This idea was
-suggested by Satoshi in an email to Mike Hearn. A unidirectional payment channel
-with specific capabilities is proposed. This layer-two application can be
-improved with threshold cryptography by reducing the size of the transactions
-without changing the security model. This reduction is made by replacing the
-multi-signature script by a single signature computed with threshold
-cryptography. The threshold scheme is analyzed and adapted to \gls{ecdsa} before
-being implemented in the existing library used in Bitcoin-core, the library
-\texttt{secp256k1}. Finally, further research about payment channels, Bitcoin in
-general, and threshold signature schemes are exposed.
+Some mechanisms of Bitcoin have been explained to allow introducing one major
+fact in Bitcoin today, i.e., the scalability problem. The problem of scalability
+already has existing drafted solutions like consensus changes or layer-two
+applications such as payment channels. Payment channels are not new to Bitcoin.
+This idea was suggested by Satoshi in an email to Mike Hearn. Since then many
+different constructions of unidirectional and bidirectional payment channels
+have been discussed. In this thesis a unidirectional payment channel with
+specific capabilities is presented, explained, and analyzed.
+
+This layer-two application can be improved with threshold cryptography by
+reducing the size of the transactions without changing the security model. This
+reduction is feasible by replacing the multi-signature script by a single
+signature computed with threshold cryptography. The threshold scheme is analyzed
+and adapted to \gls{ecdsa} before being implemented in the existing library used
+in Bitcoin-core, the library \texttt{secp256k1}. Finally, further research about
+payment channels, Bitcoin in general, and threshold signature schemes are
+exposed.
 
 The Bitcoin payment channel implementation will be released as open source
 software soon, and testing will begin in the coming months. The threshold
