@@ -733,7 +733,7 @@ the same as described in the \gls{bip}.
 \end{split}
 \end{equation*}
 
-The function $f(l)$ computes the partial share $l$ at index $k$, such that
+The function $f(l)$ computes the partial share $l$ at index $kFurther research needs$, such that
 multiplied with the parent private key share $sk_i^{par}$ for the player $i$ the
 result is $sk_i$.
 
@@ -806,7 +806,7 @@ and then $\forall p_i \in P$
 At each derivation index each player updates their chain code. The derivation
 does not depend on the secret key because the chain code must remain
 deterministic and have the same value for each player without requiring
-communication round.
+a round of communication.
 
 \begin{equation}
 \begin{split}
@@ -936,10 +936,10 @@ deterministically by using a \texttt{HMAC} function such that the parameters are
 the private key and the message to sign.
 
 The other positive side is that signatures for the same key pair and the same
-message are deterministic, i.e., if the same message multiple is signed times, the
+message are deterministic, i.e., if the same message is signed multiple times, the
 signature remains the same. This determinism is also a significant advantage in
 Bitcoin to reduce transaction malleability (nevertheless, the signer can still
-choose to sign with non-deterministic nonce.) The threshold scheme can also
+choose to sign with a non-deterministic nonce.) The threshold scheme can also
 enjoy the same properties through a deterministic signature system.
 
 \begin{equation}
