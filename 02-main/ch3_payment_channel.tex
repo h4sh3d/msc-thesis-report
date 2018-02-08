@@ -2,60 +2,104 @@
 \label{chap:paymentChannels}
 
 Payment channels or micropayment channels, as mentioned previously, are one part
-of the scalability solution. There are various propositions to construct
-such structures. To have a better understanding of the differences, strengths, and
-weaknesses of some of them the author proposes a classification and definitions present
-in the white paper following appendices. Those definitions are repeated starting
-now.
+of the scalability solution. The idea of payment channels was suggested by
+Satoshi in an email to Mike Hearn. Since then, various propositions to construct
+such structures have been proposed. To have a better understanding of the
+differences between two channels and to be able to analyze objectively a channel
+scheme few formal definitions are needed. A list of formal definitions for
+payment channel construction is proposed. An analysis of different commonly
+exposed payment channel constructions is done following these definitions. The
+list does not contain all the payment channel propositions, and some of them
+might be missing. However, the list contains a fairly good representation of the
+different constructions existing.
 
-\begin{definition}[Trustless]
-  A channel is trustless if and only if the safety of funds for every player
-  $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$
-  at each step $\mathcal{S}$ of the protocol does not depend on
-  player $\Delta p = \mathcal{P} - p_i$'s behavior.
-\end{definition}
+Schemes can be optimized when a provider has multiple clients through multiple
+channels. In this scenario the core feature is to be as cheap as possible for
+the provider while being flexible for settlement. This specific case has been
+explored through a white paper present in the following appendices. The content
+of the white paper is summarized following the analysis.
 
-\begin{definition}[Optimal]
-  A channel is optimal if and only if the number of transactions $\mathcal{T}(\mathcal{C})$
-  needed to claim the funds for a given constraint $\mathcal{C}$ is equal to
-  the number of moves $\mathcal{M}(\mathcal{C})$ needed to satisfy the constraint
-  at any time without breaking the first definition.
-
-  For a constraint $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
-  refunding $\mathcal{P}_1$ requires $\mathcal{M}(\mathcal{C}) = 1$, thus
-  an optimal scheme requires $\mathcal{T}(\mathcal{C}) = \mathcal{M}(\mathcal{C}) = 1$.
-  Note: in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$ refund and settlement both
-  require $\mathcal{M}(\mathcal{C}) = 1$.
-\end{definition}
-
-\begin{definition}[Endless]
-  A channel is endless if and only if there is no predetermined lifetime at the setup.
-\end{definition}
-
-\begin{definition}[Pulseless]
-  A channel is pulseless if and only if there is no need to refresh or close the
-  channel on-chain while at least one player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
-  \dots, \mathcal{P}_n\}$ where the available amount to send is $A(p_i) > 0$. By
-  definition a pulseless channel must be also endless.
-\end{definition}
-
-\begin{definition}[Undelayed]
-  A channel is undelayed if and only if each player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
-  \dots, \mathcal{P}_n\}$ can trigger the process to get their money back at any time.
-\end{definition}
-
-These definitions are used in the following to compare different commonly
-exposed payment channel constructions. The list does not
-contain all the payment channel propositions and some of them might be missing.
-However, the list contains a fairly good representation of the different constructions
-existing.
+Channels can be optimized with threshold cryptography. In fact, the amount
+economized can be significative according to the cases. An analysis is performed
+to define, with and without \gls{segwit}, how many it is possible to save for
+payment channel transactions.
 
 \minitoc
 
 \newpage
 
 % -----------------------------------------------------------------------------
-\section{Types of payment channel}
+\section{Formal definitions}
+
+Formal definitions specify the necessary and sufficient conditions for a thing’s
+being a member of a specific set. They set boundaries or limits that separate
+the term from any other term. The following formal definitions qualify
+properties that micropayment channels based on a blockchain such as Bitcoin can
+have with the view of a particular player. Transactions represent a set of
+information with a special meaning for the targeted blockchain that modify the
+channel state. A transaction can be broadcast in the network to effectively
+affect the channel state or been kept by the player. Players are users of the
+targeted blockchain and they own funds. Funds are owned by one and only one
+player at a time. The meaning of owning an amount fund for a player is defined
+in a channel by holding a transaction not yet broadcasted that allows this
+player to claim this amount of funds and only this amount.
+
+\begin{definition}[Trustless]
+  A channel is trustless for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
+  \dots, \mathcal{P}_n\}$ if and only if the safety of his funds at each step
+  $\mathcal{S}$ of the protocol does not depend on the behavior of players $\mathcal{P}' =
+  \mathcal{P} - p_i$.
+\end{definition}
+
+\begin{definition}[Optimal]
+  A channel is optimal for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots,
+  \mathcal{P}_n\}$ if and only if the number of transactions
+  $\mathcal{T}(\mathcal{C})$ needed to claim the funds for a given constraint
+  $\mathcal{C}$ is equal to the number of moves $\mathcal{M}(\mathcal{C})$ needed
+  to satisfy the constraint at any time.
+\end{definition}
+
+E.g., for a refund constraint $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
+refunding $\mathcal{P}_1$ requires $\mathcal{M}(\mathcal{C}) = 1$, thus
+an optimal scheme requires $\mathcal{T}(\mathcal{C}) = \mathcal{M}(\mathcal{C}) = 1$.
+
+\begin{definition}[Open-ended]
+  A channel is open-ended for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
+  \dots, \mathcal{P}_n\}$ if and only if there is no predetermined channel
+  lifetime at the setup.
+\end{definition}
+
+A channel that is not open-ended can have a mechanism to refresh the channel
+on-chain with a designated transaction before the end of the lifetime.
+
+\begin{definition}[Undelayed]
+  A channel is undelayed for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
+  \dots, \mathcal{P}_n\}$ if and only if this player can broadcast their set of
+  transactions at any time.
+\end{definition}
+
+\begin{definition}[Non-interactive]
+  A channel is non-interactive for a player $p_i \in \mathcal{P} =
+  \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$ if and only if this player should not
+  watch the targeted blockchain to react to arbitrary events $\mathcal{E}$ to
+  guarantee their safety.
+\end{definition}
+
+With these five definitions, it is possible to infer a significant necessary
+corollary. If a channel is undelayed for a player this player can broadcast his
+latest state without constraint, and if this channel is also optimal for the
+same player only one transaction is needed to move the funds. If only one
+transaction is needed to move the funds, then the funds are directly available
+for this player. If the funds are available instantly, then the channel is
+instant for the player.
+
+\begin{corollary}[Instant]
+  A channel is instant for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots,
+  \mathcal{P}_n\}$ if and only if the channel is undelayed and optimal for this
+  player.
+\end{corollary}
+
+\subsection{Types of payment channel}
 
 We can distinguish two type of channels, the unidirectional channel that allows
 one user to send money to another user in a channel and the bidirectional
@@ -63,13 +107,27 @@ channel that allows two users to send in either direction in a channel. Usually,
 bidirectional channel is more optimal than two unidirectional channels but
 introduced other constraints.
 
-\subsection{Unidirectional}
+\subsubsection{Unidirectional}
 
-In unidirectional channels, there is a payer, later referred to as player-one or
-client, and a payee, later referred to as player-two or provider.  It is not
-possible to transfer money back in the reverse direction in the channel.
+In a two-players unidirectional channels, there is a payer, later referred to as
+player-one or client, and a payee, later referred to as player-two or provider.
+It is not possible to transfer money back in the reverse direction in the
+channel. These channels are asymmetric, players can profit of different channel
+properties. The analysis must be done in the view of each player $p_i \in
+\mathcal{P} = \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$ at a time.
 
-\subsubsection{Spilman-style payment channels}
+\subsubsection{Bidirectional}
+
+In a two-players bidirectional channel $\mathcal{C}$, the player $A$ and the
+player $B$ can send funds in direction $\mathcal{C}_{AB}$ and
+$\mathcal{C}_{BA}$. A bidirectional channel can be a specific scheme or a
+pairing of existing unidirectional channels. These channels are generaly
+symmetric, each player $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots,
+\mathcal{P}_n\}$ profit of the same channel properties.
+
+\section{Analysis of payment channels}
+
+\subsection{Spilman-style payment channels}
 
 Spilman-style payment channels, proposed by Jeremy Spilman in 2013
 \cite{SpilmanStyle}, are the most simple construction of a unidirectional
@@ -85,11 +143,23 @@ proper fix to transaction malleability \cite{SegWitBIP, BIP62,
 DBLP:journals/corr/AndrychowiczDMM13, DBLP:journals/corr/DeckerW14}, this scheme
 is not secure.
 
-According to the previous definitions, Spilman-style payment channels are
-trustless (assuming that a suitable solution for transaction malleability has
-been implemented), and optimal but not endless nor undelayed.
+\begin{table}[h]
+  \begin{tabularx}{\textwidth}{ | X | l | l | l | l | l |}
+  \hline
+  Player & Trustless & Optimal & Open-ended & Undelayed & Non-interactive \\ \hline \hline
+  Payer & Yes & Yes & No & No & Yes \\ \hline
+  Payee & Yes & Yes & No & Yes & Yes \\
+  \hline
+  \end{tabularx}
+  \caption{Summary of Spilman-style payment channel properties}
+  \label{fig:summarySpilmanPaymentChannel}
+\end{table}
 
-\subsubsection{\texttt{CLTV}-style payment channels}
+According to the previous definitions, Spilman-style ephemeral payment channels are
+instant non-interactive channels for the payee, and optimal non-interactive for
+the payer.
+
+\subsection{\texttt{CLTV}-style payment channels}
 
 Introduced in 2015, \texttt{CLTV}-style payment channels are a solution to the malleability
 problem in Spilman-style payment channels. With the new \texttt{OP\_CODE} check
@@ -124,14 +194,8 @@ ENDIF
 channels following the previous definition but are not subject to transaction
 malleability attacks.
 
-\subsection{Bidirectional}
 
-In a bidirectional channel $\mathcal{C}$, the player $A$ and the player $B$ can
-send funds in direction $\mathcal{C}_{AB}$ and $\mathcal{C}_{BA}$. A
-bidirectional channel can be a specific scheme or a pairing of existing
-unidirectional channels.
-
-\subsubsection{Decker-Wattenhofer duplex payment channels}
+\subsection{Decker-Wattenhofer duplex payment channels}
 
 Decker-Wattenhofer duplex payment channels \cite{Decker2015fast}, also called
 \gls{dmc}, proposed in 2015, are bidirectional channels based on pairs of
@@ -140,35 +204,57 @@ predefined at the setup phase but can be refreshed on-chain to keep the channel
 open with an updated state. During the refresh process, it is possible to refill
 the channel, and the scheme allows payment routing with \gls{htlc}.
 
-Duplex payment channels are trustless and endless, but not optimal. The
-uncooperative close of the channel requires $d + 2$ transactions
-(where $d$ is equal to the revocation tree depth). They are not
-pulseless (it requires a refresh transaction when the lifetime runs over to keep
-the channel open) and not undelayed (without other players cooperation the funds are
-recovered after \texttt{nLockTime} values.)
+\gls{dmc} payment channels are not optimal. Uncooperative close of the channel
+requires $d + 2$ transactions (where $d$ is equal to the revocation tree depth).
+They are not undelayed, without other players cooperation the funds are
+recovered after \texttt{nLockTime} values. \gls{dmc} are not open-ended, a
+dedicated transaction  needs to be broadcast before the end of the
+\texttt{nLockTime}.
 
-\subsubsection{Poon-Dryja payment channels}
+\begin{table}[h]
+  \begin{tabularx}{\textwidth}{ | X | l | l | l | X |}
+  \hline
+  Trustless & Optimal & Open-ended & Undelayed & Non-interactive \\ \hline \hline
+  Yes & No & (Yes) & No & No \\
+  \hline
+  \end{tabularx}
+  \caption{Summary of Decker-Wattenhofer duplex payment channel properties}
+  \label{fig:summaryDeckerWattenhoferPaymentChannel}
+\end{table}
+
+\subsection{Poon-Dryja payment channels}
 
 Poon-Dryja payment channels, also called Lightning Network, is a proposed
 implementation of \gls{htlc} with bidirectional payment channels which allow
 payments to be securely routed across multiple peer-to-peer payment channels
 \cite{poon2016bitcoin}.
 
+\begin{table}[h]
+  \begin{tabularx}{\textwidth}{ | X | l | l | l | X |}
+  \hline
+  Trustless & Optimal & Open-ended & Undelayed & Non-interactive \\ \hline \hline
+  Yes & No & Yes & Yes & No \\
+  \hline
+  \end{tabularx}
+  \caption{Summary of Poon-Dryja payment channel properties}
+  \label{fig:summaryPoonDryjaPaymentChannel}
+\end{table}
+
 Their scheme is trustless (assuming that \gls{segwit} has been implemented),
-endless, pulseless, and undelayed but not optimal when the channel closes
-without co-operation.
+open-ended, and undelayed but not optimal when the channel closes without
+co-operation nor non-interactive.
 
 \subsection{Summary}
 
 \begin{table}[h]
-  \begin{tabularx}{\textwidth}{ | X | l | l | l | l |}
+  \begin{tabularx}{\textwidth}{ | X | l | l | l | l | l |}
   \hline
-  Channel & Type & Optimal & Endless & Undelayed \\ \hline \hline
-  Spilman-style & Uni & Yes & No & No \\ \hline
-  CLTV-style & Uni & Yes & No & No \\ \hline
-  Decker-Wattenhofer \gls{dmc} & Bi & No & Yes & No \\ \hline
-  Poon-Dryja & Bi & No & Yes & Yes \\ \hline
-  Shababi-Gugger-Lebrecht & Uni & No & Yes & Yes \\
+  Channel & Type & Optimal & Open-ended & Undelayed & Non-inter. \\ \hline \hline
+  Spilman-style & Uni & Yes/Yes & No/No & No/Yes & Yes/Yes \\ \hline
+  CLTV-style & Uni & Yes/Yes & No/No & No/Yes & Yes/Yes \\ \hline
+  Decker-Wattenhofer \gls{dmc} & Bi & No & (Yes) & No & No \\ \hline
+  Poon-Dryja & Bi & No & Yes & Yes & No \\ \hline
+  Shababi-Gugger-Lebrecht & Uni & No/Yes & Yes/Yes & No/Yes & Yes/No \\
   \hline
   \end{tabularx}
   \caption{Summary of different payment channels}
@@ -189,8 +275,17 @@ through multiple channels. The core design aims to be as cheap as possible for
 the provider while being flexible for settlement. The white paper describing the
 core design more in-depth is in the following appendices.
 
-Our payment channel requires \gls{segwit}, and is trustless, endless, pulseless,
-and undelayed but not optimal when the channel closes without co-operation.
+\begin{table}[h]
+  \begin{tabularx}{\textwidth}{ | X | l | l | l | l | l |}
+  \hline
+  Player & Trustless & Optimal & Open-ended & Undelayed & Non-interactive \\ \hline \hline
+  Payer & Yes & No & Yes & No & Yes \\ \hline
+  Payee & Yes & Yes & Yes & Yes & No \\
+  \hline
+  \end{tabularx}
+  \caption{Summary of Shababi-Gugger-Lebrecht payment channel properties}
+  \label{fig:summaryShababiGuggerLebrechtPaymentChannel}
+\end{table}
 
 A part of this thesis was devoted to writing the white paper describing our
 channel scheme while working on the scheme itself. During this work we found a
@@ -202,6 +297,7 @@ construction depends on a funding transaction that locks funds in a 2-out-of-2
 multi-signature script. This funding transaction is always on-chain, so if it is
 possible to replace this \gls{p2sh} with a standard \gls{p2pkh} output the savings
 should be attractive.
+
 
 % -----------------------------------------------------------------------------
 \section{Optimizing payment channels}
@@ -248,21 +344,21 @@ Script Hash (SH) consumes a multi-signature script, and the Public Key Hash
   \label{fig:summaryTransactionSizeOpti}
 \end{table}
 
-The average fee per byte in the last three months is around 292 Satoshis. This
-optimization allows saving until 32,412 Satoshis for the first refund
+The average fee per virtual byte in the last three months was around 292 Satoshis. This
+optimization allows savings of up to 32,412 Satoshis for the first refund
 transaction without \gls{segwit}, and 12,264 Satoshis for a refund or a
-settlement transaction with \gls{segwit}. At the current price, these amounts
+settlement transaction with \gls{segwit}. At the current price, these savings
 represent between USD \$1.31 and USD \$3.47\footnote{ Average price of Bitcoin
 in the last 3 months, around \$10,700 USD}. If the channel is
 used for micropayments such as a couple of cents each time, this optimization
-makes the difference and lower the required threshold for rentability. The first
-refund transaction being less expensive, this also makes the client commitment
+makes a difference and lowers the required threshold for rentability. The first
+refund transaction being less expensive also makes the client commitment
 easier.
 
 Requirements need to be defined to be able to replace the multi-signature script
 with a threshold scheme. Analysis of the protocol and the signing process for a
 multi-signature script allows one to define these requirements. A multi-signature
-script can be unlocked with two different public keys and theire signature. The
+script can be unlocked with two different public keys and their signature. The
 signers order does not matter, signatures are sorted by numerical value in the script.
 The protocol takes advantage of this fact. A transaction is usually held fully signed
 only by one player. The threshold scheme must follow these requirements (i) 2

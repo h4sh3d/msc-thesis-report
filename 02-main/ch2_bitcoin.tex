@@ -75,9 +75,7 @@ the block identifiers after the changed block with the same difficulty target. I
 that can be estimated and for which the costs represent a certain safety
 threshold. It is established that a transaction included in a block can be
 considered as safe after six child blocks. The amount of power needed to erase
-this transaction becomes statistically too high to be probable, but it does not
-mean that it will never happen since the mining process is modelled as a Poisson
-process.
+this transaction becomes too high to be probable.
 
 \subsection{A list of transactions}
 
@@ -88,7 +86,7 @@ also called \textit{depth}, is related to the number of blocks mined after the
 inclusion of the transaction.
 
 A Merkle tree is created to keep track of all the transactions included in a
-block. This Merkle tree, or hash tree, is a is a structure in which every leaf
+block. This Merkle tree, or hash tree, is a structure in which every leaf
 node is labeled with the hash of a data block, and every non-leaf node is
 labeled with the cryptographic hash of the labels of its child nodes.
 
@@ -101,7 +99,7 @@ labeled with the cryptographic hash of the labels of its child nodes.
 \end{figure}
 
 Given the top hash, known as the Merkle root, and a leaf, it is possible to prove the
-membership by giving the path for each complementary hash. E.g given the
+membership by giving the path for each complementary hash. E.g., given the
 Merkle root and \texttt{L1}, the proof is \texttt{Hash 0-1} and \texttt{Hash 1}.
 The verifier can then compute the hash of \texttt{L1}, the result of this hash
 with \texttt{Hash 0-1}, and then with \texttt{Hash 1}. If the result is the same
@@ -129,7 +127,7 @@ words, where the bitcoins come from and where they go. An input refers to an
 unspent output at the address from where funds will be spent, and output
 refers to an address where the funds will go.  To spend funds the user needs
 to control the addresses where unspent outputs are present. These unspent outputs are
-called \texttt{UTXOs} and, combined, represent the total amount owned by a user.
+called Uspent Transaction Output (\texttt{UTXOs}) and, combined, represent the total amount owned by a user.
 
 \begin{figure}[H]
 	\centering
@@ -141,7 +139,7 @@ called \texttt{UTXOs} and, combined, represent the total amount owned by a user.
 \end{figure}
 
 Each input has a value, the value specified in the output to which
-the input points. The sum of the value of all inputs in a transaction must be less than the
+the input points. The sum of the value of all inputs in a transaction must be more than the
 sum of the values specified in the outputs, with the difference being the fee, meaning an input must be spent entirely.
 
 The most straightforward transaction is composed of one input and one output
@@ -160,16 +158,16 @@ input.
 
 \subsection{Transaction fees}
 
-The sum of all outputs of a transaction is constrained by the sum of the
-inputs, but the difference is implicitly considered as a fee (as
+The sum of all inputs of a transaction constrains the sum of the
+outputs, and the difference is implicitly considered as a fee (as
 shown in Figure~\ref{fig:utxosChain}.) Fees were not required in the beginning, but
 today a transaction will not be relayed, nor included in a block without paying fees. A
 miner, when he finds a block, can create the first transaction without inputs,
 where a fixed amount of new coins is created plus the total amount of fees
 collected in all the included transactions. A miner will, therefore, select the
 transactions that pay the most fees given the space they consume in the block.
-Fees are calculated with the weight of the transaction, the weight is equal to
-the transaction size in bytes. A ratio of fee per byte is then selected
+Fees are calculated with the virtual size of the transaction, the virtual size is equal to
+the transaction size in bytes. A ratio of fee per virtual byte is then selected
 to find the fee for a transaction.
 
 \subsection{Scripting language}
@@ -177,7 +175,7 @@ to find the fee for a transaction.
 As described before, outputs or \texttt{UTXOs} are related to addresses and
 proof of ownership is required to spend them. To spend a \texttt{UTXO}, the
 Bitcoin protocol uses digital signatures, a valid
-signature for the address from which the it is being spent is required and,
+signature for the address from which the output is being spent is required and,
 to sign, the private key is required. Thus, while signing a transaction
 corresponding to the right address, it is possible to prove that the user owns
 the address. However, the protocol does not just require signatures and public
@@ -239,7 +237,7 @@ value \texttt{False} put on top of the stack. If the value \texttt{True} is pres
 on top of the stack at the end of the script the transaction is valid,
 otherwise the transaction is invalid.
 
-\gls{p2sh} are the second standard script mostly used. It provides the ability
+\gls{p2sh} is the second standard script mostly used. It provides the ability
 to send outputs to a custom script without knowing the content of the script.
 A user can create a custom script and give the hash of this script, encoded in an address,
 to another user. When the output is spent the whole script must be provided in
@@ -340,7 +338,7 @@ of truth and only for resolving disagreements. Usually, the construction that
 uses this architectural concept is called payment channels or micropayment
 channels. These channels enable scalability because they reduce the number of
 transactions needed on the blockchain if two users exchange often.
-Channels allow more than scalability, with payment channels, transactions are
+Channels allow more than scalability, as payment channel transactions are
 instant and can be accepted as \textit{confirmed} without latency. Latency is a
 consequence of the mechanism that resolves the \textit{double-spending} problem
 when funds are spent twice to different users. Payment channels create a
