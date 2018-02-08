@@ -20,7 +20,7 @@ The scheme analyzed, transformed, and implemented in the following has been
 proposed by MacKenzie and Reiter in their paper \say{Two-Party Generation of DSA
 Signatures} \cite{crypto-2001-1592}. This scheme is also the basis of several
 other papers previously cited. They base their construction of a threshold signature
-scheme a simple multiplicative shared secret and
+scheme on a simple multiplicative shared secret and
 homomorphic encryption to keep the individual values unknown by the other
 signer. The homomorphic encryption used as an example in the paper and chosen for
 the implementation is the Paillier cryptosystem
@@ -94,7 +94,7 @@ resulting point is obtained with:
 
 \subsubsection{Point doubling}
 
-For $P$ and $Q$ equal, the formula is similar and can be simplified, the tangent to the curve
+For $P$ and $Q$ being equal, the formula is similar and can be simplified, the tangent to the curve
 $\mathcal{E}$ at point $P$ determines $R$.
 
 \begin{equation}
@@ -279,7 +279,7 @@ used to implement the scheme. Alice and Bob know a set of parameters used for
 both zero-knowledge proofs.
 
 Starting now the initialization is not taken into account, and the author
-assumes that reader has a good understanding of the original scheme
+assumes that the reader has a good understanding of the original scheme
 \cite{crypto-2001-1592}. The choice was made to focus the work on the
 signing protocol and because the implementation is not directly part of the
 cryptographic \texttt{C} library. This initialization can be further researched.
@@ -293,7 +293,7 @@ describe the adapted scheme. The adapted protocol keeps the same messages, so
 they are not repeated. The postulate~\ref{post:adaptEcdsa} is used to perform
 the adaptation.
 
-The secret remains shared multiplicatively so that so that Alice holds the secret
+The secret remains shared multiplicatively so that Alice holds the secret
 value $x_1 \in \mathbb{Z}_{n}$ and Bob $x_2 \in \mathbb{Z}_{n}$ such that $x
 \equiv x_1x_2 \pmod n$. Alice holds her public key $Q_1 = x_1 \cdot G$ and Bob
 $Q_2 = x_2 \cdot G$ such that $Q = x_1 \cdot Q_2$ for Alice or $Q = x_2 \cdot
