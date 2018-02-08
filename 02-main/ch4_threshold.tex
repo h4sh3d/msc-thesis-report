@@ -421,7 +421,7 @@ $(k_1)^{-1} \cdot R = ((k_1)^{-1}k_1k_2) \cdot G = k_2 \cdot G = R_2$.
   \label{fig:theProofPi}
 \end{figure}
 
-To help the reader a mapping of old variable names and the new variable name is done.
+To help the reader a mapping of old variable names to the new variable names is presented below.
 
 \begin{table}[h]
   \begin{tabular}{p{4cm} l}
@@ -501,7 +501,7 @@ acted honestly according to the protocol. The proof states that the point
 $\mathcal{R}_2$ is generated accordingly to the value $z_2$ and so to the value
 $k_2$. That the public key $\mathcal{Q}_2$ is related to the values $z_2$ and
 $x_2z_2$, and that the encrypted values $\mu$ and $\mu'$ are correctly composed.
-Again a mapping between the old names and the new names is done to help the
+Again a mapping between the old names and the new names is presented to help the
 reader.
 
 \begin{table}[h]
@@ -543,8 +543,8 @@ reader.
   \label{fig:theProofPi2}
 \end{figure}
 
-In the first Python implementation, the ZKP $\Pi'$ did not pass the validation.
-To investigate from where the problem comes all equations from the validation
+In the first Python implementation, the ZKP $\Pi'$ did not pass validation.
+To investigate where the problem comes from, all equations from the validation
 was done by hand. By expanding the equation $v_3$, we can see that the result
 does not match the expected value.
 
@@ -556,7 +556,7 @@ original paper. The result in the verification process $\Pi'$ need to match
 $v_3 \leftarrow (m_3)^{\alpha} (m_4)^{\delta} g^{n \sigma} \mu^{N} \mod N^2$.
 The original equation proposes $v_3 \leftarrow (m_3)^{s_1} (m_4)^{t_1} g^{nt_5}
 (t_3)^{N} (m_2)^{-e} \mod N^2$ which does not include $m'$ and $r'$ present in $\mu$,
-so $m_2$ cannot be used correctly as exposed next.
+so $m_2$ cannot be used correctly as shown next.
 
 \begin{equation}
 \begin{split}
