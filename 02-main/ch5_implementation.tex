@@ -1,14 +1,14 @@
 \chapter{Implementation in Bitcoin-core secp256k1}
 \label{chap:implementation-secp256k1}
 
-As mentioned before, Bitcoin uses elliptic curve cryptography (ECC) for signing
+As previously mentioned, Bitcoin uses elliptic curve cryptography (ECC) for signing
 transactions. When the first release of Bitcoin core appeared in early 2009,
-OpenSSL library was used to perform the cryptographic computations. Some years
-after a project started with the goal of replacing OpenSSL and creating a custom
-and minimalistic \texttt{C} library for cryptography over the curve secp256k1.
+OpenSSL library was used to perform the cryptographic computations.  Several years
+later, a project started with the goal of replacing OpenSSL and creating a custom
+and minimalistic \texttt{C} library for cryptography over the secp256k1 curve.
 This library is now available on GitHub at \texttt{bitcoin-core/secp256k1}
-project and it is one of the most optimized library, if not the most optimized,
-for the curve secp256k1. It is worth noting that other significant
+and it is one of the most optimized libraries, if not the most,
+for the secp256k1 curve. It is worth noting that other significant
 crypto-currencies like Ethereum also use this library, so extending the
 capabilities of this library is an excellent choice to attract other
 cryptographers to have a look and increase the number of reviews for this
@@ -22,16 +22,13 @@ implementation is NOT production ready and NOT side-channel attack resistant.
 Paillier and ZKP are not constant time computation and use \texttt{libgmp} for
 all arithmetic computations, even when secret values are used. This
 implementation is a textbook implementation of the scheme and needs to be
-reviewed and more tested before being used in production. It is also worth
+reviewed and tested more thoroughly before being used in production. It is also worth
 noting that this library does not implement the functions needed to initialize
 the setup. Only the functions needed to parse existing keys and compute a
 distributed signature are implemented.
 
 This chapter refers to the implementation available on GitHub at
-\url{https://github.com/GuggerJoel/secp256k1/tree/threshold} at the time when
-these lines are written. Note that the sources can evolve after that this report
-is written, to be sure to read the latest version of the code checks out the
-sources directly on GitHub.
+\url{https://github.com/GuggerJoel/secp256k1/tree/threshold} at the time of writing. Note that the sources may evolve after writing this report, to be sure to read the latest version of the code, check out the sources directly on GitHub.
 
 \minitoc
 
@@ -40,10 +37,10 @@ sources directly on GitHub.
 % -----------------------------------------------------------------------------
 \section{Configuration}
 
-The library use \texttt{autotools} to manage the compilation, installation, and
+The library uses \texttt{autotools} to manage the compilation, installation, and
 uninstallation. A system of modules is already present in the structure with an
 ECDH experimental module for shared secret computation and a recovery module for
-recover ECDSA public key. A module can be flag as experimental, then, at the
+recovering ECDSA public keys. A module can be flagged as experimental, then, at
 configuration time, an explicit parameter enabling experimental modules must be
 passed, and a warning is shown to warn that the build contains experimental
 code.
@@ -52,21 +49,21 @@ code.
 
 In this structure, the threshold extension is all indicated to be an
 experimental module also. A new variable \texttt{\$enable\_module\_recovery} is
-declared with a m4 macro defined by autoconf in the \texttt{configure.ac} file
+declared with an m4 macro defined by autoconf in the \texttt{configure.ac} file
 with the argument \texttt{-{}-enable-module-threshold}. The default value is set
 to \texttt{no}.
 
 \begin{listing}
   \bashfile[firstline=137,lastline=140]{02-main/listings/configure.ac}
-	\caption{Add argument into \texttt{configure.ac} to enable the module}
+	\caption{Add argument in \texttt{configure.ac} to enable the module}
 	\label{lst:configureEnableThreshold}
 \end{listing}
 
-If the variable \texttt{\$enable\_module\_recovery} is set to yes into
-\texttt{configure.ac} (lines 443 to 445) a compiler constant is declared, again
-with a m4 marco defined by autoconf, and set to 1 in
-\texttt{libsecp256k1-config.h} (lines 20 and 21.) This header file is generated
-when \texttt{./configure} script is run and is included in the library.
+If the variable \texttt{\$enable\_module\_recovery} is set to yes in
+\texttt{configure.ac} (lines 443 to 445), a compiler constant is declared, again
+with an m4 marco defined by autoconf, and set to 1 in
+\texttt{libsecp256k1-config.h} (lines 20 and 21). This header file is generated
+when \texttt{./configure} script runs and is included in the library.
 
 \begin{listing}
   \bashfile[firstline=443,lastline=445]{02-main/listings/configure.ac}
@@ -85,15 +82,15 @@ The main file \texttt{secp256k1.c} (lines 586 to 590) and the tests file
 	\label{lst:includeThresholdImplementationHeaders}
 \end{listing}
 
-The module is set as experimental to avoid enabling it without explicitly agree
-to build experimental code. If the parameter experimental is set to yes a
+The module is set as experimental to avoid enabling it without explicitly agreeing
+to build experimental code. If the experimental parameter is set to yes a
 warning is displayed during the configuration process to warn the user. If the
-parameter experimental is not set and an experimental module is enabled an error
-message is displayed, and the process failed.
+experimental parameter is not set and an experimental module is enabled an error
+message is displayed, and the process fails.
 
 \begin{listing}
   \bashfile[firstline=465,lastline=482]{02-main/listings/configure.ac}
-	\caption{Set threshold module to experimental into \texttt{configure.ac}}
+	\caption{Set threshold module to experimental in \texttt{configure.ac}}
 	\label{lst:setModuleExperimental}
 \end{listing}
 
@@ -102,22 +99,22 @@ message is displayed, and the process failed.
 A module is composed of one or many \texttt{include/} headers that contain the
 public API with a small description of each function, these headers are copied
 in the right folders when \texttt{sudo make install} command is run. The file
-\texttt{Makefile.am} defines which headers need to be installed, which not and
+\texttt{Makefile.am} defines which headers need to be installed, which don't and
 how to compile the project. This file is parsed by Autoconf to generate the
-final \texttt{Makefile} with all the functionalities expected.
+final \texttt{Makefile}.
 
-Each module has its \texttt{Makefile.am.include} which describe what to do with
-all the files present in the module folder. This file is included in the main
+Each module has its \texttt{Makefile.am.include} which describes what to do with
+all the files in the module folder. This file is included in the main
 \texttt{Makefile.am} (lines 179 to 181) if the module is enabled.
 
 \begin{listing}
   \makefile[firstline=179,lastline=181]{02-main/listings/Makefile.am}
-	\caption{Include specialized Makefile if threshold module is enable}
+	\caption{Include specialized Makefile if threshold module is enabled}
 	\label{lst:includeSpecializedMakefile}
 \end{listing}
 
-The specific \texttt{Makefile.am.include} declare the header requisite to be
-include and declare the list of all the headers that must not be installed on
+The specific \texttt{Makefile.am.include} declares the requisite header to be
+included and declares the list of all the headers that must not be installed on
 the system when \texttt{sudo make install} command is run.
 
 \begin{listing}
@@ -138,10 +135,10 @@ command below.
 \section{\texttt{DER} parser-serializer}
 
 Transmit messages and retrieve keys are an essential part of the scheme. Because
-between all steps a communication on the network is necessary, a way to export
-and import data is required. Bitcoin private key is a simple structure because
+between each step communication on the network is necessary, a way to export
+and import data is required. Bitcoin private keys are a simple structure because
 of the fixed curve and their intrinsic nature, a single $2^{256}$ bits value.
-Threshold private keys are composed of multiple parts like (i) the private
+Threshold private keys are composed of multiple parts, (i) the private
 share, (ii) a Paillier private key, (iii) a Paillier public key, and (iv)
 Zero-Knowledge Proof parameters. To serialize these complex structures the
 \texttt{DER} standard is chosen. Three simple data types are implemented in the
@@ -152,24 +149,24 @@ library (i) sequence, (ii) integer, and (iii) octet string.
 The sequence data structure holds a sequence of integers and/or octet strings.
 The sequence starts with the constant \texttt{0x30} and is followed by the
 content length and the content itself. A length could be in the short form or
-the long form. If the content number of bytes is shorter to \texttt{0x80} the
-length byte indicate the length, if the content is equal or longer than
+the long form. If the content number of bytes is shorter than \texttt{0x80} the
+length byte indicates the length, if the content is equal or longer than
 \texttt{0x80} the seven lower bits 0 to 6 where $\texttt{byte} = \{
 \texttt{b}_7, \dots, \texttt{b}_1, \texttt{b}_0\}$ indicate the number of
-followed bytes which are used for the length.
+following bytes which are used for the length.
 
 \begin{listing}
   \cfile[firstline=10,lastline=23]{02-main/listings/der_impl.h}
-	\caption{Implementation of a \texttt{DER} lenght parser}
-	\label{lst:implDERLenghtParser}
+	\caption{Implementation of a \texttt{DER} length parser}
+	\label{lst:implDERLengthParser}
 \end{listing}
 
 The sequence parser checks the first byte with the constant \texttt{0x30} and
-extracts the content length. Position in the input array are held in the
-\texttt{*pos} variable, extracted length is stored in \texttt{*lenght}, and the
-offset holds how many bytes in the data are used for the header and the length.
+extracts the content length. Positions in the input array are held in the
+\texttt{*pos} variable, extracted length is stored in \texttt{*length}, and the
+offset holds how many bytes of the data are used for the header and the length.
 A coherence check is performed to ensure that the current offset and the
-retrieved length result in the same amount of bytes passed in argument.
+retrieved length result in the same number of bytes passed in argument.
 
 When a sequence holds other sequences, retrieving their total length (including
 header and content length bytes) is needed to parse them recursively. A specific
@@ -183,13 +180,13 @@ its first byte.
 \end{listing}
 
 The serialization of a sequence is implemented as a serialization of an octet
-string with the sequence header \texttt{0x30} without integrity check of the
+string with the sequence header \texttt{0x30} without an integrity check of the
 content. The content length is serialized first, then the header is added.
 
-The result of a content length serialization can be $\geq 1$ bytes. If the
+The result of content length serialization can be $\geq 1$ bytes. If the
 content is shorter than \texttt{0x80}, then one byte is enough to store the
-length. Else multiple bytes ($\geq 2$) are used. Because the number of bytes is
-undefined before the computation a memory allocation is necessary and a pointer
+length. Otherwise multiple bytes ($\geq 2$) are used. Because the number of bytes is
+undefined before the computation, a memory allocation is necessary and a pointer
 is returned with the length of the array.
 
 \begin{listing}
@@ -200,32 +197,32 @@ is returned with the length of the array.
 
 If the content length is longer than \texttt{0x80}, then \texttt{mpz} is used to
 serialize the length into a bytes array in big-endian most significant byte
-first. The length of this serialization is stored into \texttt{longsize} and is
+first. The length of this serialization is stored in \texttt{longsize} and is
 used to create the first byte with the most significant bit set to 1 (line 93).
 
 \begin{listing}
   \cfile[firstline=81,lastline=100]{02-main/listings/der_impl.h}
-	\caption{Implementation of a \texttt{DER} lenght serializer}
-	\label{lst:implDERLenghtSerializer}
+	\caption{Implementation of a \texttt{DER} length serializer}
+	\label{lst:implDERLengthSerializer}
 \end{listing}
 
 \subsection{Integer}
 
-Integers are used to store the most values in the keys and Zero-Knowledge
+Integers are used to store most values in the keys and Zero-Knowledge
 Proofs. An integer can be positive, negative or zero and are represented in the
 second complement form. The header starts with \texttt{0x02}, followed by the
-length of the data. Parsing and serializing integer are already implemented in
-\texttt{libgmp}, functions are just wrapper to extract information from the
+length of the data. Parsing and serializing integers is already implemented in
+\texttt{libgmp}, functions are just wrappers to extract information from the
 header and start the \texttt{mpz} importation at the right offset.
 
 \subsection{Octet string}
 
-Octet strings are used to holds serialized data like points/public keys. An
+Octet strings are used to hold serialized data like points/public keys. An
 octet string is an arbitrary array of bytes. The header starts with
 \texttt{0x04} followed by the size of the content. The serialization
-implementation retrieves the length of the content, copy the header and the
-octet string into a new memory space, and return the pointer with the total
-length. The parser implementation copies the content and set the content length,
+implementation retrieves the length of the content, copies the header and the
+octet string into a new memory space, and returns the pointer with the total
+length. The parser implementation copies the content and sets the content length,
 the position index, and the offset.
 
 \section{Paillier cryptosystem}
@@ -237,7 +234,7 @@ be reviewed.
 
 \subsection{Data structures}
 
-Encrypted message, public and private keys are transmitted. As mentioned before,
+Encrypted messages, public keys and private keys are transmitted. As mentioned before,
 the \texttt{DER} standard format is used to parse and serialize data. A
 \texttt{der} schema for all data structures is defined to ensure portability
 over different implementations.
@@ -245,7 +242,7 @@ over different implementations.
 \subsubsection{Public keys}
 
 The public key is composed of a public modulus and a generator. The
-implementation data structure adds a big modulus corresponding to the square of
+implementation's data structure adds a big modulus corresponding to the square of
 the modulus. A version number is added for future compatibility purposes.
 
 \begin{listing}
@@ -260,8 +257,8 @@ HEPublicKey ::= SEQUENCE {
 	\label{lst:DERSchemaPaillierPub}
 \end{listing}
 
-\texttt{libgmp} is used for all the arithmetic in Paillier implementation, all
-numbers are stored in \texttt{mpz\_t} type. The parser takes in input an array
+\texttt{libgmp} is used for all the arithmetic in the Paillier implementation, all
+numbers are stored in \texttt{mpz\_t} type. The parser takes as input, an array
 of bytes with a length and the public key to create.
 
 \begin{listing}
@@ -286,7 +283,7 @@ int secp256k1_paillier_pubkey_parse(
 \subsubsection{Private keys}
 
 The private key is composed of a public modulus, two primes, a generator, a
-private exponant $\lambda = \varphi(n) = (p-1)(q-1)$, and a private coefficient
+private exponent $\lambda = \varphi(n) = (p-1)(q-1)$, and a private coefficient
 $\mu = \varphi(n)^{-1} \mod n$. Again, a version number is added for future
 compatibility purposes.
 
@@ -306,8 +303,8 @@ HEPrivateKey ::= SEQUENCE {
 	\label{lst:DERSchemaPaillierPriv}
 \end{listing}
 
-The parser takes in input an array of bytes with a length and the private key to
-filling. The big modulus is computed after the parsing to accelerate encryption
+The parser takes as input, an array of bytes with a length and the private key to
+filling. The big modulus is computed after parsing to accelerate encryption
 and decryption.
 
 \begin{listing}
@@ -336,8 +333,8 @@ int secp256k1_paillier_privkey_parse(
 \subsubsection{Encrypted messages}
 
 An encrypted message with Paillier cryptosystem is a big number $c \in
-\mathbb{Z}_{n^2}^*$. No version number is added in this case. The implementation
-structure contains a nonce value that could be set to 0 to stores the nonce used
+\mathbb{Z}_{n^2}^*$. No version number is added in this case. The implementation's
+structure contains a nonce value which could be set to 0 to store the nonce used
 during encryption.
 
 \begin{listing}
@@ -350,7 +347,7 @@ HEEncryptedMessage ::= SEQUENCE {
 	\label{lst:DERSchemaPaillierEncMessage}
 \end{listing}
 
-An encrypted message can be serialized and parsed and they are used in messages
+An encrypted message can be serialized and parsed and they are used in message
 exchange during the signing protocol by both parties.
 
 \subsection{Encrypt and decrypt}
@@ -358,11 +355,11 @@ exchange during the signing protocol by both parties.
 Like all other encryption schemes in public key cryptography, the public key is
 used to encrypt and the private key to decrypt. To encrypt the message
 \texttt{mpz\_t m} where $m < n$, a random value $r$ where $r < n$ is selected
-with the function pointer \texttt{noncefp} and set into the nonce value
-\texttt{res->nonce}. This nonce is stored because his value is needed to create
-Zero-Knowledge Proofs. Then, the cipher $c = g^m \cdot r^n \mod n^2$ is putted
-into \texttt{res->message} to complete the encryption process. All intermediary
-states are wipe out before returning the result.
+with the function pointer \texttt{noncefp} and set in the nonce value
+\texttt{res->nonce}. This nonce is stored because its value is needed to create
+Zero-Knowledge Proofs. Then, the cipher $c = g^m \cdot r^n \mod n^2$ is put
+in \texttt{res->message} to complete the encryption process. All intermediary
+states are erased before returning the result.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
@@ -384,9 +381,9 @@ int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, co
 	\label{lst:implEncryptPaillier}
 \end{listing}
 
-If the random value selection process failed the encryption fail also. The
+If the random value selection process fails the encryption also fails. The
 random function of type \texttt{secp256k1\_paillier\_nonce\_function} must use a
-good CPRNG and his implementation is not part of the library.
+good CPRNG and its implementation is not part of the library.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
@@ -395,14 +392,14 @@ typedef int (*secp256k1_paillier_nonce_function)(
     const mpz_t max
 );
   \end{minted}
-	\caption{Function signature for Paillier nonces generation}
+	\caption{Function signature for Paillier nonce generation}
 	\label{lst:PaillierNoncesSigFunc}
 \end{listing}
 
 To decrypt the cipher $c \in \mathbb{Z}_{n^2}^*$ with the private key, the
-function compute $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = (x -
+function computes $m = L(c^{\lambda} \mod n^2) \cdot \mu \mod n$ where $L(x) = (x -
 1) / n$. The cipher is raised to the lambda $c^{\lambda} \mod n^2$ in line 4 and
-the result is put to an intermediary state variable. Then the $L(x)$ function is
+the result is put in an intermediary state variable. Then the $L(x)$ function is
 applied to the intermediary state in lines 5-6. Finally, the multiplication with
 $\mu$ and the modulo of $n$ are taken (lines 7-8) to lead to the result. It is
 worth noting that, in line 6, only the quotient of the division is recovered.
@@ -427,7 +424,7 @@ void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_me
 \subsection{Homomorphism}
 
 The choice of this scheme is not hazardous, homomorphic addition and
-multiplication are used to construct the signature composant $s = D_{sk}(\mu)
+multiplication are used to construct the signature component $s = D_{sk}(\mu)
 \mod q : \mu = (\alpha \times_{pk} m'z_2) +_{pk} (\zeta \times_{pk} r'x_2z_2)
 +_{pk} E_{pk}(cn)$ where $+_{pk}$ denotes homomorphic addition over the
 ciphertexts and $\times_{pk}$ denotes homomorphic multiplication over the
@@ -436,7 +433,7 @@ ciphertexts.
 \subsubsection{Addition}
 Addition $+_{pk}$ over ciphertexts is computed with $D_{sk}(E_{pk}(m_1, r_1)
 \cdot E_{pk}(m_2, r_2) \mod n^2) = m_1 + m_2 \mod n$ or $D_{sk}(E_{pk}(m_1, r_1)
-\cdot g^{m_2} \mod n^2) = m_1 + m_2 \mod n$ where $D_{sk}$ denotes descryption
+\cdot g^{m_2} \mod n^2) = m_1 + m_2 \mod n$ where $D_{sk}$ denotes decryption
 with private key $sk$ and $E_{pk}$ denotes encryption with public key $pk$. Only
 the first variant is implemented, where two ciphertexts are added together to
 result in a third ciphertext.
@@ -460,7 +457,7 @@ void secp256k1_paillier_add(secp256k1_paillier_encrypted_message *res, const sec
 Multiplication $\times_{pk}$ over ciphertexts can be performed with
 $D_{sk}(E_{pk}(m_1, r_1)^{m_2} \mod n^2) = m_1 m_2 \mod n$, the implementation
 is straight forward in this case. The nonce value from the ciphertext is copied
-in the resulted encrypted message for not lose information after opperations.
+in the resulting encrypted message to not lose information after opperations.
 
 \begin{listing}
   \begin{minted}[breaklines=true,fontsize=\scriptsize]{c}
@@ -477,16 +474,16 @@ void secp256k1_paillier_mult(secp256k1_paillier_encrypted_message *res, const se
 
 \section{Zero-knowledge proofs}
 
-Two Zero-Knowledge Proofs are used in the scheme, each party generate a proof
+Two Zero-Knowledge Proofs are used in the scheme, each party generates a proof
 and validates the other one. A proof is generated and verified under some ZKP
-parameters, these parameters are fixed at the initialization time and don't
-change over the time.
+parameters, these parameters are fixed at initialization time and don't
+change over time.
 
 \subsection{Data structures}
 
 Three data structures are created, one for each ZKP and one for storing the
-parameters. Zero-Knowledge Proofs are composed of big numbers and points and
-need to be serialized and parsed to be included in the messages exchange
+parameters. Zero-Knowledge Proofs are composed of big numbers and points, and
+need to be serialized and parsed to be included in the message exchange
 protocol.
 
 \subsubsection{Zero-Knowledge Parameters}
@@ -512,8 +509,8 @@ ZKPParameter ::= SEQUENCE {
 \subsubsection{Zero-Knowledge Proof $\Pi$}
 
 Zero-Knowledge Proof $\Pi$ is composed of numeric values and one point. The
-point is stored in a public key internal structure inside the implementation and
-is exported through the secp256k1 library as a 65 bytes uncompressed public key.
+point is stored in a public key internal structure within the implementation and
+is exported through the secp256k1 library as a 65 byte uncompressed public key.
 The uncompressed public key is then stored as an octet string in the schema. A
 version number is added for future compatibility purposes. Two functions are
 provided in the module to parse and serialize a \texttt{ECZKPPi} \texttt{DER}
@@ -578,13 +575,13 @@ ECZKPPiPrim ::= SEQUENCE {
 \subsection{Generate proofs}
 
 Proofs are generated in relation to a specific setup and a specific in progress
-signature. which makes them linked to a large number of values (points,
+signature, which makes them linked to a large number of values (points,
 encrypted messages, secrets, parameters, etc.) The complexity of these
-constructions is strongly felt in the code. Heavy mathematic computations are
+constructions is strongly felt in the code. Heavy mathematical computations are
 needed with two \texttt{hash} functions.
 
-A CPRNG function is required to generate both proofs. This function generate
-random number in $\mathbb{Z}_{max}$ and $\mathbb{Z}_{max}^*$. The \texttt{flag}
+A CPRNG function is required to generate both proofs. This function generates
+random numbers in $\mathbb{Z}_{max}$ and $\mathbb{Z}_{max}^*$. The \texttt{flag}
 argument indicate which case is treated, \texttt{STD} or \texttt{INV}. If the
 function has no access to a good source of randomness or cannot generate a good
 random number a zero is returned, otherwise a one is returned.
@@ -606,13 +603,13 @@ typedef int (*secp256k1_eczkp_rdn_function)(
 
 \subsubsection{Zero-Knowledge Proof $\Pi$}
 
-As shown in figure~\ref{fig:theProofPi}, the proof states that (i) it exists a
-known value by the proover that link $r \rightarrow r_2$, (ii) it exists a
-second known value by the proover that, related to the first one, link $G
+As shown in figure~\ref{fig:theProofPi}, the proof states that (i) there exists a
+known value by the proover that links $r \rightarrow r_2$, (ii) there exists a
+second known value by the proover that, related to the first one, links $G
 \rightarrow y_1$, (iii) the result of $D_{sk}(\alpha)$ is this first value, and
 (iv) the result of $D_{sk}(\zeta)$ is this second value.
 
-To do computation on the curve a context object need to be passed in argument,
+To do computation on the curve a context object needs to be passed in arguments,
 then the ZKP object to fill, the ZKP parameters, the two encrypted messages
 $\alpha$ and $\zeta$, scalar values $sx_1$ and $sx_2$ representing $z_1 =
 (k_1)^{-1} \mod n$ and $x_1z_1$, then the point $r$, the point $r_2$, the
@@ -641,18 +638,18 @@ int secp256k1_eczkp_pi_generate(
 	\label{lst:funcSigGeneratePi}
 \end{listing}
 
-The function implementation can be splited in four main parts (i) generate all
+The function implementation can be split in four main parts (i) generate all
 the needed random values $v$, (ii) compute the challenge values, (iii) compute
 the \texttt{hash} of these values $v$, and (iv) compute the ZKP values with $e =
 \texttt{hash}(v)$.
 
 \subsubsection{Zero-Knowledge Proof $\Pi'$}
 
-As shown in figure~\ref{fig:theProofPi2}, the proof states that (i) it exists a
-known value by the proover $x_1$ that link $r_2 \rightarrow G$, (ii) it exists a
+As shown in figure~\ref{fig:theProofPi2}, the proof states that (i) there exists a
+known value by the proover $x_1$ that link $r_2 \rightarrow G$, (ii) there exists a
 second known value by the proover that, related to the first one, link $G
 \rightarrow y_2$, (iii) the result of $D_{sk'}(\mu')$ is this first value, and
-(iv) it exists a third known value by the proover $x_3$ and the result of
+(iv) there exists a third known value by the proover $x_3$ and the result of
 $D_{sk}(\mu)$ is the homomorphic operation of $(\alpha \times x_1) + (\zeta
 \times x_2) + x_3$.
 
@@ -683,13 +680,13 @@ int secp256k1_eczkp_pi2_generate(
 	\label{lst:funcSigGeneratePi2}
 \end{listing}
 
-The function implementation can also be splited in four main parts (i) generate
+The function implementation can also be split in four main parts (i) generate
 all the needed random values $v$, (ii) compute the proof values, (iii) compute
 the \texttt{hash'} of these values $v$, and (iv) compute the ZKP values with $e =
 \texttt{hash'}(v)$.
 
 It is worth noting that \texttt{hash} and \texttt{hash'} must be different
-hashing function to avoid reusing $\Pi$ proofs, even not satisfying the
+hashing functions to avoid reusing $\Pi$ proofs, even without satisfying the
 predicate, to construct fraudulent $\Pi'$ proofs.
 
 \subsection{Validate proofs}
@@ -738,23 +735,23 @@ int secp256k1_eczkp_pi2_verify(
 The threshold module exposes the public API used to create an application that
 wants to use the distributed signature protocol. The public API includes all
 functions needed to parse-serialize keys, messages, and signature parameters.
-Signature parameters holds the values $k$, $z = k^{-1}$, and $r = k \cdot G$,
-these values are---in a normal signature mode---computed, used, and destroy in
-one time. However, a mechanism to save et restore these values is required in
-the distributed mode because the context can be destroyed and re-created between
+Signature parameters hold the values $k$, $z = k^{-1}$, and $r = k \cdot G$,
+these values are---in a normal signature mode---computed, used, and destroyed in
+one go. However, a mechanism to save and restore these values is required in
+distributed mode because the context can be destroyed and re-created between
 each step.
 
 The public API also includes the five functions that implement the protocol. One
-function is one step in the protocol and between two functions, the generated
+function is one step in the protocol and in-between functions, the generated
 message is serialized by the caller and parsed by the sender. The signature
 parameters could also be serialized and parsed during the response waiting time.
 
 \subsubsection{Nomenclature}
 
-A proposal for exchanged messages names and actions is done in this report.
+A proposal for exchanged message names and actions is done in this report.
 Players $P_1$ and $P_2$ represent the initiator and collaborator. Player $P_1$
-initialize the communication and ask $P_2$ to collaborate on a signature, if
-$P_2$ collaborates and the protocol end successfully $P_1$ retrieve the
+initializes the communication and asks $P_2$ to collaborate on a signature, if
+$P_2$ collaborates and the protocol ends successfully $P_1$ retrieves the
 signature.
 
 Four messages are necessary between the five steps. In order, the proposed names
@@ -764,13 +761,13 @@ message name.
 
 \subsection{Create call message}
 
-The \texttt{call\_create} function, as indicated by his name, create the call
-message. Arguments are checked to be non-null if one of them is the function
-will fail. The secret share is loaded in a 32 bytes array and the nonce ($k$) is
+The \texttt{call\_create} function, as indicated by its name, creates the call
+message. Arguments are checked to be non-null.  If one of them is the function
+will fail. The secret share is loaded in a 32 byte array and the nonce ($k$) is
 retrieved with the \texttt{noncefp} function pointer. It is worth noting that
 this function could be called multiple times until a nonce that is not zero and
-which doesn't overflow is found. However, this function as a limited number of
-calls and if the limit is reached the function will fail. The signatures
+which doesn't overflow is found. However, this function has a limited number of
+calls and if the limit is reached the function will fail. The signature
 parameters are then set and encrypted in the call message. The parameters $k$
 and $z$ are set for $P_1$. The \texttt{noncefp} can point to an implementation
 of a deterministic signature mode or a random \cite{rfc6979} signature mode. If
@@ -785,8 +782,8 @@ done by the function.
 
 \subsection{Receive call message}
 
-The \texttt{call\_received} function set the parameter $k$ and $r$ of $P_2$ and
-prepare the challenge message with $r$. Again, the pointer can point to a
+The \texttt{call\_received} function sets the parameter $k$ and $r$ of $P_2$ and
+prepares the challenge message with $r$. Again, the pointer can point to a
 deterministic implementation for generating the nonce.
 
 \begin{longlisting}
@@ -814,11 +811,11 @@ validates the first Zero-Knowledge Proof, $\Pi$. The final ciphertext which
 contains the $s$ part of the distributed signature is computed and the second
 Zero-Knowledge Proof $\Pi'$ is created.
 
-The point $r$ is normalized and the coordinate $r.x$ is get (modulo $n$). The
+The point $r$ is normalized and the coordinate $r.x$ is obtained (modulo $n$). The
 \texttt{hash} is multiplied with $z_2$ and the coordinate $r.x$ is multiplied
 with $x_2z_2$. A value $x_3$ where $n|x_3$ is added to the cipher to hide
 information about the secret share and the secret random. In ECDSA $s = k^{-1}(m +
-rx) \mod n$, so the ciphertext match the requirement as demonstrated below:
+rx) \mod n$, so the ciphertext matches the requirement as demonstrated below:
 
 \begin{equation*}
 \begin{split}
@@ -843,8 +840,8 @@ The \texttt{terminate\_received} function is called by $P_1$ and validates the
 second Zero-Knowledge Proof, $\Pi'$. After validation of the proof, the
 ciphertext is decrypted and the signature is composed. The signature is then
 tested and the protocol ends. Only $P_1$ can decrypt the ciphertext so the
-protocol is asymetric. If $P_2$ also needs the signature, $P_1$ must share it.
-There is now way for $P_2$ to know the signature without a cooperative $P_1$.
+protocol is asymmetric. If $P_2$ also needs the signature, $P_1$ must share it.
+There is no way for $P_2$ to know the signature without a cooperative $P_1$.
 
 \begin{longlisting}
   \cfile[firstline=460,lastline=526]{02-main/listings/threshold_impl.h}
