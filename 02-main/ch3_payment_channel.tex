@@ -3,15 +3,15 @@
 
 Payment channels or micropayment channels, as mentioned previously, are one part
 of the scalability solution. The idea of payment channels was suggested by
-Satoshi in an email to Mike Hearn. Since then, various propositions to construct
+Satoshi in an email to Mike Hearn. Since then, various schemes to construct
 such structures have been proposed. To have a better understanding of the
-differences between two channels and to be able to analyze objectively a channel
-scheme few formal definitions are needed. A list of formal definitions for
+differences between various channel schemes, and to be able to analyze a channel
+scheme objectively, a few formal definitions are needed. A list of formal definitions for
 payment channel construction is proposed. An analysis of different commonly
 exposed payment channel constructions is done following these definitions. The
-list does not contain all the payment channel propositions, and some of them
+list does not contain all the payment channel schemes, some of them
 might be missing. However, the list contains a fairly good representation of the
-different constructions existing.
+different existing constructions.
 
 Schemes can be optimized when a provider has multiple clients through multiple
 channels. In this scenario the core feature is to be as cheap as possible for
@@ -21,7 +21,7 @@ of the white paper is summarized following the analysis.
 
 Channels can be optimized with threshold cryptography. In fact, the amount
 economized can be significative according to the cases. An analysis is performed
-to define, with and without \gls{segwit}, how many it is possible to save for
+to define, with and without \gls{segwit}, possible savings for
 payment channel transactions.
 
 \minitoc
@@ -36,13 +36,11 @@ being a member of a specific set. They set boundaries or limits that separate
 the term from any other term. The following formal definitions qualify
 properties that micropayment channels based on a blockchain such as Bitcoin can
 have with the view of a particular player. Transactions represent a set of
-information with a special meaning for the targeted blockchain that modify the
-channel state. A transaction can be broadcast in the network to effectively
-affect the channel state or been kept by the player. Players are users of the
-targeted blockchain and they own funds. Funds are owned by one and only one
-player at a time. The meaning of owning an amount fund for a player is defined
-in a channel by holding a transaction not yet broadcasted that allows this
-player to claim this amount of funds and only this amount.
+information with a special meaning for the given blockchain that modify the
+channel state. A transaction can be broadcast to the network to effectively
+affect the on chain channel state or been kept by the player. Players are users of the
+given blockchain and they own funds. Funds are owned by one and only one
+player at a time. The meaning of owning an amount of funds in a channel for a given player is defined as holding a transaction not yet broadcast that allows this player to claim this amount of funds.
 
 \begin{definition}[Trustless]
   A channel is trustless for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0,
@@ -59,7 +57,7 @@ player to claim this amount of funds and only this amount.
   to satisfy the constraint at any time.
 \end{definition}
 
-E.g., for a refund constraint $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
+For example, for a refund constraint $\mathcal{C}$ in a channel $\mathcal{P}_1 \rightarrow \mathcal{P}_2$,
 refunding $\mathcal{P}_1$ requires $\mathcal{M}(\mathcal{C}) = 1$, thus
 an optimal scheme requires $\mathcal{T}(\mathcal{C}) = \mathcal{M}(\mathcal{C}) = 1$.
 
@@ -308,7 +306,7 @@ Three transactions are compared with \gls{segwit}\footnote{ The transaction size
 is calculated with nested-\gls{segwit} and not with native mode.} and without.
 Optimization is expressed in percentage of size or virtual-size economized. The
 Script Hash (SH) consumes a multi-signature script, and the Public Key Hash
-(PKH) consumes a standard public key. Noted that size can vary few bytes with
+(PKH) consumes a standard public key. Note that size can vary by a few bytes with
 \gls{segwit}.
 
 % ** P2SH

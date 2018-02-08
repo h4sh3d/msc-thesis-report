@@ -99,7 +99,7 @@ labeled with the cryptographic hash of the labels of its child nodes.
 \end{figure}
 
 Given the top hash, known as the Merkle root, and a leaf, it is possible to prove the
-membership by giving the path for each complementary hash. E.g., given the
+membership by giving the path for each complementary hash. For example, given the
 Merkle root and \texttt{L1}, the proof is \texttt{Hash 0-1} and \texttt{Hash 1}.
 The verifier can then compute the hash of \texttt{L1}, the result of this hash
 with \texttt{Hash 0-1}, and then with \texttt{Hash 1}. If the result is the same
