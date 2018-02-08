@@ -8,7 +8,7 @@ key, itself being the representation of a private key. An address is owned by a
 user if this user has the associated private key in his possession. Users can
 transfer funds from some of their addresses to other addresses owned by other
 users or themselves. When funds are transferred a transaction is created and
-sent to the network. The network is composed of nodes, and these nodes take care
+broadcast to the network. The network is composed of nodes, and these nodes take care
 of its proper functioning. Some of these nodes are called miners, they listen to
 new transactions and try to include them into the blockchain. This blockchain is
 the output, the necessary result, of the Bitcoin protocol and can be compared to
@@ -16,9 +16,9 @@ a distributed public ledger. Nodes are software running all over the world. This
 software is maintained and improved by a group of developers present all over
 the world and for Bitcoin, the original and reference implementation is
 Bitcoin-core (previously referred to as bitcoind). Bitcoin-core allows interacting with the blockchain, and it is
-possible to retrieve information such as current unconfirmed transactions,
+possible to retrieve information such as current \textit{unconfirmed} transactions,
 information present in the blockchain, the amount available for an address, and
-more. Unconfirmed transactions are transactions that have not been yet included
+more. \textit{Unconfirmed} transactions are transactions that have not been yet included
 in the blockchain but have already been broadcast to the network.
 
 In the following, some building blocks needed to figure out how payment channels
@@ -41,42 +41,43 @@ resource today is the book \say{Mastering Bitcoin} by Andreas Antonopoulos
 
 The blockchain, as indicated by the name, is a chain of blocks. Blocks are
 created by miners in a race to find the next valid block. A block is valid if its identifier, i.e., the double hash of its
-header, is lower than the current difficulty target. It is worth noting that the
+header, is lower than the current difficulty target. The
 validity of a block is based on several other criteria which are not mentioned
 here.  For further information, please refer to the book \say{Mastering Bitcoin}.
 The header of a block is composed of a version number, a creation timestamp, a
-nonce, ??or the difficulty target used as the boundary??.
+\textit{nonce}, an other required information.
 
-The difficulty target is adjusted every 2016 blocks, so that on average, a valid block is found in the network every ten minutes. The probability of finding a block can be modelled as a Poisson process,
+The difficulty target is adjusted every 2016 blocks, so that on average, a valid
+block is found in the network every ten minutes. The probability of finding a block can be modelled as a Poisson process,
 i.e., the probability of a given number of events occurring in a fixed interval
 of time or space, if these events occur with a known constant rate, is independent
 of the time since the last event. A miner will create a candidate block and
 compute its identifier if this identifier is lower than the current difficulty
 target then the block is valid and the miner notifies the network that he found
 the next block. Then the process starts again. If the block identifier is not
-valid, the miner can change the nonce value in the header and check with the new
-identifier. Enumerating these identifies to find the next valid block requires an
+valid, the miner can change the \textit{nonce} value in the header and check with the new
+identifier. Enumerating these identifiers to find the next valid block requires an
 enormous amount of power. All of the miners, round the clock, keep searching for
-the next valid block.
+the next valid block by brut forcing these identifiers with the \textit{nonce}.
 
 \subsection{A chain of blocks}
 
 As mentioned before, the blockchain is a chain which must be secure, verifiable,
 and immutable. To achieve immutability, modification of previous blocks must
 invalidate the chain. The block identifier is affected by information like the
-creation timestamp or the nonce used to adapt the modifier but also from the
+creation timestamp or the \textit{nonce} used to adapt the modifier but also from the
 previous block identifier in the chain. That means that if the previous block
 identifier is changed for example because its content changed, the child block
 will become invalid as well as its child, and so on.
 
 Modifying the blockchain without invalidating the chain requires recomputing all
-the block identifiers after the changed block. It requires a quantity of power
+the block identifiers after the changed block with the same difficulty target. It requires a quantity of power
 that can be estimated and for which the costs represent a certain safety
 threshold. It is established that a transaction included in a block can be
 considered as safe after six child blocks. The amount of power needed to erase
 this transaction became statistically too high to be probable, but it does not
-mean that it will never happen since there is the same probability of finding a
-valid block with the first nonce than with the thousandth.
+mean that it will never happen since the mining process is modelled as a Poisson
+process.
 
 \subsection{A list of transactions}
 
@@ -110,20 +111,24 @@ In a block, the miner creates a Merkle tree of all included transaction
 identifiers and puts the Merkle root into the header of the block. To validate
 if a transaction is included in a block the path must be provided. Then the
 resulting hash is compared to the Merkle root registered in the block's header.
+\gls{spv} nodes, nodes without the full blockchain, download only block headers
+and ask other nodes to provide partial views of relevant parts of the blockchain.
 
 % -----------------------------------------------------------------------------
 \section{Transactions}
 
-Transactions allow users to move Bitcoins from one address to another and are the content of  Bitcoin's blockchain. In Bitcoin, the blockchain does
+Transactions allow users to move bitcoins from one address to another and are
+the content of  Bitcoin's blockchain. In Bitcoin, the blockchain does
 not store a balance for each user; the blockchain keeps only the history of all
 transactions made since the beginning.
 
 \subsection{A list of inputs \& outputs}
 
 A transaction is composed of a list of inputs and a list of outputs. In other
-words, where the Bitcoins come from and where they go. An input refers to an
+words, where the bitcoins come from and where they go. An input refers to an
 unspent output at the address from where funds will be spent, and output
-refers to an address where the funds will go.  To spend funds the user needs to control the addresses where unspent outputs are present. These unspent outputs are
+refers to an address where the funds will go.  To spend funds the user needs
+to control the addresses where unspent outputs are present. These unspent outputs are
 called \texttt{UTXOs} and, combined, represent the total amount owned by a user.
 
 \begin{figure}[H]
@@ -135,8 +140,8 @@ called \texttt{UTXOs} and, combined, represent the total amount owned by a user.
 	\label{fig:utxosChain}
 \end{figure}
 
-Each input has a value (the value specified in the output to which
-the input points). The sum of the value of all inputs in a transaction must be less than the
+Each input has a value, the value specified in the output to which
+the input points. The sum of the value of all inputs in a transaction must be less than the
 sum of the values specified in the outputs, with the difference being the fee, meaning an input must be spent entirely.
 
 The most straightforward transaction is composed of one input and one output
@@ -148,10 +153,10 @@ the amount transferred, and the second output is another address owned by the
 sender to gather the change, i.e., the remaining amount.
 
 As with blocks, transactions also have an identifier. These identifiers are created in the
-same way as blocks, by taking the double hash of the data, i.e., the signed
+same way as blocks, by taking the double hash of the data, i.e., the whole
 transaction. This means that, in the original design, a transaction does not
-have its final transaction identifier (TXID) before it is wholly signed (every
-input).
+have its final transaction identifier (TXID) before it is wholly signed, i.e., every
+input.
 
 \subsection{Transaction fees}
 
@@ -164,15 +169,16 @@ where a fixed amount of new coins is created plus the total amount of fees
 collected in all the included transactions. A miner will, therefore, select the
 transactions that pay the most fees given the space they consume in the block.
 Fees are calculated with the weight of the transaction, the weight is equal to
-the transaction size in bytes. A ratio of fee per byte/weight is then selected
+the transaction size in bytes. A ratio of fee per byte is then selected
 to find the fee for a transaction.
 
 \subsection{Scripting language}
 
 As described before, outputs or \texttt{UTXOs} are related to addresses and
-proof of ownership is required to spend them. For spending, the
-Bitcoin protocol uses digital signatures. To spend a \texttt{UTXO}, a valid
-signature for the address from which the it is being spent is required and, to sign, the private key is required. Thus, while signing a transaction
+proof of ownership is required to spend them. To spend a \texttt{UTXO}, the
+Bitcoin protocol uses digital signatures, a valid
+signature for the address from which the it is being spent is required and,
+to sign, the private key is required. Thus, while signing a transaction
 corresponding to the right address, it is possible to prove that the user owns
 the address. However, the protocol does not just require signatures and public
 keys, conditions to \textit{unlock} a \texttt{UTXO} are structured in scripts.
@@ -189,10 +195,10 @@ Bitcoin has a stack-based script language called \say{Bitcoin Script}.
 
 The list of all the \texttt{OP\_CODES} available in Bitcoin's scripting language
 is in the documentation. Among them are \texttt{OP\_CHECKSIG}, which verifies a given
-signature with a public key provided onto the stack, \texttt{OP\_IF, OP\_ELSE,
-OP\_ENDIF} create execution branches with a boolean on the stack,
-\texttt{OP\_DUP} duplicates the value on the stack or \texttt{OP\_HASH160,
-OP\_SHA256} which compute hashes of values on the stack.
+signature with a public key provided on top of the stack, \texttt{OP\_IF, OP\_ELSE,
+OP\_ENDIF} create execution branches with a boolean on top of the stack,
+\texttt{OP\_DUP} duplicates the value on top of the stack or \texttt{OP\_HASH160,
+OP\_SHA256} which compute hashes of values on top of the stack.
 
 Each input and output have a script. For outputs, the script establishes the
 requirement to be fulfilled in order to be able to spend it. An address is the result
@@ -208,15 +214,15 @@ the transaction and give the signature with the public key in the input's
 unlocking script. Before including a transaction in a candidate block, a miner
 validates all the inputs. He needs to check if the outputs are in fact
 \texttt{UTXOs}, so ensuring the outputs are \textit{unspent}, and execute the
-locking script with the unlocking script. Both scripts are concatenated to
-validate input; the unlocking script first (as shown in
-Figure~\ref{fig:lockUnlock}).
+unlocking script with the locking script. Both scripts are concatenated to
+validate input; the unlocking script first, as shown in
+Figure~\ref{fig:lockUnlock}.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1\columnwidth]{lockUnlock}
 	\captionsource{Example of pay to public key hash script}
-  {Example of pay to public key hash script}
+  {Example of pay to public key hash locking script with unlocking script}
 	{\url{https://github.com/bitcoinbook/bitcoinbook/blob/second_edition/ch06.asciidoc}}
 	\label{fig:lockUnlock}
 \end{figure}
@@ -227,11 +233,17 @@ and the public key hash present in the locking script is put on top of the stack
 then the two first elements on top of the stack are then compared. If the
 comparison fails, the script fails and the transaction is rejected. If the
 test passes, the signature will be checked with the two remaining parameters on
-the stack: the public key and the signature. If the signature is valid, the
+the stack (i) the public key and (ii) the signature. If the signature is valid, the
 value \texttt{True} is put on top of the stack. Otherwise, the
 value \texttt{False} put on top of the stack. If the value \texttt{True} is present
 on top of the stack at the end of the script the transaction is valid,
 otherwise the transaction is invalid.
+
+\gls{p2sh} are the second standard script mostly used. It provides the ability
+to send outputs to a custom script without knowing the content of the script.
+A user can create a custom script and give the hash of this script, in an address,
+to another user. When the output is spent the whole script must be provided in
+the unlocking script. \gls{p2sh} are used, e.g., to create multi-signature scripts.
 
 \subsection{Segregated witness}
 
@@ -240,7 +252,7 @@ structure to fix transaction malleability, add script versioning, and improve
 other aspects \cite{SegWit, SegWitBIP}. In fact, \gls{segwit} changed the way
 outputs are structured. The malleability is fixed if all inputs use \gls{segwit}
 only. A transaction can have \gls{segwit} inputs and non-\gls{segwit} inputs at
-the same time. The \gls{bip} abstract explains the purpose of \gls{segwit}:
+the same time. The \gls{bip} abstract explains its purpose:
 
 \begin{quote}
   This BIP defines a new structure called a \say{witness} that is committed to
@@ -258,11 +270,10 @@ With \gls{segwit}, a transaction has two TXIDs. The first is determined without
 all the witness data, so it is deterministic at transaction creation. The
 second one is related to the witness data and changes when signatures appear.
 This separation fixes the transaction malleability issue. The second big change is the
-way the size is calculated to determine the fees. The transaction weight
+way the weight is calculated to determine the fees. The transaction weight
 \texttt{Tx Weight} becomes $\texttt{Base Tx} * 3 + \texttt{Total Size}$ where
 \texttt{BaseTx} is the size without the witness data and \texttt{Total Size} is
-the serialized transaction with all the data, including the witness data. With
-this new structure the fee calculation changes. The new structure introduces a
+the serialized transaction with all the data, including the witness data. This new structure introduces a
 virtual transaction size such as virtual size is equal to $\texttt{Tx Weight} /
 4$. Thus, \gls{segwit} reduces the weight of the witness data in the calculus of
 the fees.
@@ -302,7 +313,7 @@ of the hashing data for the TXID. E.g., by introducing an additional
 signature.
 
 Nevertheless, with \gls{segwit} activated, now the transaction malleability with
-signatures and scripts is no longer possible. As mentioned in the \gls{bip}:
+signatures and scripts is no longer possible. As mentioned in the \gls{bip} 141:
 
 \begin{quote}
 	It allows creation of unconfirmed transaction dependency chains without
@@ -329,3 +340,9 @@ of truth and only for resolving disagreements. Usually, the construction that
 uses this architectural concept is called payment channels or micropayment
 channels. These channels enable scalability because they reduce the number of
 transactions needed on the blockchain if two users exchange often.
+Channels allow more than scalability, with payment channel transactions are
+instant and can be accepted as \textit{confirmed} without latency. Latency is a
+consequence of the mechanism that resolves the \textit{double-spending} problem
+when funds are spent twice to different users. Payment channels create a
+structure that ensures that no double-spending is possible for the funds locked
+in the channel.
