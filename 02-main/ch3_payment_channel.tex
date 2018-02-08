@@ -78,9 +78,8 @@ on-chain with a designated transaction before the end of the lifetime.
 
 \begin{definition}[Non-interactive]
   A channel is non-interactive for a player $p_i \in \mathcal{P} =
-  \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$ if and only if this player should not
-  watch the targeted blockchain to react to arbitrary events $\mathcal{E}$ to
-  guarantee their safety.
+  \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$ if and only if this player does not
+  have the responsibility to watch the targeted blockchain to react to arbitrary events $\mathcal{E}$ in order to guarantee their safety.
 \end{definition}
 
 With these five definitions, it is possible to infer a significant necessary
@@ -99,29 +98,29 @@ instant for the player.
 
 \subsection{Types of payment channel}
 
-We can distinguish two type of channels, the unidirectional channel that allows
-one user to send money to another user in a channel and the bidirectional
-channel that allows two users to send in either direction in a channel. Usually, a
+We can distinguish two type of channels, unidirectional channels that allow
+one user to send money to another user and bidirectional
+channels that allow two users to send in either direction. Usually, a
 bidirectional channel is more optimal than two unidirectional channels but
-introduced other constraints.
+introduces other constraints.
 
 \subsubsection{Unidirectional}
 
-In a two-players unidirectional channels, there is a payer, later referred to as
+In a two-player unidirectional channel, there is a payer, later referred to as
 player-one or client, and a payee, later referred to as player-two or provider.
 It is not possible to transfer money back in the reverse direction in the
-channel. These channels are asymmetric, players can profit of different channel
+channel. These channels are asymmetric, each player benefits from different channel
 properties. The analysis must be done in the view of each player $p_i \in
 \mathcal{P} = \{\mathcal{P}_0, \dots, \mathcal{P}_n\}$ at a time.
 
 \subsubsection{Bidirectional}
 
-In a two-players bidirectional channel $\mathcal{C}$, the player $A$ and the
+In a two-player bidirectional channel $\mathcal{C}$, the player $A$ and the
 player $B$ can send funds in direction $\mathcal{C}_{AB}$ and
 $\mathcal{C}_{BA}$. A bidirectional channel can be a specific scheme or a
 pairing of existing unidirectional channels. These channels are generaly
 symmetric, each player $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots,
-\mathcal{P}_n\}$ profit of the same channel properties.
+\mathcal{P}_n\}$ benefits from the same channel properties.
 
 \section{Analysis of payment channels}
 
@@ -202,11 +201,11 @@ predefined at the setup phase but can be refreshed on-chain to keep the channel
 open with an updated state. During the refresh process, it is possible to refill
 the channel, and the scheme allows payment routing with \gls{htlc}.
 
-\gls{dmc} payment channels are not optimal. Uncooperative close of the channel
+\gls{dmc} payment channels are not optimal. Uncooperative closing of the channel
 requires $d + 2$ transactions (where $d$ is equal to the revocation tree depth).
 They are not undelayed, without other players cooperation the funds are
 recovered after \texttt{nLockTime} values. \gls{dmc} are not open-ended, a
-dedicated transaction  needs to be broadcast before the end of the
+dedicated transaction needs to be broadcast before the end of the
 \texttt{nLockTime}.
 
 \begin{table}[h]
