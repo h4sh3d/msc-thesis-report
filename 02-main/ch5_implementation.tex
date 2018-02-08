@@ -304,7 +304,7 @@ HEPrivateKey ::= SEQUENCE {
 \end{listing}
 
 The parser takes as input, an array of bytes with a length and the private key to
-filling. The big modulus is computed after parsing to accelerate encryption
+create. The big modulus is computed after parsing to accelerate encryption
 and decryption.
 
 \begin{listing}
@@ -424,7 +424,7 @@ void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_me
 \subsection{Homomorphism}
 
 The choice of this scheme is not hazardous, homomorphic addition and
-multiplication are used to construct the signature component $s = D_{sk}(\mu)
+multiplication are used to construct the signature $s = D_{sk}(\mu)
 \mod q : \mu = (\alpha \times_{pk} m'z_2) +_{pk} (\zeta \times_{pk} r'x_2z_2)
 +_{pk} E_{pk}(cn)$ where $+_{pk}$ denotes homomorphic addition over the
 ciphertexts and $\times_{pk}$ denotes homomorphic multiplication over the
@@ -541,7 +541,7 @@ ECZKPPi ::= SEQUENCE {
 
 Zero-Knowledge Proof $\Pi'$ is composed of the same named values as ZKP $\Pi$
 plus five new ones. The construction of the proof is based on $\Pi$ but needs
-more than values to express all the proven statements. Again, the point $y$ is a
+more equations to express all the proven statements. Again, the point $y$ is a
 point serialized as an uncompressed public key in an octet string and a version
 number is added for future compatibility purposes. Two functions are provided in
 the module to parse and serialize a \texttt{ECZKPPiPrim} \texttt{DER} schema.
