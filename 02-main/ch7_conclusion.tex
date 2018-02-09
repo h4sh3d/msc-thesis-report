@@ -1,7 +1,7 @@
 \chapter{Conclusions}
 \label{chap:conclusions}
 
-Some mechanisms of Bitcoin have been explained to allow introducing one major
+Some mechanisms of Bitcoin have been explained to introduce one major
 fact in Bitcoin today, i.e., the scalability problem. The problem of scalability
 already has existing drafted solutions like consensus changes or layer-two
 applications such as payment channels. Payment channels are not new to Bitcoin.
@@ -17,11 +17,11 @@ signature computed with threshold cryptography. The threshold scheme is analyzed
 and adapted to \gls{ecdsa} before being implemented in the existing library used
 in Bitcoin-core, the library \texttt{secp256k1}. Finally, further research about
 payment channels, Bitcoin in general, and threshold signature schemes are
-exposed.
+explored.
 
 The Bitcoin payment channel implementation will be released as open source
 software soon, and testing will begin in the coming months. The threshold
 implementation will be part of a current project comprising the creation of an
 open Bitcoin Teller Machine (BTM) using payment channels to allow instant
-withdraw cash without security risk for the BTM provider and threshold signature
-to secure the key on the machine by avoiding full private key.
+cash withdrawal without security risk for the BTM provider and threshold signature
+to secure the key on the machine by not keeping the full private key on the machine or backend server.
