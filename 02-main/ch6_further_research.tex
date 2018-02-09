@@ -11,7 +11,7 @@ entirely exploratory.
 \section{Side-channel attack resistant implementation and improvements}
 
 The proposed implementation in the library \texttt{secp256k1} relies upon
-\texttt{libgmp} for all mathematical calculus and this library is
+\texttt{libgmp} for all mathematical calculus but this library is
 not robust against side-channel attacks. The library has not
 been developed for that particular purpose. Therefore, another implementation
 is needed to handle, in constant time and constant memory if
@@ -29,7 +29,7 @@ and used for $\Pi'$.
 \subsection{Paillier cryptosystem}
 
 Two major improvements or modifications can be made specificaly on the
-Paillier cryptosystem implementation. As shown in the Paillier's paper, the
+Paillier cryptosystem implementation. As shown in Paillier's paper, the
 Chinese Remainder Theorem can be used to optimize the decryption. In the
 standard approach, with a private key $(n, g, \lambda, \mu)$ and a ciphertext $c
 \in \mathbb{Z}_{n^2}^*$ it is possible to compute the plaintext $m =
