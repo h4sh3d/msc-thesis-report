@@ -640,8 +640,8 @@ int secp256k1_eczkp_pi_generate(
 	\label{lst:funcSigGeneratePi}
 \end{listing}
 
-The function implementation can be split in four main parts (i) generate all
-the needed random values, (ii) compute the proof values $v$, (iii) compute
+The function's implementation can be split in four main parts (i) generate all
+the required random values, (ii) compute the proof values $v$, (iii) compute
 the challenge value with the \texttt{hash} of these values $v$, and (iv) compute
 the ZKP with $e = \texttt{hash}(v)$.
 
@@ -682,8 +682,8 @@ int secp256k1_eczkp_pi2_generate(
 	\label{lst:funcSigGeneratePi2}
 \end{listing}
 
-The function implementation can also be split in four main parts (i) generate
-all the needed random values, (ii) compute the proof values $v$, (iii) compute
+The function's implementation can also be split in four main parts (i) generate
+all the required random values, (ii) compute the proof values $v$, (iii) compute
 the challenge value with the \texttt{hash'} of these values $v$, and (iv)
 compute the ZKP with $e = \texttt{hash'}(v)$.
 
