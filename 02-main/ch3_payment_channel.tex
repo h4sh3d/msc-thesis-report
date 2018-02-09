@@ -31,8 +31,8 @@ payment channel transactions.
 % -----------------------------------------------------------------------------
 \section{Formal definitions}
 
-Formal definitions specify the necessary and sufficient conditions for a thing’s
-being a member of a specific set. They set boundaries or limits that separate
+These formal definitions specify the necessary and sufficient conditions for a
+payment channel to be qualified as a member of a specific set. They set boundaries or limits that separate
 the term from any other term. The following formal definitions qualify
 properties that micropayment channels based on a blockchain such as Bitcoin can
 have with the view of a particular player. Transactions represent a set of
@@ -88,10 +88,10 @@ latest state without constraint, and if this channel is also optimal for the
 same player only one transaction is needed to move the funds. If only one
 transaction is needed to move the funds, then the funds are directly available
 for this player. If the funds are available instantly, then the channel is
-instant for the player.
+instantaneous for the player.
 
-\begin{corollary}[Instant]
-  A channel is instant for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots,
+\begin{corollary}[Instantaneous]
+  A channel is instantaneous for a player $p_i \in \mathcal{P} = \{\mathcal{P}_0, \dots,
   \mathcal{P}_n\}$ if and only if the channel is undelayed and optimal for this
   player.
 \end{corollary}
@@ -153,7 +153,7 @@ is not secure.
 \end{table}
 
 According to the previous definitions, Spilman-style ephemeral payment channels are
-instant non-interactive channels for the payee, and optimal non-interactive for
+instantaneous non-interactive channels for the payee, and optimal non-interactive for
 the payer.
 
 \subsection{\texttt{CLTV}-style payment channels}
@@ -169,7 +169,7 @@ transaction output can enforce the spending transaction to have a
 
 Instead of creating a funding transaction and a refund transaction vulnerable to
 transaction malleability attacks, the client creates the funding transaction
-output with a script (Listing \ref{lst:scriptPubKeyCLTV}) that allows the
+output with a script (Listing~\ref{lst:scriptPubKeyCLTV}) that allows the
 provider and the client to spend the funds
 with co-operation or after a lock time the client can spend the funds without
 the co-operation of the provider.
@@ -188,7 +188,7 @@ ENDIF
 \end{listing}
 
 \texttt{CLTV}-style payment channels have the same properties as Spilman-style payment
-channels following the previous definition but are not subject to transaction
+channels following the previous definitions but are not subject to transaction
 malleability attacks.
 
 
@@ -269,8 +269,9 @@ applications, such as \say{Yours Lightning Protocol} or Lightning Network
 \cite{poon2016bitcoin, YoursLightningProtocol}. The scheme is specially designed
 for a client to provider scenario, where the provider has multiple clients
 through multiple channels. The core design aims to be as cheap as possible for
-the provider while being flexible for settlement. The white paper describing the
-core design more in-depth is in the following appendices.
+the provider while being flexible for settlement. The white paper \say{Partially
+Non-Interactive and Instantaneous One-way Payment Channel for Bitcoin} inserted
+after the appendices, describes the core design and the incentives.
 
 \begin{table}[h]
   \begin{tabularx}{\textwidth}{ | X | l | l | l | l | l |}
@@ -299,8 +300,6 @@ should be attractive.
 % -----------------------------------------------------------------------------
 \section{Optimizing payment channels}
 
-% Even if the channel is not completely trustless without \gls{segwit} we can compare the possible gain in non-\gls{segwit} mode.
-
 Three transactions are compared with \gls{segwit}\footnote{ The transaction size
 is calculated with nested-\gls{segwit} and not with native mode.} and without.
 Optimization is expressed in percentage of size or virtual-size economized. The
@@ -328,7 +327,7 @@ Script Hash (SH) consumes a multi-signature script, and the Public Key Hash
 \begin{table}[h]
   \begin{tabularx}{\textwidth}{| X | S | S | S | S | S | S |}
   \cline{3-7}
-  \multicolumn{2}{l|}{ } & \multicolumn{2}{c|}{Non-\gls{segwit}} & \multicolumn{3}{c|}{\gls{segwit}} \\ \hhline{~~~----}
+  \multicolumn{2}{l|}{ } & \multicolumn{2}{c|}{Non-\gls{segwit}} & \multicolumn{3}{c|}{\gls{segwit}} \\ \hhline{~~-----}
   \multicolumn{2}{l|}{ } & R-Size & O & \cellcolor[gray]{0.9} R-Size & V-Size & O \\ \hhline{--=====}
   \multirow{2}{*}{First Refund}  & SH   & 302  & \multirow{2}{*}{36.75\%} & \cellcolor[gray]{0.9} 340 & 174  & \multirow{2}{*}{22.99\%} \\ \hhline{~--~--~}
                                  & PKH  & 191  &                          & \cellcolor[gray]{0.9} 216 & 134  &                          \\ \hhline{-------}
@@ -350,28 +349,22 @@ in the last 3 months, around \$10,700 USD}. If the channel is
 used for micropayments such as a couple of cents each time, this optimization
 makes a difference and lowers the required threshold for feasibility. The first
 refund transaction being less expensive also makes the clients commitment
-easier.
+easier. The Table~\ref{fig:summaryTransactionSizeOpti} exhibits transaction
+utilizing only one input, and it is worth noting that the number of input has a
+supralinear influence to the savings.
 
-Requirements need to be defined to be able to replace the multi-signature script
+Requirements need to be defined to be able to substitute the multi-signature script
 with a threshold scheme. Analysis of the protocol and the signing process for a
-multi-signature script allows one to define these requirements. A multi-signature
+multi-signature script allows one to define these requirements. A 2-out-of-2 multi-signature
 script can be unlocked with two different public keys and their signature. The
-signing order does not matter as signatures are sorted by numerical value in the script.
+signing order only matters in that it is determined at the time of creating a
+multisig address. Some standards such as \gls{bip}45 address the need to
+predefine or communicate the ordering of the keys (and therefore the signatures)
+by always ordering the keys lexicographically, and always ordering the
+signatures in order of the keys \cite{BIP45}.
 The protocol takes advantage of this fact. A transaction is usually held fully signed
 only by one player. The threshold scheme must follow these requirements (i) 2
 players need to co-operate to generate a valid signature, (ii) both must be able
 to start the signing process, and (iii) only one player must be able to retrieve
 the signature at the end of the process. If both need the signature it is
 always feasible to share, meaning the current protocol is not better in this case.
-
-% \begin{table}[h]
-%   \begin{tabularx}{\textwidth}{| X | S | S | S | S | S |}
-%   \cline{2-6}
-%   \multicolumn{1}{l|}{ } & \multicolumn{2}{c|}{Non-\gls{segwit}} & \multicolumn{3}{c|}{\gls{segwit}} \\ \cline{2-6}
-%   \multicolumn{1}{l|}{ } & Raw Size & O & Raw Size & V-Size & O \\ \hhline{-=====}
-%   Refund transaction & 100 & 0\% & 110 & 80 & 0\% \\
-%   \hhline{------}
-%   \end{tabularx}
-%   \caption{Summary of transaction size optimization}
-%   \label{fig:summaryTransactionSizeOpti}
-% \end{table}

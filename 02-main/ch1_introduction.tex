@@ -29,25 +29,3 @@ might improve these schemes significantly. Finding such a threshold scheme that
 fulfills the requirements is not trivial. The threshold scheme selected for this work is
 adapted to the needs of channels, and is implemented in the Bitcoin cryptographic
 library to compute a particular two-party threshold ECDSA signature.
-
-% ECDSA is the signature scheme used by Bitcoin to sign transactions. A standard transaction
-% is constituted of a single signature corresponding to the address where the Bitcoins come
-% from. But sometimes we need more complex management for locking funds. To address the
-% limitation of a single signature, Bitcoin introduced a new OP\_CODE named CHECKMULTISIG with
-% a new standard script. With this standard script, it is now possible to spend Bitcoin to an
-% address that requires a minimum of m signatures in n authorised signatories and extend the
-% capability of Bitcoin to lock funds in a more complex way.
-%
-% However, some issues appear. The way the script works requires exposing all the public keys
-% when an output is signed and this increases the transaction size enormously, which implies
-% bigger fees. All the signatures are, obviously, present with the public keys in the transaction
-% script, which implies that we can know which public keys signed the transaction. And there
-% is some limitation, due to the script size limit, the maximum number of authorised signatories
-% is 15. All these limitations mean that we cannot imagine a complex organization nor structure
-% with the multi-signature script for the moment.
-%
-% To address this limitation, a group of researchers published a first paper  in 2015 and a
-% second one  in 2016 describing the way to achieve a threshold scheme with DSA and ECDSA.
-% Today, there is no well-known implementation ready for production purposes even though
-% industries need it. The principal purpose of this thesis is to provide a clear, well
-% documented C library, based on the internal ECDSA library present in bitcoin-core.
