@@ -819,7 +819,7 @@ with $x_2z_2$. A value $x_3$ where $n|x_3$ ($n$ divides $x_3$) is added to the c
 information about the secret share and the secret random. In ECDSA $s = k^{-1}(m +
 rx) \mod n$, so the ciphertext matches the requirement as demonstrated below:
 
-\begin{equation*}
+\begin{equation}
 \begin{split}
   D_{sk}(\mu) &\equiv (\alpha \times mz_2) + (\zeta \times rx_2z_2) + (x_3) \pmod n \\
               &\equiv (z_1 \times mz_2) + (x_1z_1 \times rx_2z_2)  \\
@@ -828,7 +828,7 @@ rx) \mod n$, so the ciphertext matches the requirement as demonstrated below:
               &\equiv z(m + rx)  \\
               &\equiv k^{-1}(m + rx)
 \end{split}
-\end{equation*}
+\end{equation}
 
 \begin{longlisting}
   \cfile[firstline=379,lastline=446]{02-main/listings/threshold_impl.h}

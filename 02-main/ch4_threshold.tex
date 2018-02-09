@@ -722,7 +722,7 @@ proposal differs from the BIP32 \cite{HDWallets} standard in the chain
 derivation process. The \texttt{ser} function and \texttt{point} function are
 the same as described in the \gls{bip}.
 
-\begin{equation*}
+\begin{equation}
 \begin{split}
   f(l) &=
   \begin{cases}
@@ -731,7 +731,7 @@ the same as described in the \gls{bip}.
   \end{cases} \\
   sk_i &\equiv l \cdot sk_i^{par} \pmod n
 \end{split}
-\end{equation*}
+\end{equation}
 
 The function $f(l)$ computes the partial share $l$ at index $kFurther research needs$, such that
 multiplied with the parent private key share $sk_i^{par}$ for the player $i$ the
@@ -745,7 +745,7 @@ extended public key. It is worth noting that it is not possible to compute a
 that every player updates the master public key for the threshold not their
 public key share.
 
-\begin{equation*}
+\begin{equation}
 \begin{split}
   f(l) &=
   \begin{cases}
@@ -756,7 +756,7 @@ public key share.
       &= l \cdot (sk_{mas}^{par} \cdot G)\\
       &= (l \cdot sk_{mas}^{par} \bmod n) \cdot G
 \end{split}
-\end{equation*}
+\end{equation}
 
 \subsection{Child key share derivation}
 
