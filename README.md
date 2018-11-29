@@ -1,40 +1,31 @@
-# hesso-latextemplate-thesis
+# New Methods for Transactions in Blockchain Systems
 
-A LaTeX template for the HES-SO//Master MSE thesis.
+This work is the result of my master thesis in computer science from the University of Applied Sciences Western Switzerland.
 
-Say goodbye to ugly and proprietary MS Word files!
+## Abstract
 
-## Features
+Bitcoin is a decentralized peer-to-peer currency that allows users to to pay for
+things electronically. Bitcoin was created by a pseudonymous software developer
+going by the name of Satoshi Nakamoto in 2008, as an electronic payment system
+based on mathematical proof. Yet the largest challenge in Bitcoin for the coming
+years is scalability. Currently, Bitcoin can only handle a few transactions per
+second on the network. This is not sufficient in comparison to large payment
+infrastructures, which allow tens of thousands of transactions per second. As a
+potential scalability solution, the idea of payment channels was suggested by
+Satoshi in an email to Mike Hearn. A one-way payment channel specific for retail
+commercial transactions is presented, analyzed and optimized with threshold
+cryptography. The threshold scheme selected has been adapted and implemented
+into the Bitcoin cryptographic library to compute a special two-party threshold
+ECDSA signature.
 
-- Title page with official layout
-- Table of contents, Table of figures, Table of tables
-- Abstracts (French + English)
-- Nice title styles for chapter and appendices
-- Chapter table of contents (minitoc)
-- Bibliography
-- Glossary
-- Code highlighting with minted
-- Nice default typography settings
+## Related implementations
 
-## Getting started
+ * [A python proof of concept](https://github.com/GuggerJoel/poc-threshold-ecdsa-secp256k1)
+ * [libsecp256k1 fork with experimental module](https://github.com/GuggerJoel/secp256k1)
 
-1. Clone this repository
-2. Make sure that you have the required LaTeX packages (look into `00-settings/settings_base.tex`)
-3. Fill out the `00-settings/metadata.tex` with your thesis info
-4. Write your thesis
-5. Use the given Makefile or your favorite IDE to build the PDF
-6. Profit
-
-## Contributing
-
-1. Take a look at the issues with the "Help wanted" tag
-2. Choose something or open a new issue
-3. Fork the repo, fix the problem in a branch
-4. Rebase your branch if needed
-5. Submit a PR
-
-## Thanks to
+#### Thanks to
 
 - Maria Sisto, for the title page
 - Loïc Monney, for the section title style, captions style and font idea
 - EPFL, for the basic structure
+
